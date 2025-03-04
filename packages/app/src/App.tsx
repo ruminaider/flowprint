@@ -106,11 +106,29 @@ export function App() {
     void settingsHook.updateSettings({ theme: next })
   }, [settings.theme, settingsHook])
 
+  const handleClose = useCallback(() => {
+    if (fileManager.dirty) {
+      if (!window.confirm('You have unsaved changes. Discard and return to the welcome screen?')) {
+        return
+      }
+    }
+    setDoc(null)
+    fileManager.setDirty(false)
+    setRulesDataMap({})
+    setError(null)
+  }, [fileManager])
+
   return (
     <div
       className="fp-app"
       data-fp-theme={resolvedTheme}
-      style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        width: '100vw',
+        background: 'var(--fp-bg-canvas, #0A0A0F)',
+      }}
     >
       <UnsavedChangesGuard dirty={fileManager.dirty} />
 
@@ -180,6 +198,7 @@ export function App() {
             onSettings={() => {
               setSettingsOpen(true)
             }}
+            onClose={handleClose}
           />
           <div style={{ flex: 1, minHeight: 0 }}>
             <FlowprintEditor

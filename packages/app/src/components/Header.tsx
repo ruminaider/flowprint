@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ThemeMode } from '@ruminaider/flowprint-editor'
 
 export interface HeaderProps {
@@ -11,6 +12,7 @@ export interface HeaderProps {
   onSave: () => void
   onSaveAs: () => void
   onSettings: () => void
+  onClose?: () => void
 }
 
 const THEME_LABELS: Record<ThemeMode, string> = {
@@ -20,13 +22,37 @@ const THEME_LABELS: Record<ThemeMode, string> = {
 }
 
 const btnStyle: React.CSSProperties = {
-  padding: '4px 10px',
-  fontSize: 12,
-  border: '1px solid var(--fp-border, #e0e0e0)',
-  borderRadius: 4,
-  background: 'transparent',
-  color: 'inherit',
+  padding: '6px 14px',
+  fontSize: 11,
+  border: '1px solid #2E2D3D',
+  borderRadius: 10,
+  background: '#1C1B25',
+  color: '#E8E7F4',
   cursor: 'pointer',
+}
+
+function HeaderButton({
+  onClick,
+  children,
+}: {
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        ...btnStyle,
+        background: hovered ? '#252434' : '#1C1B25',
+      }}
+    >
+      {children}
+    </button>
+  )
 }
 
 export function Header({
@@ -40,6 +66,7 @@ export function Header({
   onSave,
   onSaveAs,
   onSettings,
+  onClose,
 }: HeaderProps) {
   return (
     <header
@@ -47,21 +74,28 @@ export function Header({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
-        height: 48,
-        borderBottom: '1px solid var(--fp-border, #e0e0e0)',
-        background: 'var(--fp-surface, #fff)',
-        color: 'var(--fp-text, #1e1e2e)',
+        padding: '0 24px',
+        height: 56,
+        borderBottom: 'none',
+        background: 'rgba(10, 10, 15, 0.8)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        color: '#E8E7F4',
         flexShrink: 0,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {onClose && (
+          <HeaderButton onClick={onClose}>
+            ←
+          </HeaderButton>
+        )}
         <strong style={{ fontSize: 14 }}>{fileName ?? 'Flowprint'}</strong>
         {fileName !== null && (
           <span
             style={{
               fontSize: 12,
-              color: dirty ? 'var(--fp-warning, #f9e2af)' : 'var(--fp-muted, #999)',
+              color: dirty ? '#f9e2af' : '#8887A5',
             }}
           >
             {dirty ? 'Unsaved changes' : 'Saved'}
@@ -69,26 +103,16 @@ export function Header({
         )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <button type="button" onClick={onOpen} style={btnStyle}>
-          Open
-        </button>
+        <HeaderButton onClick={onOpen}>Open</HeaderButton>
         {supportsOpenProject && onOpenProject && (
-          <button type="button" onClick={onOpenProject} style={btnStyle}>
-            Open Project
-          </button>
+          <HeaderButton onClick={onOpenProject}>Open Project</HeaderButton>
         )}
-        <button type="button" onClick={onSave} style={btnStyle}>
-          Save
-        </button>
-        <button type="button" onClick={onSaveAs} style={btnStyle}>
-          Save As
-        </button>
-        <button type="button" onClick={onSettings} style={btnStyle}>
-          Settings
-        </button>
-        <button type="button" onClick={onCycleTheme} style={btnStyle}>
+        <HeaderButton onClick={onSave}>Save</HeaderButton>
+        <HeaderButton onClick={onSaveAs}>Save As</HeaderButton>
+        <HeaderButton onClick={onSettings}>Settings</HeaderButton>
+        <HeaderButton onClick={onCycleTheme}>
           Theme: {THEME_LABELS[themeMode]}
-        </button>
+        </HeaderButton>
       </div>
     </header>
   )
