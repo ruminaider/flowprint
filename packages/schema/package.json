@@ -26,8 +26,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "echo \"no tests yet\"",
-    "lint": "echo \"no linter yet\"",
+    "test": "vitest run",
+    "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

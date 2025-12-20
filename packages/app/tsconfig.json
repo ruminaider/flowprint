@@ -8,8 +8,5 @@
     "noEmit": true
   },
   "include": ["src"],
-  "references": [
-    { "path": "../schema" },
-    { "path": "../editor" }
-  ]
+  "references": [{ "path": "../schema" }, { "path": "../editor" }]
 }
