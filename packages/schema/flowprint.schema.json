@@ -1,0 +1,401 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flowprint.dev/schema/flowprint/1.0",
+  "title": "Flowprint Service Blueprint",
+  "description": "A service blueprint definition mapping business processes to code entry points",
+  "type": "object",
+  "required": ["schema", "name", "version", "lanes", "nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "pattern": "^flowprint/\\d+\\.\\d+$",
+      "description": "Schema version identifier (e.g. flowprint/1.0)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Machine-readable blueprint name"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Semantic version of this blueprint"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the blueprint"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Custom key-value metadata (e.g. owner, domain, tags)"
+    },
+    "lanes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/definitions/Lane"
+      },
+      "description": "Swimlane definitions keyed by lane ID"
+    },
+    "nodes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/definitions/Node"
+      },
+      "description": "Node definitions keyed by node ID"
+    }
+  },
+  "definitions": {
+    "Lane": {
+      "type": "object",
+      "required": ["label", "visibility", "order"],
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable lane display name"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["external", "internal"],
+          "description": "Whether this lane is customer-facing (external) or internal"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Display order (0 = topmost lane)"
+        }
+      }
+    },
+    "EntryPoint": {
+      "type": "object",
+      "required": ["file", "symbol"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative file path from repo root"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Function/method name in the file"
+        }
+      }
+    },
+    "ErrorHandler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retry": {
+          "type": "object",
+          "required": ["limit"],
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum number of retry attempts"
+            },
+            "backoff": {
+              "type": "string",
+              "enum": ["linear", "exponential"],
+              "description": "Backoff strategy for retries"
+            }
+          }
+        },
+        "catch": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Node ID to handle the error"
+        }
+      }
+    },
+    "Node": {
+      "oneOf": [
+        { "$ref": "#/definitions/ActionNode" },
+        { "$ref": "#/definitions/SwitchNode" },
+        { "$ref": "#/definitions/ParallelNode" },
+        { "$ref": "#/definitions/WaitNode" },
+        { "$ref": "#/definitions/ErrorNode" },
+        { "$ref": "#/definitions/TerminalNode" }
+      ]
+    },
+    "ActionNode": {
+      "type": "object",
+      "required": ["type", "lane", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "action"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntryPoint"
+          }
+        },
+        "next": {
+          "type": "string",
+          "minLength": 1
+        },
+        "error": {
+          "$ref": "#/definitions/ErrorHandler"
+        }
+      }
+    },
+    "SwitchNode": {
+      "type": "object",
+      "required": ["type", "lane", "label", "cases"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "switch"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntryPoint"
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["when", "next"],
+            "additionalProperties": false,
+            "properties": {
+              "when": {
+                "type": "string",
+                "minLength": 1
+              },
+              "next": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "default": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ParallelNode": {
+      "type": "object",
+      "required": ["type", "lane", "label", "branches", "join"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "parallel"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntryPoint"
+          }
+        },
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "join": {
+          "type": "string",
+          "minLength": 1
+        },
+        "join_strategy": {
+          "type": "string",
+          "enum": ["all_reached", "await_all"]
+        }
+      }
+    },
+    "WaitNode": {
+      "type": "object",
+      "required": ["type", "lane", "label", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "wait"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntryPoint"
+          }
+        },
+        "event": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Event name to wait for"
+        },
+        "timeout": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Duration string (e.g. 7d, 24h, 30m)"
+        },
+        "next": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeout_next": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Node to route to when timeout expires"
+        }
+      }
+    },
+    "ErrorNode": {
+      "type": "object",
+      "required": ["type", "lane", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "entry_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EntryPoint"
+          }
+        },
+        "next": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "TerminalNode": {
+      "type": "object",
+      "required": ["type", "lane", "label", "outcome"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "terminal"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "failure"],
+          "description": "Whether this terminal represents a successful or failed outcome"
+        }
+      }
+    }
+  }
+}

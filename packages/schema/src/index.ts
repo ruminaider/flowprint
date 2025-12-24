@@ -1,1 +1,21 @@
-export {}
+// Types (generated from JSON Schema + manual additions)
+export type {
+  FlowprintDocument,
+  Lane,
+  Node,
+  ActionNode,
+  SwitchNode,
+  ParallelNode,
+  WaitNode,
+  ErrorNode,
+  TerminalNode,
+  EntryPoint,
+  ErrorHandler,
+  ValidationResult,
+  ValidationError,
+  OrderedNode,
+  Edge,
+} from './types.js'
+
+// Validation
+export { validate, validateYaml, SUPPORTED_VERSIONS, NODE_TYPES } from './validate.js'

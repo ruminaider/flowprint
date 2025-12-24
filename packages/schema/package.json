@@ -19,21 +19,28 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "flowprint.schema.json"
   ],
   "engines": {
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "tsup",
+    "generate:types": "json2ts flowprint.schema.json src/types.generated.ts",
+    "build": "pnpm run generate:types && tsup",
     "test": "vitest run",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
+    "json-schema-to-typescript": "^15.0.4",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "yaml": "^2.8.2"
+  }
 }
