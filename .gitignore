@@ -38,5 +38,3 @@ blob-report/
 
 # TypeScript build info
 *.tsbuildinfo
-.worktrees/
-docs/plans/

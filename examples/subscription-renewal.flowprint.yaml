@@ -1,0 +1,136 @@
+schema: flowprint/1.0
+name: subscription-renewal
+version: '1.0.0'
+description: Subscription renewal flow handling active, expired, and cancelled states
+
+lanes:
+  customer:
+    label: Customer-Facing
+    visibility: external
+    order: 0
+  backend:
+    label: Backend Services
+    visibility: internal
+    order: 1
+
+nodes:
+  request_renewal:
+    type: action
+    lane: customer
+    label: Request Renewal
+    description: Customer initiates a subscription renewal
+    entry_points:
+      - file: backend/subscriptions/api.py
+        symbol: handle_renewal_request
+    next: check_subscription_status
+
+  check_subscription_status:
+    type: action
+    lane: backend
+    label: Check Subscription Status
+    entry_points:
+      - file: backend/subscriptions/service.py
+        symbol: get_subscription_status
+    next: route_by_status
+
+  route_by_status:
+    type: switch
+    lane: backend
+    label: Route by Subscription Status
+    description: Determine next step based on current subscription state
+    cases:
+      - when: active
+        next: process_renewal_payment
+      - when: expired
+        next: send_reactivation_offer
+      - when: cancelled
+        next: send_cancellation_confirmation
+    default: process_renewal_payment
+
+  process_renewal_payment:
+    type: action
+    lane: backend
+    label: Process Renewal Payment
+    entry_points:
+      - file: backend/billing/service.py
+        symbol: charge_renewal
+    next: await_payment_confirmation
+    error:
+      retry:
+        limit: 2
+        backoff: linear
+      catch: payment_failed
+
+  await_payment_confirmation:
+    type: wait
+    lane: backend
+    label: Await Payment Confirmation
+    event: payment.confirmed
+    timeout: 30m
+    next: renewal_success
+    timeout_next: payment_failed
+
+  renewal_success:
+    type: terminal
+    lane: customer
+    label: Renewal Successful
+    outcome: success
+
+  payment_failed:
+    type: error
+    lane: customer
+    label: Payment Failed
+    entry_points:
+      - file: backend/notifications/service.py
+        symbol: send_payment_failure_notice
+    next: renewal_failed
+
+  renewal_failed:
+    type: terminal
+    lane: customer
+    label: Renewal Failed
+    outcome: failure
+
+  send_reactivation_offer:
+    type: action
+    lane: customer
+    label: Send Reactivation Offer
+    entry_points:
+      - file: backend/notifications/service.py
+        symbol: send_reactivation_email
+    next: await_reactivation_response
+
+  await_reactivation_response:
+    type: wait
+    lane: customer
+    label: Await Reactivation Response
+    event: reactivation.response_received
+    timeout: 7d
+    next: route_reactivation_response
+    timeout_next: renewal_failed
+
+  route_reactivation_response:
+    type: switch
+    lane: backend
+    label: Route Reactivation Response
+    cases:
+      - when: accepted
+        next: process_renewal_payment
+      - when: declined
+        next: renewal_failed
+    default: renewal_failed
+
+  send_cancellation_confirmation:
+    type: action
+    lane: customer
+    label: Send Cancellation Confirmation
+    entry_points:
+      - file: backend/notifications/service.py
+        symbol: send_cancellation_notice
+    next: cancelled_terminal
+
+  cancelled_terminal:
+    type: terminal
+    lane: customer
+    label: Subscription Cancelled
+    outcome: failure
