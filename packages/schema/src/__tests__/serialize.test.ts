@@ -479,5 +479,22 @@ describe('serialize', () => {
       expect(parsed.version).toBe('1.0.0')
       expect(typeof parsed.version).toBe('string')
     })
+
+    it('preserves YAML-reserved strings in metadata through round-trip', () => {
+      const doc = makeDoc({
+        metadata: { flag: 'true', empty: 'null', answer: 'yes', count: '1.0' },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      // All values must survive as strings, not booleans/numbers/null
+      expect(parsed.metadata?.flag).toBe('true')
+      expect(typeof parsed.metadata?.flag).toBe('string')
+      expect(parsed.metadata?.empty).toBe('null')
+      expect(typeof parsed.metadata?.empty).toBe('string')
+      expect(parsed.metadata?.answer).toBe('yes')
+      expect(typeof parsed.metadata?.answer).toBe('string')
+      expect(parsed.metadata?.count).toBe('1.0')
+      expect(typeof parsed.metadata?.count).toBe('string')
+    })
   })
 })

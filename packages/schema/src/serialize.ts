@@ -215,16 +215,9 @@ function serializeOrderedMap(
 
 /**
  * Create a YAML scalar with appropriate type handling.
- * Uses PLAIN style by default (unquoted), only quoting when required.
+ * Lets the yaml library auto-detect quoting for round-trip safety
+ * (e.g., 'true', 'null', '1.0' must be quoted to preserve string type).
  */
 function createScalar(value: unknown): Scalar {
-  if (typeof value === 'string') {
-    const scalar = new Scalar(value)
-    // Let the yaml library decide if quoting is needed
-    // by defaulting to PLAIN
-    scalar.type = Scalar.PLAIN
-    return scalar
-  }
-
   return new Scalar(value)
 }
