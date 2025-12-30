@@ -32,16 +32,14 @@ Every node is keyed by its ID (snake_case convention, e.g. `create_prescription`
 
 ### Common Fields (all node types)
 
-| Field          | Type                      | Required | Description                                  |
-|----------------|---------------------------|----------|----------------------------------------------|
-| `type`         | enum                      | yes      | One of the 6 node types listed below.        |
-| `lane`         | string                    | yes      | Lane ID this node belongs to.                |
-| `label`        | string                    | yes      | Human-readable display name.                 |
-| `description`  | string                    | no       | Longer description of what this node does.   |
-| `metadata`     | map\<string,string>       | no       | Arbitrary key-value pairs.                   |
-| `entry_points` | EntryPoint[]              | no       | Code locations that implement this node.     |
-
-**Note:** `description` and `entry_points` are available on all node types except `terminal`, which does not support `description` or `entry_points`.
+| Field          | Type                      | Required | Description                                                |
+|----------------|---------------------------|----------|------------------------------------------------------------|
+| `type`         | enum                      | yes      | One of the 6 node types listed below.                      |
+| `lane`         | string                    | yes      | Lane ID this node belongs to.                              |
+| `label`        | string                    | yes      | Human-readable display name.                               |
+| `description`  | string                    | no       | Longer description of what this node does. Not on terminal.|
+| `metadata`     | map\<string,string>       | no       | Arbitrary key-value pairs.                                 |
+| `entry_points` | EntryPoint[]              | no       | Code locations that implement this node. Not on terminal.  |
 
 ### EntryPoint
 

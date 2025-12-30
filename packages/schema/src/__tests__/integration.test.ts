@@ -17,7 +17,7 @@ import {
   isErrorNode,
   isTerminalNode,
 } from '../index.js'
-import type { FlowprintDocument, Node } from '../types.js'
+import type { FlowprintDocument } from '../types.js'
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -208,11 +208,12 @@ describe('integration: type guards on example nodes', () => {
     const doc = loadExample('prescription-fulfillment.flowprint.yaml')
 
     it('identifies action nodes', () => {
-      const node = doc.nodes['complete_consultation']!
-      expect(isActionNode(node)).toBe(true)
-      expect(isSwitchNode(node)).toBe(false)
-      expect(isTerminalNode(node)).toBe(false)
-      if (isActionNode(node)) {
+      const node = doc.nodes['complete_consultation']
+      expect(node).toBeDefined()
+      expect(isActionNode(node!)).toBe(true)
+      expect(isSwitchNode(node!)).toBe(false)
+      expect(isTerminalNode(node!)).toBe(false)
+      if (isActionNode(node!)) {
         expect(node.next).toBe('evaluate_treatment')
         expect(node.entry_points).toBeDefined()
         expect(node.entry_points!.length).toBeGreaterThan(0)
@@ -222,70 +223,77 @@ describe('integration: type guards on example nodes', () => {
     })
 
     it('identifies switch nodes', () => {
-      const node = doc.nodes['evaluate_treatment']!
-      expect(isSwitchNode(node)).toBe(true)
-      expect(isActionNode(node)).toBe(false)
-      if (isSwitchNode(node)) {
-        expect(node.cases.length).toBe(2)
-        expect(node.cases[0]!.when).toBe('needs_prescription')
-        expect(node.default).toBe('create_prescription')
+      const node = doc.nodes['evaluate_treatment']
+      expect(node).toBeDefined()
+      expect(isSwitchNode(node!)).toBe(true)
+      expect(isActionNode(node!)).toBe(false)
+      if (isSwitchNode(node!)) {
+        expect(node!.cases.length).toBe(2)
+        expect(node!.cases[0]!.when).toBe('needs_prescription')
+        expect(node!.default).toBe('create_prescription')
       }
     })
 
     it('identifies parallel nodes', () => {
-      const node = doc.nodes['fulfill_order']!
-      expect(isParallelNode(node)).toBe(true)
-      if (isParallelNode(node)) {
-        expect(node.branches).toContain('submit_to_pharmacy')
-        expect(node.branches).toContain('notify_patient')
-        expect(node.join).toBe('delivery_tracking')
-        expect(node.join_strategy).toBe('all_reached')
+      const node = doc.nodes['fulfill_order']
+      expect(node).toBeDefined()
+      expect(isParallelNode(node!)).toBe(true)
+      if (isParallelNode(node!)) {
+        expect(node!.branches).toContain('submit_to_pharmacy')
+        expect(node!.branches).toContain('notify_patient')
+        expect(node!.join).toBe('delivery_tracking')
+        expect(node!.join_strategy).toBe('all_reached')
       }
     })
 
     it('identifies wait nodes', () => {
-      const node = doc.nodes['delivery_tracking']!
-      expect(isWaitNode(node)).toBe(true)
-      if (isWaitNode(node)) {
-        expect(node.event).toBe('delivery.confirmed')
-        expect(node.timeout).toBe('7d')
-        expect(node.next).toBe('order_complete')
-        expect(node.timeout_next).toBe('order_failed')
+      const node = doc.nodes['delivery_tracking']
+      expect(node).toBeDefined()
+      expect(isWaitNode(node!)).toBe(true)
+      if (isWaitNode(node!)) {
+        expect(node!.event).toBe('delivery.confirmed')
+        expect(node!.timeout).toBe('7d')
+        expect(node!.next).toBe('order_complete')
+        expect(node!.timeout_next).toBe('order_failed')
       }
     })
 
     it('identifies error nodes', () => {
-      const node = doc.nodes['pharmacy_submission_failed']!
-      expect(isErrorNode(node)).toBe(true)
-      if (isErrorNode(node)) {
-        expect(node.next).toBe('order_failed')
-        expect(node.entry_points).toBeDefined()
+      const node = doc.nodes['pharmacy_submission_failed']
+      expect(node).toBeDefined()
+      expect(isErrorNode(node!)).toBe(true)
+      if (isErrorNode(node!)) {
+        expect(node!.next).toBe('order_failed')
+        expect(node!.entry_points).toBeDefined()
       }
     })
 
     it('identifies terminal nodes', () => {
-      const node = doc.nodes['order_complete']!
-      expect(isTerminalNode(node)).toBe(true)
-      if (isTerminalNode(node)) {
+      const node = doc.nodes['order_complete']
+      expect(node).toBeDefined()
+      expect(isTerminalNode(node!)).toBe(true)
+      if (isTerminalNode(node!)) {
         expect(node.outcome).toBe('success')
       }
 
-      const failNode = doc.nodes['order_failed']!
-      expect(isTerminalNode(failNode)).toBe(true)
-      if (isTerminalNode(failNode)) {
-        expect(failNode.outcome).toBe('failure')
+      const failNode = doc.nodes['order_failed']
+      expect(failNode).toBeDefined()
+      expect(isTerminalNode(failNode!)).toBe(true)
+      if (isTerminalNode(failNode!)) {
+        expect(failNode!.outcome).toBe('failure')
       }
     })
 
     it('checks error handler with retry', () => {
-      const node = doc.nodes['submit_to_pharmacy']!
-      expect(isActionNode(node)).toBe(true)
-      if (isActionNode(node)) {
-        expect(node.error).toBeDefined()
-        expect(node.error!.retry).toBeDefined()
-        expect(node.error!.retry!.limit).toBe(3)
-        expect(node.error!.retry!.backoff).toBe('exponential')
-        expect(node.error!.catch).toBe('pharmacy_submission_failed')
+      const node = doc.nodes['submit_to_pharmacy']
+      expect(node).toBeDefined()
+      expect(isActionNode(node!)).toBe(true)
+      if (isActionNode(node!)) {
+        expect(node!.error).toBeDefined()
+        expect(node!.error!.retry).toBeDefined()
+        expect(node!.error!.retry!.limit).toBe(3)
+        expect(node!.error!.retry!.backoff).toBe('exponential')
+        expect(node!.error!.catch).toBe('pharmacy_submission_failed')
       }
     })
   })
@@ -303,7 +311,7 @@ describe('integration: type guards on example nodes', () => {
         isTerminalNode,
       ] as const
 
-      for (const [nodeId, node] of Object.entries(doc.nodes)) {
+      for (const [_nodeId, node] of Object.entries(doc.nodes)) {
         const matches = guards.filter((g) => g(node))
         expect(matches.length).toBe(1)
       }
@@ -352,11 +360,12 @@ describe('integration: type guards on example nodes', () => {
     })
 
     it('parallel node has correct structure', () => {
-      const node = doc.nodes['route_specialist_consults']!
-      expect(isParallelNode(node)).toBe(true)
-      if (isParallelNode(node)) {
-        expect(node.branches.length).toBe(2)
-        expect(node.join).toBe('conduct_consultation')
+      const node = doc.nodes['route_specialist_consults']
+      expect(node).toBeDefined()
+      expect(isParallelNode(node!)).toBe(true)
+      if (isParallelNode(node!)) {
+        expect(node!.branches.length).toBe(2)
+        expect(node!.join).toBe('conduct_consultation')
       }
     })
   })
