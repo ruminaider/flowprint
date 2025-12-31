@@ -38,3 +38,6 @@ blob-report/
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Git worktrees
+.worktrees/
