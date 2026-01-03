@@ -1,0 +1,251 @@
+/* Flowprint Editor Styles */
+
+.fp-viewer {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ---- Node base styles ---- */
+
+.fp-node {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  min-width: 160px;
+  max-width: 200px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.fp-node-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.fp-node-label {
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Action Node (4A.4) ---- */
+
+.fp-node-action {
+  border-radius: 8px;
+}
+
+.fp-entry-badge {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  flex-shrink: 0;
+}
+
+/* ---- Switch Node (4A.5) ---- */
+
+.fp-node-switch {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 2px;
+  transform: rotate(0deg);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  min-height: 80px;
+}
+
+.fp-node-diamond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.fp-node-switch .fp-node-label {
+  font-size: 11px;
+}
+
+/* ---- Parallel Node (4A.6) ---- */
+
+.fp-node-parallel {
+  background: #f0fdf4;
+  border: 2px solid #22c55e;
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+
+.fp-parallel-bars {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 6px;
+}
+
+.fp-parallel-bar {
+  width: 100%;
+  height: 3px;
+  background: #22c55e;
+  border-radius: 1px;
+}
+
+/* ---- Wait Node (4A.7) ---- */
+
+.fp-node-wait {
+  background: #fefce8;
+  border: 2px solid #eab308;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.fp-wait-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fp-wait-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fp-wait-event {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.fp-wait-timeout {
+  font-size: 10px;
+  color: #92400e;
+  font-style: italic;
+}
+
+/* ---- Error Node (4A.8) ---- */
+
+.fp-node-error {
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  padding: 20px 30px;
+  min-width: 160px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fp-node-error .fp-node-label {
+  color: #dc2626;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---- Terminal Node (4A.9) ---- */
+
+.fp-node-terminal {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.fp-node-terminal-success {
+  background: #dcfce7;
+  border: 2px solid #22c55e;
+}
+
+.fp-node-terminal-failure {
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+}
+
+.fp-node-terminal .fp-node-label {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.fp-node-terminal-success .fp-node-label {
+  color: #166534;
+}
+
+.fp-node-terminal-failure .fp-node-label {
+  color: #dc2626;
+}
+
+/* ---- Edge labels (4A.10) ---- */
+
+.fp-edge-label {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.fp-edge-label-error {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.fp-edge-label-default {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* ---- Lane backgrounds (4A.2) ---- */
+
+.fp-lane-backgrounds {
+  z-index: -1;
+}
+
+.fp-lane-label {
+  z-index: 1;
+}
+
+/* ---- Line of Visibility (4A.3) ---- */
+
+.fp-line-of-visibility {
+  z-index: 0;
+}
+
+/* ---- React Flow overrides ---- */
+
+.fp-viewer .react-flow__node {
+  cursor: default;
+}
+
+.fp-viewer .react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background: #9ca3af;
+  border: 1px solid #6b7280;
+}
+
+.fp-viewer .react-flow__minimap {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+}

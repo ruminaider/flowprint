@@ -29,22 +29,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.2.0",
-    "@ruminaider/flowprint-schema": "workspace:*",
-    "chalk": "^5.6.2",
-    "commander": "^14.0.3",
-    "glob": "^13.0.1",
-    "tree-sitter-javascript": "0.25.0",
-    "tree-sitter-python": "0.25.0",
-    "tree-sitter-typescript": "0.23.2",
-    "web-tree-sitter": "0.25.3",
-    "yaml": "^2.8.2"
+    "@ruminaider/flowprint-schema": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
     "tsup": "^8.3.6",
-    "typescript": "^5.7.3",
-    "vitest": "^4.0.18"
+    "typescript": "^5.7.3"
   },
   "license": "MIT"
 }

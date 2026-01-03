@@ -8,6 +8,7 @@ export default defineConfig({
     react(),
     dts({
       insertTypesEntry: true,
+      exclude: ['src/stories/**', 'src/**/*.test.*', 'src/**/*.stories.*'],
     }),
   ],
   build: {
@@ -17,8 +18,16 @@ export default defineConfig({
       fileName: 'index',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@ruminaider/flowprint-schema'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@ruminaider/flowprint-schema',
+        '@xyflow/react',
+        '@xyflow/system',
+      ],
     },
     sourcemap: true,
+    cssCodeSplit: false,
   },
 })
