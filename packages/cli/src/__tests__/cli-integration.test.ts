@@ -6,6 +6,7 @@ import { existsSync, unlinkSync } from 'node:fs'
 const CLI = resolve(__dirname, '../../dist/index.js')
 const ROOT = resolve(__dirname, '../../../..')
 const EXAMPLES = resolve(ROOT, 'examples')
+const FIXTURES = resolve(__dirname, 'fixtures')
 
 function run(
   args: string[],
@@ -66,6 +67,20 @@ describe('CLI integration', () => {
       const { exitCode } = run(['lint', 'no-match-*.yaml'])
       expect(exitCode).toBe(2)
     })
+
+    it('should respect custom .flowprintrc.yaml config via --config', () => {
+      const configPath = resolve(FIXTURES, '.flowprintrc.yaml')
+      const { stdout, exitCode } = run([
+        'lint',
+        `${EXAMPLES}/*.flowprint.yaml`,
+        '--config',
+        configPath,
+      ])
+      // The custom config sets require-description to error, so example files
+      // without descriptions on all action nodes should trigger errors
+      expect(stdout).toContain('require-description')
+      expect(exitCode).toBe(1)
+    })
   })
 
   describe('flowprint diff', () => {
@@ -87,6 +102,16 @@ describe('CLI integration', () => {
       ])
       expect(exitCode).toBe(0)
       expect(stdout).toContain('No structural differences found')
+    })
+
+    it('should exit 0 even when a file cannot be read', () => {
+      const { exitCode } = run([
+        'diff',
+        'nonexistent-file.yaml',
+        `${EXAMPLES}/prescription-fulfillment.flowprint.yaml`,
+      ])
+      // Per spec, diff always exits 0 (informational command)
+      expect(exitCode).toBe(0)
     })
   })
 

@@ -18,14 +18,14 @@ export const diffCommand = new Command('diff')
       doc1 = parse(readFileSync(resolve(file1), 'utf-8')) as FlowprintDocument
     } catch {
       console.error(chalk.red(`Failed to read or parse: ${file1}`))
-      process.exit(2)
+      return
     }
 
     try {
       doc2 = parse(readFileSync(resolve(file2), 'utf-8')) as FlowprintDocument
     } catch {
       console.error(chalk.red(`Failed to read or parse: ${file2}`))
-      process.exit(2)
+      return
     }
 
     const changes = computeDiff(doc1, doc2)

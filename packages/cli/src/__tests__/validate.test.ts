@@ -33,9 +33,9 @@ describe('flowprint validate', () => {
     expect(exitCode).toBe(2)
   })
 
-  it('should exit 1 for invalid YAML content', () => {
-    const { exitCode } = run(['validate', `${resolve(__dirname, 'fixtures/invalid.flowprint.yaml')}`])
-    // File doesn't exist, so exit 2
-    expect(exitCode).toBe(2)
+  it('should exit 1 for invalid blueprint with dangling references', () => {
+    const { stdout, exitCode } = run(['validate', `${resolve(__dirname, 'fixtures/invalid.flowprint.yaml')}`])
+    expect(exitCode).toBe(1)
+    expect(stdout).toContain('FAIL')
   })
 })
