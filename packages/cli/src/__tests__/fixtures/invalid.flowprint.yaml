@@ -1,0 +1,27 @@
+schema: flowprint/1.0
+name: invalid-example
+version: '1.0.0'
+lanes:
+  frontstage:
+    label: Frontstage
+    visibility: external
+    order: 0
+nodes:
+  start_action:
+    type: action
+    lane: frontstage
+    label: Start Action
+    next: nonexistent_node
+  check_status:
+    type: switch
+    lane: nonexistent_lane
+    label: Check Status
+    cases:
+      - when: approved
+        next: dangling_ref
+    default: end
+  end:
+    type: terminal
+    lane: frontstage
+    label: End
+    outcome: success

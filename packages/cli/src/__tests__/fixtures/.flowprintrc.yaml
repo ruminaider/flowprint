@@ -1,0 +1,5 @@
+rules:
+  node-naming: error
+  lane-ordering: warn
+  require-description: error
+  no-empty-branches: off
