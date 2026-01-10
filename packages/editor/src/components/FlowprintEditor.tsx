@@ -18,6 +18,13 @@ import { useConnectionHandler } from '../hooks/useConnectionHandler'
 import { useDeleteHandler } from '../hooks/useDeleteHandler'
 import { useAddNode } from '../hooks/useAddNode'
 import { useLaneSnap } from '../hooks/useLaneSnap'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { NodePalette } from './NodePalette'
+import { SwitchConditionPopover } from './SwitchConditionPopover'
+import { DeleteConfirmation } from './DeleteConfirmation'
+import { ErrorBoundary } from './ErrorBoundary'
+import { PropertiesPanel } from '../panels/PropertiesPanel'
+import { LanePanel } from '../panels/LanePanel'
 
 export interface FlowprintEditorProps {
   value: FlowprintDocument
@@ -59,6 +66,26 @@ export function FlowprintEditor({
   const addNode = useAddNode(state, layout.lanes)
   const laneSnap = useLaneSnap(layout.lanes)
 
+  // --- Selection ---
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+
+  // --- Keyboard shortcuts ---
+  useKeyboardShortcuts({
+    undo: state.undo,
+    redo: state.redo,
+    deleteSelected: () => {
+      if (selectedNodeId) {
+        const node = state.doc.nodes[selectedNodeId]
+        if (node) {
+          deleteHandler.onNodesDelete([{ id: selectedNodeId } as import('@xyflow/react').Node])
+        }
+      }
+    },
+    selectAll: () => {}, // no-op for now
+    deselect: () => setSelectedNodeId(null),
+    disabled: readOnly,
+  })
+
   // --- Validation ---
   const [validation, setValidation] = useState<ValidationResult>(() =>
     validate(state.doc),
@@ -78,6 +105,7 @@ export function FlowprintEditor({
   const proOptions = useMemo(() => ({ hideAttribution: true }), [])
 
   return (
+    <ErrorBoundary doc={state.doc}>
     <div
       className={`fp-editor ${className ?? ''}`}
       style={{
@@ -102,6 +130,10 @@ export function FlowprintEditor({
         onDrop={readOnly ? undefined : addNode.onDrop}
         onDragOver={readOnly ? undefined : addNode.onDragOver}
         onNodeDragStop={readOnly ? undefined : laneSnap.onNodeDragStop}
+        onSelectionChange={readOnly ? undefined : ({ nodes }) => {
+          setSelectedNodeId(nodes.length === 1 ? nodes[0]?.id ?? null : null)
+        }}
+        onNodeClick={readOnly ? undefined : (_, node) => setSelectedNodeId(node.id)}
         panOnDrag
         zoomOnScroll
         zoomOnPinch
@@ -124,6 +156,40 @@ export function FlowprintEditor({
           onDismiss={() => setBannerDismissed(true)}
         />
       )}
+      {!readOnly && <NodePalette />}
+      {!readOnly && (
+        <PropertiesPanel
+          selectedNodeId={selectedNodeId}
+          doc={state.doc}
+          onUpdateNode={state.updateNode}
+          lanes={state.doc.lanes}
+        />
+      )}
+      {!readOnly && (
+        <LanePanel
+          doc={state.doc}
+          onAddLane={state.addLane}
+          onUpdateLane={state.updateLane}
+          onRemoveLane={state.removeLane}
+          onReorderLanes={state.reorderLanes}
+        />
+      )}
+      {connectionHandler.pendingSwitchConnection && (
+        <SwitchConditionPopover
+          connection={connectionHandler.pendingSwitchConnection}
+          onConfirm={connectionHandler.confirmSwitchConnection}
+          onCancel={connectionHandler.cancelSwitchConnection}
+        />
+      )}
+      {deleteHandler.pendingDeletion && (
+        <DeleteConfirmation
+          nodeId={deleteHandler.pendingDeletion.id}
+          connectionCount={deleteHandler.pendingDeletion.connectionCount}
+          onConfirm={deleteHandler.confirmDeletion}
+          onCancel={deleteHandler.cancelDeletion}
+        />
+      )}
     </div>
+    </ErrorBoundary>
   )
 }

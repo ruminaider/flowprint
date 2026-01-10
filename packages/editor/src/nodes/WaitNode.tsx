@@ -1,21 +1,24 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { WaitNode as WaitNodeType } from '@ruminaider/flowprint-schema'
+import { UnassignedBadge } from '../components/UnassignedBadge'
 
 interface WaitNodeData {
   label: string
   nodeData: WaitNodeType
   laneColor: string
+  isUnassigned?: boolean
 }
 
-function WaitNodeRenderer({ data }: NodeProps) {
-  const { label, nodeData, laneColor } = data as unknown as WaitNodeData
+function WaitNodeRenderer({ data, selected }: NodeProps) {
+  const { label, nodeData, laneColor, isUnassigned } = data as unknown as WaitNodeData
 
   return (
     <div
-      className="fp-node fp-node-wait"
+      className={`fp-node fp-node-wait${selected ? ' fp-node-selected' : ''}${isUnassigned ? ' fp-node-unassigned' : ''}`}
       style={{
         borderColor: laneColor,
+        position: 'relative',
       }}
     >
       <Handle type="target" position={Position.Left} />
@@ -30,6 +33,7 @@ function WaitNodeRenderer({ data }: NodeProps) {
         </div>
       </div>
       <Handle type="source" position={Position.Right} />
+      <UnassignedBadge visible={isUnassigned ?? false} />
     </div>
   )
 }

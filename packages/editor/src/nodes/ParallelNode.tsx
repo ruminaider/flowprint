@@ -1,19 +1,22 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { UnassignedBadge } from '../components/UnassignedBadge'
 
 interface ParallelNodeData {
   label: string
   laneColor: string
+  isUnassigned?: boolean
 }
 
-function ParallelNodeRenderer({ data }: NodeProps) {
-  const { label, laneColor } = data as unknown as ParallelNodeData
+function ParallelNodeRenderer({ data, selected }: NodeProps) {
+  const { label, laneColor, isUnassigned } = data as unknown as ParallelNodeData
 
   return (
     <div
-      className="fp-node fp-node-parallel"
+      className={`fp-node fp-node-parallel${selected ? ' fp-node-selected' : ''}${isUnassigned ? ' fp-node-unassigned' : ''}`}
       style={{
         borderColor: laneColor,
+        position: 'relative',
       }}
     >
       <Handle type="target" position={Position.Left} />
@@ -23,6 +26,7 @@ function ParallelNodeRenderer({ data }: NodeProps) {
         <div className="fp-parallel-bar fp-parallel-bar-bottom" />
       </div>
       <Handle type="source" position={Position.Right} />
+      <UnassignedBadge visible={isUnassigned ?? false} />
     </div>
   )
 }

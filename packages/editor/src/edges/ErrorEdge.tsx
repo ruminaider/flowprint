@@ -20,6 +20,7 @@ function ErrorEdge(props: EdgeProps) {
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={20}
         style={{
           stroke: '#ef4444',
           strokeWidth: 1.5,

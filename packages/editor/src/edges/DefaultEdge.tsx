@@ -20,6 +20,7 @@ function DefaultEdge(props: EdgeProps) {
       <BaseEdge
         path={edgePath}
         markerEnd={markerEnd}
+        interactionWidth={20}
         style={{
           stroke: '#6b7280',
           strokeWidth: 3,
