@@ -199,6 +199,8 @@ export function useFlowprintState(
   const [doc, setDocState] = useState<FlowprintDocument>(() => structuredClone(initialDoc))
   const pastRef = useRef<FlowprintDocument[]>([])
   const futureRef = useRef<FlowprintDocument[]>([])
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
   // -----------------------------------------------------------------------
   // Core mutation helper
@@ -217,6 +219,9 @@ export function useFlowprintState(
         }
         // Clear future
         futureRef.current = []
+
+        setCanUndo(true)
+        setCanRedo(false)
 
         onChange?.(draft)
         return draft
@@ -252,7 +257,7 @@ export function useFlowprintState(
   const removeNode = useCallback(
     (id: string) => {
       commit((draft) => {
-        delete draft.nodes[id]
+        Reflect.deleteProperty(draft.nodes, id)
         purgeNodeReferences(draft.nodes, id)
       })
     },
@@ -312,7 +317,7 @@ export function useFlowprintState(
   const removeLane = useCallback(
     (id: string) => {
       commit((draft) => {
-        delete draft.lanes[id]
+        Reflect.deleteProperty(draft.lanes, id)
       })
     },
     [commit],
@@ -322,7 +327,8 @@ export function useFlowprintState(
     (orderedIds: string[]) => {
       commit((draft) => {
         for (let i = 0; i < orderedIds.length; i++) {
-          const id = orderedIds[i]!
+          const id = orderedIds[i]
+          if (!id) continue
           const lane = draft.lanes[id]
           if (lane) {
             lane.order = i
@@ -344,6 +350,8 @@ export function useFlowprintState(
 
       pastRef.current = pastRef.current.slice(0, -1)
       futureRef.current = [...futureRef.current, current]
+      setCanUndo(pastRef.current.length > 0)
+      setCanRedo(true)
       onChange?.(prev)
       return prev
     })
@@ -356,6 +364,8 @@ export function useFlowprintState(
 
       futureRef.current = futureRef.current.slice(0, -1)
       pastRef.current = [...pastRef.current, current]
+      setCanUndo(true)
+      setCanRedo(futureRef.current.length > 0)
       onChange?.(next)
       return next
     })
@@ -386,8 +396,8 @@ export function useFlowprintState(
     reorderLanes,
     undo,
     redo,
-    canUndo: pastRef.current.length > 0,
-    canRedo: futureRef.current.length > 0,
+    canUndo,
+    canRedo,
     setDoc,
   }
 }

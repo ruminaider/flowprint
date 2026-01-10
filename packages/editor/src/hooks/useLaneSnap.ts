@@ -20,8 +20,9 @@ export function snapToLane(
   const sorted = [...lanes].sort((a, b) => a.y - b.y)
 
   // Check if y is above the first lane or below the last lane
-  const first = sorted[0]!
-  const last = sorted[sorted.length - 1]!
+  const first = sorted[0]
+  const last = sorted[sorted.length - 1]
+  if (!first || !last) return null
 
   if (y < first.y || y >= last.y + last.height) {
     return null

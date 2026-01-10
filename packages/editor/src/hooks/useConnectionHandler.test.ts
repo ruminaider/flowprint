@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method -- mock functions are not class methods */
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type { Connection } from '@xyflow/react'
@@ -127,7 +128,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('a', 'b')))
+    act(() => { result.current.onConnect(connection('a', 'b')); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('a', 'b', { type: 'next' })
   })
@@ -140,7 +141,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('w', 'b')))
+    act(() => { result.current.onConnect(connection('w', 'b')); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('w', 'b', { type: 'next' })
   })
@@ -153,7 +154,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('e', 'b')))
+    act(() => { result.current.onConnect(connection('e', 'b')); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('e', 'b', { type: 'next' })
   })
@@ -166,7 +167,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('p', 'b')))
+    act(() => { result.current.onConnect(connection('p', 'b')); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('p', 'b', {
       type: 'parallel_branch',
@@ -181,7 +182,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('sw', 'b')))
+    act(() => { result.current.onConnect(connection('sw', 'b')); })
 
     expect(state.connectNodes).not.toHaveBeenCalled()
     expect(result.current.pendingSwitchConnection).toEqual({
@@ -198,7 +199,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('a', 'a')))
+    act(() => { result.current.onConnect(connection('a', 'a')); })
 
     expect(state.connectNodes).not.toHaveBeenCalled()
   })
@@ -211,7 +212,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('t', 'b')))
+    act(() => { result.current.onConnect(connection('t', 'b')); })
 
     expect(state.connectNodes).not.toHaveBeenCalled()
   })
@@ -222,7 +223,7 @@ describe('onConnect', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('missing', 'b')))
+    act(() => { result.current.onConnect(connection('missing', 'b')); })
 
     expect(state.connectNodes).not.toHaveBeenCalled()
   })
@@ -312,11 +313,11 @@ describe('confirmSwitchConnection', () => {
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
     // First set up pending connection
-    act(() => result.current.onConnect(connection('sw', 'b')))
+    act(() => { result.current.onConnect(connection('sw', 'b')); })
     expect(result.current.pendingSwitchConnection).not.toBeNull()
 
     // Confirm with a case condition
-    act(() => result.current.confirmSwitchConnection('approved'))
+    act(() => { result.current.confirmSwitchConnection('approved'); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('sw', 'b', {
       type: 'switch_case',
@@ -333,8 +334,8 @@ describe('confirmSwitchConnection', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('sw', 'b')))
-    act(() => result.current.confirmSwitchConnection('ignored', true))
+    act(() => { result.current.onConnect(connection('sw', 'b')); })
+    act(() => { result.current.confirmSwitchConnection('ignored', true); })
 
     expect(state.connectNodes).toHaveBeenCalledWith('sw', 'b', {
       type: 'switch_default',
@@ -348,7 +349,7 @@ describe('confirmSwitchConnection', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.confirmSwitchConnection('test'))
+    act(() => { result.current.confirmSwitchConnection('test'); })
 
     expect(state.connectNodes).not.toHaveBeenCalled()
   })
@@ -367,10 +368,10 @@ describe('cancelSwitchConnection', () => {
 
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
-    act(() => result.current.onConnect(connection('sw', 'b')))
+    act(() => { result.current.onConnect(connection('sw', 'b')); })
     expect(result.current.pendingSwitchConnection).not.toBeNull()
 
-    act(() => result.current.cancelSwitchConnection())
+    act(() => { result.current.cancelSwitchConnection(); })
     expect(result.current.pendingSwitchConnection).toBeNull()
   })
 
@@ -381,7 +382,7 @@ describe('cancelSwitchConnection', () => {
     const { result } = renderHook(() => useConnectionHandler(state, doc))
 
     expect(result.current.pendingSwitchConnection).toBeNull()
-    act(() => result.current.cancelSwitchConnection())
+    act(() => { result.current.cancelSwitchConnection(); })
     expect(result.current.pendingSwitchConnection).toBeNull()
   })
 })

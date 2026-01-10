@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- test assertions guarantee non-null */
+/* eslint-disable @typescript-eslint/unbound-method -- mock functions are not class methods */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'

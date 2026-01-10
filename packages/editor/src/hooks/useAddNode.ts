@@ -34,7 +34,7 @@ export function resetCounter(): void {
 
 function nextId(type: PaletteNodeType): string {
   counter += 1
-  return `new_${type}_${counter}`
+  return `new_${type}_${String(counter)}`
 }
 
 // ---------------------------------------------------------------------------
@@ -89,8 +89,9 @@ export function useAddNode(
     (event: React.DragEvent) => {
       event.preventDefault()
 
-      const type = event.dataTransfer.getData(NODE_TYPE_MIME) as PaletteNodeType
-      if (!type || !PALETTE_NODE_TYPES.includes(type)) return
+      const raw = event.dataTransfer.getData(NODE_TYPE_MIME)
+      if (!raw || !PALETTE_NODE_TYPES.includes(raw as PaletteNodeType)) return
+      const type = raw as PaletteNodeType
 
       const dropY = event.clientY
       const snap = snapToLane(dropY, lanes)

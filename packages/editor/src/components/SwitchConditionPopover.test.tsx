@@ -142,14 +142,14 @@ describe('SwitchConditionPopover', () => {
 
     const input = screen.getByPlaceholderText(
       "e.g., status === 'approved'",
-    ) as HTMLInputElement
+    )
 
-    expect(input.disabled).toBe(false)
+    expect((input as HTMLInputElement).disabled).toBe(false)
 
     const checkbox = screen.getByLabelText('Make Default')
     fireEvent.click(checkbox)
 
-    expect(input.disabled).toBe(true)
+    expect((input as HTMLInputElement).disabled).toBe(true)
   })
 
   it('auto-focuses condition input on mount', () => {

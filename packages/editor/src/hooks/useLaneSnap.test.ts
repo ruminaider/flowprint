@@ -63,6 +63,7 @@ describe('snapToLane', () => {
       const result = snapToLane(150, twoLanes)
       expect(result).not.toBeNull()
       // Both are dist=10; top lane is checked first (sorted by y), so top wins
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(result!.laneId).toBe('top')
     })
   })
@@ -159,6 +160,7 @@ describe('snapToLane', () => {
       // Equal distance, first in sorted order (large) wins
       const result = snapToLane(430, threeLanes)
       expect(result).not.toBeNull()
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(result!.laneId).toBe('large')
     })
 

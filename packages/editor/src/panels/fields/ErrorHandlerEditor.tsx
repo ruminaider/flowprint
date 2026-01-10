@@ -26,8 +26,11 @@ export function ErrorHandlerEditor({ error, onChange }: ErrorHandlerEditorProps)
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const limit = parseInt(e.target.value, 10)
       if (isNaN(limit)) {
-        const { retry: _, ...rest } = error ?? {}
-        onChange(Object.keys(rest).length > 0 ? rest : undefined)
+        const current = error ?? {}
+        const rest = Object.fromEntries(
+          Object.entries(current).filter(([key]) => key !== 'retry'),
+        )
+        onChange(Object.keys(rest).length > 0 ? (rest as typeof current) : undefined)
       } else {
         onChange({
           ...error,

@@ -51,23 +51,23 @@ export function SwitchCaseEditor({ cases, onChange }: SwitchCaseEditorProps) {
             type="text"
             className="fp-panel-field-input"
             value={c.when}
-            onChange={(e) => handleUpdate(i, 'when', e.target.value)}
+            onChange={(e) => { handleUpdate(i, 'when', e.target.value); }}
             placeholder="when"
-            aria-label={`Case ${i + 1} when`}
+            aria-label={`Case ${String(i + 1)} when`}
           />
           <input
             type="text"
             className="fp-panel-field-input"
             value={c.next}
-            onChange={(e) => handleUpdate(i, 'next', e.target.value)}
+            onChange={(e) => { handleUpdate(i, 'next', e.target.value); }}
             placeholder="next"
-            aria-label={`Case ${i + 1} next`}
+            aria-label={`Case ${String(i + 1)} next`}
           />
           <button
             type="button"
             className="fp-panel-remove-btn"
-            onClick={() => handleRemove(i)}
-            aria-label={`Remove case ${i + 1}`}
+            onClick={() => { handleRemove(i); }}
+            aria-label={`Remove case ${String(i + 1)}`}
           >
             x
           </button>

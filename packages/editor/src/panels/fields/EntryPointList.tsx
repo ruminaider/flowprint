@@ -47,23 +47,23 @@ export function EntryPointList({ entries, onChange }: EntryPointListProps) {
             type="text"
             className="fp-panel-field-input"
             value={ep.file}
-            onChange={(e) => handleUpdate(i, 'file', e.target.value)}
+            onChange={(e) => { handleUpdate(i, 'file', e.target.value); }}
             placeholder="file"
-            aria-label={`Entry point ${i + 1} file`}
+            aria-label={`Entry point ${String(i + 1)} file`}
           />
           <input
             type="text"
             className="fp-panel-field-input"
             value={ep.symbol}
-            onChange={(e) => handleUpdate(i, 'symbol', e.target.value)}
+            onChange={(e) => { handleUpdate(i, 'symbol', e.target.value); }}
             placeholder="symbol"
-            aria-label={`Entry point ${i + 1} symbol`}
+            aria-label={`Entry point ${String(i + 1)} symbol`}
           />
           <button
             type="button"
             className="fp-panel-remove-btn"
-            onClick={() => handleRemove(i)}
-            aria-label={`Remove entry point ${i + 1}`}
+            onClick={() => { handleRemove(i); }}
+            aria-label={`Remove entry point ${String(i + 1)}`}
           >
             x
           </button>

@@ -59,7 +59,8 @@ export function computeLayout(doc: FlowprintDocument): LayoutResult {
   let currentY = 0
 
   for (let i = 0; i < sortedLanes.length; i++) {
-    const lane = sortedLanes[i]!
+    const lane = sortedLanes[i]
+    if (!lane) continue
     const rowCount = laneRowCounts.get(lane.id) ?? 1
     const laneHeight = Math.max(
       MIN_LANE_HEIGHT,
@@ -86,8 +87,9 @@ export function computeLayout(doc: FlowprintDocument): LayoutResult {
   // Calculate line of visibility
   let lineOfVisibilityY: number | null = null
   for (let i = 0; i < lanes.length - 1; i++) {
-    const currentLane = lanes[i]!
-    const nextLane = lanes[i + 1]!
+    const currentLane = lanes[i]
+    const nextLane = lanes[i + 1]
+    if (!currentLane || !nextLane) continue
     if (currentLane.visibility === 'external' && nextLane.visibility === 'internal') {
       lineOfVisibilityY = currentLane.y + currentLane.height
       break
@@ -112,7 +114,8 @@ export function computeLayout(doc: FlowprintDocument): LayoutResult {
     const band = laneBandMap.get(on.node.lane)
     if (!band) continue
 
-    const layerSlots = laneLayerSlot.get(on.node.lane)!
+    const layerSlots = laneLayerSlot.get(on.node.lane)
+    if (!layerSlots) continue
     const slot = layerSlots.get(on.order) ?? 0
     layerSlots.set(on.order, slot + 1)
 
@@ -151,7 +154,7 @@ export function computeLayout(doc: FlowprintDocument): LayoutResult {
 }
 
 function toReactFlowEdge(edge: SchemaEdge, index: number): RFEdge {
-  const id = `e-${edge.source}-${edge.target}-${index}`
+  const id = `e-${edge.source}-${edge.target}-${String(index)}`
 
   switch (edge.type) {
     case 'error':

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { MockInstance } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -39,10 +40,10 @@ function ThrowingChild({ shouldThrow = true }: { shouldThrow?: boolean }) {
 }
 
 describe('ErrorBoundary', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
+  let consoleErrorSpy: MockInstance
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* noop */ })
   })
 
   afterEach(() => {
@@ -89,6 +90,7 @@ describe('ErrorBoundary', () => {
 
     const yamlPreview = container.querySelector('.fp-error-yaml-preview')
     expect(yamlPreview).toBeTruthy()
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(yamlPreview!.textContent).toBe('schema: flowprint/1.0\nname: test\n')
   })
 

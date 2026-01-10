@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method -- mock functions are not class methods */
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, act, cleanup } from '@testing-library/react'
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -86,7 +87,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onNodesDelete([rfNode('b')]))
+      act(() => { result.current.onNodesDelete([rfNode('b')]); })
 
       expect(state.removeNode).toHaveBeenCalledWith('b')
       expect(result.current.pendingDeletion).toBeNull()
@@ -100,7 +101,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onNodesDelete([rfNode('a')]))
+      act(() => { result.current.onNodesDelete([rfNode('a')]); })
 
       expect(state.removeNode).toHaveBeenCalledWith('a')
       expect(result.current.pendingDeletion).toBeNull()
@@ -120,7 +121,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onNodesDelete([rfNode('hub')]))
+      act(() => { result.current.onNodesDelete([rfNode('hub')]); })
 
       expect(state.removeNode).not.toHaveBeenCalled()
       expect(result.current.pendingDeletion).toEqual({
@@ -144,7 +145,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onNodesDelete([rfNode('center')]))
+      act(() => { result.current.onNodesDelete([rfNode('center')]); })
 
       expect(state.removeNode).not.toHaveBeenCalled()
       expect(result.current.pendingDeletion).toEqual({
@@ -170,11 +171,11 @@ describe('useDeleteHandler', () => {
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
       // Trigger pending state
-      act(() => result.current.onNodesDelete([rfNode('hub')]))
+      act(() => { result.current.onNodesDelete([rfNode('hub')]); })
       expect(result.current.pendingDeletion).not.toBeNull()
 
       // Confirm
-      act(() => result.current.confirmDeletion())
+      act(() => { result.current.confirmDeletion(); })
 
       expect(state.removeNode).toHaveBeenCalledWith('hub')
       expect(result.current.pendingDeletion).toBeNull()
@@ -186,7 +187,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.confirmDeletion())
+      act(() => { result.current.confirmDeletion(); })
 
       expect(state.removeNode).not.toHaveBeenCalled()
       expect(result.current.pendingDeletion).toBeNull()
@@ -208,11 +209,11 @@ describe('useDeleteHandler', () => {
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
       // Trigger pending state
-      act(() => result.current.onNodesDelete([rfNode('hub')]))
+      act(() => { result.current.onNodesDelete([rfNode('hub')]); })
       expect(result.current.pendingDeletion).not.toBeNull()
 
       // Cancel
-      act(() => result.current.cancelDeletion())
+      act(() => { result.current.cancelDeletion(); })
 
       expect(state.removeNode).not.toHaveBeenCalled()
       expect(result.current.pendingDeletion).toBeNull()
@@ -231,7 +232,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onEdgesDelete([rfEdge('e-a-b-0')]))
+      act(() => { result.current.onEdgesDelete([rfEdge('e-a-b-0')]); })
 
       expect(state.disconnectNodes).toHaveBeenCalledWith('a', 'b')
     })
@@ -249,7 +250,7 @@ describe('useDeleteHandler', () => {
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
       act(() =>
-        result.current.onEdgesDelete([rfEdge('e-a-b-0'), rfEdge('e-b-c-1')]),
+        { result.current.onEdgesDelete([rfEdge('e-a-b-0'), rfEdge('e-b-c-1')]); },
       )
 
       expect(state.disconnectNodes).toHaveBeenCalledTimes(2)
@@ -263,7 +264,7 @@ describe('useDeleteHandler', () => {
 
       const { result } = renderHook(() => useDeleteHandler(state, doc))
 
-      act(() => result.current.onEdgesDelete([rfEdge('invalid-id')]))
+      act(() => { result.current.onEdgesDelete([rfEdge('invalid-id')]); })
 
       expect(state.disconnectNodes).not.toHaveBeenCalled()
     })

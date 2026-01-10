@@ -46,9 +46,12 @@ function countConnections(doc: FlowprintDocument, nodeId: string): number {
  * and return { source, target }. Returns null if the format is unrecognised.
  */
 function parseEdgeId(edgeId: string): { source: string; target: string } | null {
-  const match = edgeId.match(/^e-(.+)-(.+)-\d+$/)
+  const match = /^e-(.+)-(.+)-\d+$/.exec(edgeId)
   if (!match) return null
-  return { source: match[1]!, target: match[2]! }
+  const source = match[1]
+  const target = match[2]
+  if (!source || !target) return null
+  return { source, target }
 }
 
 // ---------------------------------------------------------------------------

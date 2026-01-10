@@ -62,19 +62,19 @@ export function PropertiesPanel({
       <TextField
         label="Label"
         value={node.label}
-        onChange={(label) => handlePatch({ label } as Partial<Node>)}
+        onChange={(label) => { handlePatch({ label } as Partial<Node>); }}
       />
       <LaneSelector
         value={node.lane}
         lanes={lanes}
-        onChange={(lane) => handlePatch({ lane } as Partial<Node>)}
+        onChange={(lane) => { handlePatch({ lane } as Partial<Node>); }}
       />
       {!isTerminalNode(node) && (
         <TextField
           label="Description"
           value={node.description ?? ''}
           onChange={(description) =>
-            handlePatch({ description: description || undefined } as Partial<Node>)
+            { handlePatch({ description: description || undefined } as Partial<Node>); }
           }
         />
       )}
@@ -85,12 +85,12 @@ export function PropertiesPanel({
           <EntryPointList
             entries={node.entry_points ?? []}
             onChange={(entry_points) =>
-              handlePatch({ entry_points } as Partial<Node>)
+              { handlePatch({ entry_points } as Partial<Node>); }
             }
           />
           <ErrorHandlerEditor
             error={node.error}
-            onChange={(error) => handlePatch({ error } as Partial<Node>)}
+            onChange={(error) => { handlePatch({ error } as Partial<Node>); }}
           />
         </div>
       )}
@@ -100,9 +100,9 @@ export function PropertiesPanel({
           <SwitchCaseEditor
             cases={[...node.cases]}
             onChange={(cases) =>
-              handlePatch({
+              { handlePatch({
                 cases: cases as [{ when: string; next: string }, ...{ when: string; next: string }[]],
-              } as Partial<Node>)
+              } as Partial<Node>); }
             }
           />
         </div>
@@ -116,9 +116,9 @@ export function PropertiesPanel({
               className="fp-panel-field-select"
               value={node.join_strategy ?? 'all_reached'}
               onChange={(e) =>
-                handlePatch({
+                { handlePatch({
                   join_strategy: e.target.value as 'all_reached' | 'await_all',
-                } as Partial<Node>)
+                } as Partial<Node>); }
               }
               aria-label="Join Strategy"
             >
@@ -134,7 +134,7 @@ export function PropertiesPanel({
           <WaitEventEditor
             event={node.event}
             timeout={node.timeout}
-            onChange={(patch) => handlePatch(patch as Partial<Node>)}
+            onChange={(patch) => { handlePatch(patch as Partial<Node>); }}
           />
         </div>
       )}
@@ -143,7 +143,7 @@ export function PropertiesPanel({
         <div className="fp-panel-section">
           <TerminalOutcomeSelector
             outcome={node.outcome}
-            onChange={(outcome) => handlePatch({ outcome } as Partial<Node>)}
+            onChange={(outcome) => { handlePatch({ outcome } as Partial<Node>); }}
           />
         </div>
       )}

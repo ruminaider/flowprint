@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- test assertions guarantee non-null */
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type {
@@ -98,10 +99,10 @@ describe('addNode', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('step1', actionNode()))
+    act(() => { result.current.addNode('step1', actionNode()); })
 
-    expect(result.current.doc.nodes['step1']).toBeDefined()
-    expect(result.current.doc.nodes['step1']!.label).toBe('Do something')
+    expect(result.current.doc.nodes.step1).toBeDefined()
+    expect(result.current.doc.nodes.step1!.label).toBe('Do something')
   })
 
   it('does not mutate the previous document', () => {
@@ -111,10 +112,10 @@ describe('addNode', () => {
     )
 
     const docBefore = result.current.doc
-    act(() => result.current.addNode('step1', actionNode()))
+    act(() => { result.current.addNode('step1', actionNode()); })
 
-    expect(docBefore.nodes['step1']).toBeUndefined()
-    expect(result.current.doc.nodes['step1']).toBeDefined()
+    expect(docBefore.nodes.step1).toBeUndefined()
+    expect(result.current.doc.nodes.step1).toBeDefined()
   })
 })
 
@@ -129,10 +130,10 @@ describe('updateNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.updateNode('a', { label: 'Updated' }))
+    act(() => { result.current.updateNode('a', { label: 'Updated' }); })
 
-    expect(result.current.doc.nodes['a']!.label).toBe('Updated')
-    expect(result.current.doc.nodes['a']!.type).toBe('action')
+    expect(result.current.doc.nodes.a!.label).toBe('Updated')
+    expect(result.current.doc.nodes.a!.type).toBe('action')
   })
 
   it('throws for non-existent node', () => {
@@ -141,7 +142,7 @@ describe('updateNode', () => {
     )
 
     expect(() => {
-      act(() => result.current.updateNode('missing', { label: 'x' }))
+      act(() => { result.current.updateNode('missing', { label: 'x' }); })
     }).toThrow("Node 'missing' not found")
   })
 })
@@ -157,10 +158,10 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('a'))
+    act(() => { result.current.removeNode('a'); })
 
-    expect(result.current.doc.nodes['a']).toBeUndefined()
-    expect(result.current.doc.nodes['b']).toBeDefined()
+    expect(result.current.doc.nodes.a).toBeUndefined()
+    expect(result.current.doc.nodes.b).toBeDefined()
   })
 
   it('cleans up action.next references', () => {
@@ -174,9 +175,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('b'))
+    act(() => { result.current.removeNode('b'); })
 
-    const nodeA = result.current.doc.nodes['a'] as ActionNode
+    const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.next).toBeUndefined()
   })
 
@@ -191,9 +192,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('err'))
+    act(() => { result.current.removeNode('err'); })
 
-    const nodeA = result.current.doc.nodes['a'] as ActionNode
+    const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.error?.catch).toBeUndefined()
   })
 
@@ -214,11 +215,11 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('target'))
+    act(() => { result.current.removeNode('target'); })
 
-    const sw = result.current.doc.nodes['sw'] as SwitchNode
+    const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]!.next).toBe('other')
+    expect(sw.cases[0].next).toBe('other')
   })
 
   it('cleans up switch.default references', () => {
@@ -232,9 +233,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('target'))
+    act(() => { result.current.removeNode('target'); })
 
-    const sw = result.current.doc.nodes['sw'] as SwitchNode
+    const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.default).toBeUndefined()
   })
 
@@ -249,15 +250,15 @@ describe('removeNode', () => {
       },
     })
     // Set join to something other than 'b' so we only test branches
-    ;(doc.nodes['p'] as ParallelNode).join = 'j'
+    ;(doc.nodes.p as ParallelNode).join = 'j'
 
     const { result } = renderHook(() =>
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('b'))
+    act(() => { result.current.removeNode('b'); })
 
-    const p = result.current.doc.nodes['p'] as ParallelNode
+    const p = result.current.doc.nodes.p as ParallelNode
     expect(p.branches).toEqual(['a', 'c'])
   })
 
@@ -272,9 +273,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('j'))
+    act(() => { result.current.removeNode('j'); })
 
-    const p = result.current.doc.nodes['p'] as ParallelNode
+    const p = result.current.doc.nodes.p as ParallelNode
     expect(p.join).toBe('')
   })
 
@@ -289,9 +290,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('target'))
+    act(() => { result.current.removeNode('target'); })
 
-    const w = result.current.doc.nodes['w'] as WaitNode
+    const w = result.current.doc.nodes.w as WaitNode
     expect(w.next).toBeUndefined()
   })
 
@@ -306,9 +307,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('target'))
+    act(() => { result.current.removeNode('target'); })
 
-    const w = result.current.doc.nodes['w'] as WaitNode
+    const w = result.current.doc.nodes.w as WaitNode
     expect(w.timeout_next).toBeUndefined()
   })
 
@@ -323,9 +324,9 @@ describe('removeNode', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.removeNode('target'))
+    act(() => { result.current.removeNode('target'); })
 
-    const e = result.current.doc.nodes['e'] as ErrorNode
+    const e = result.current.doc.nodes.e as ErrorNode
     expect(e.next).toBeUndefined()
   })
 })
@@ -341,9 +342,9 @@ describe('connectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.connectNodes('a', 'b', { type: 'next' }))
+    act(() => { result.current.connectNodes('a', 'b', { type: 'next' }); })
 
-    expect((result.current.doc.nodes['a'] as ActionNode).next).toBe('b')
+    expect((result.current.doc.nodes.a as ActionNode).next).toBe('b')
   })
 
   it('adds a switch case', () => {
@@ -359,10 +360,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('sw', 'b', { type: 'switch_case', when: 'no' }),
+      { result.current.connectNodes('sw', 'b', { type: 'switch_case', when: 'no' }); },
     )
 
-    const sw = result.current.doc.nodes['sw'] as SwitchNode
+    const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(2)
     expect(sw.cases[1]!.when).toBe('no')
     expect(sw.cases[1]!.next).toBe('b')
@@ -376,9 +377,9 @@ describe('connectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.connectNodes('sw', 'b', { type: 'switch_default' }))
+    act(() => { result.current.connectNodes('sw', 'b', { type: 'switch_default' }); })
 
-    expect((result.current.doc.nodes['sw'] as SwitchNode).default).toBe('b')
+    expect((result.current.doc.nodes.sw as SwitchNode).default).toBe('b')
   })
 
   it('adds a parallel branch', () => {
@@ -390,10 +391,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('p', 'd', { type: 'parallel_branch' }),
+      { result.current.connectNodes('p', 'd', { type: 'parallel_branch' }); },
     )
 
-    const p = result.current.doc.nodes['p'] as ParallelNode
+    const p = result.current.doc.nodes.p as ParallelNode
     expect(p.branches).toContain('d')
   })
 
@@ -406,10 +407,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('p', 'j', { type: 'parallel_join' }),
+      { result.current.connectNodes('p', 'j', { type: 'parallel_join' }); },
     )
 
-    expect((result.current.doc.nodes['p'] as ParallelNode).join).toBe('j')
+    expect((result.current.doc.nodes.p as ParallelNode).join).toBe('j')
   })
 
   it('sets next on a wait node', () => {
@@ -418,9 +419,9 @@ describe('connectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.connectNodes('w', 'b', { type: 'next' }))
+    act(() => { result.current.connectNodes('w', 'b', { type: 'next' }); })
 
-    expect((result.current.doc.nodes['w'] as WaitNode).next).toBe('b')
+    expect((result.current.doc.nodes.w as WaitNode).next).toBe('b')
   })
 
   it('sets timeout_next on a wait node', () => {
@@ -432,10 +433,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('w', 't', { type: 'timeout_next' }),
+      { result.current.connectNodes('w', 't', { type: 'timeout_next' }); },
     )
 
-    expect((result.current.doc.nodes['w'] as WaitNode).timeout_next).toBe('t')
+    expect((result.current.doc.nodes.w as WaitNode).timeout_next).toBe('t')
   })
 
   it('sets error.catch on an action node', () => {
@@ -447,10 +448,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('a', 'e', { type: 'error_catch' }),
+      { result.current.connectNodes('a', 'e', { type: 'error_catch' }); },
     )
 
-    expect((result.current.doc.nodes['a'] as ActionNode).error?.catch).toBe('e')
+    expect((result.current.doc.nodes.a as ActionNode).error?.catch).toBe('e')
   })
 
   it('sets error.catch preserving existing retry config', () => {
@@ -465,10 +466,10 @@ describe('connectNodes', () => {
     )
 
     act(() =>
-      result.current.connectNodes('a', 'e', { type: 'error_catch' }),
+      { result.current.connectNodes('a', 'e', { type: 'error_catch' }); },
     )
 
-    const nodeA = result.current.doc.nodes['a'] as ActionNode
+    const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.error?.catch).toBe('e')
     expect(nodeA.error?.retry?.limit).toBe(3)
   })
@@ -479,9 +480,9 @@ describe('connectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.connectNodes('e', 'b', { type: 'next' }))
+    act(() => { result.current.connectNodes('e', 'b', { type: 'next' }); })
 
-    expect((result.current.doc.nodes['e'] as ErrorNode).next).toBe('b')
+    expect((result.current.doc.nodes.e as ErrorNode).next).toBe('b')
   })
 
   it('rejects connections from terminal nodes', () => {
@@ -493,7 +494,7 @@ describe('connectNodes', () => {
     )
 
     expect(() => {
-      act(() => result.current.connectNodes('t', 'b', { type: 'next' }))
+      act(() => { result.current.connectNodes('t', 'b', { type: 'next' }); })
     }).toThrow('Terminal nodes cannot have outgoing connections')
   })
 
@@ -503,7 +504,7 @@ describe('connectNodes', () => {
     )
 
     expect(() => {
-      act(() => result.current.connectNodes('missing', 'b', { type: 'next' }))
+      act(() => { result.current.connectNodes('missing', 'b', { type: 'next' }); })
     }).toThrow("Source node 'missing' not found")
   })
 
@@ -515,7 +516,7 @@ describe('connectNodes', () => {
 
     expect(() => {
       act(() =>
-        result.current.connectNodes('a', 'b', { type: 'switch_case', when: 'x' }),
+        { result.current.connectNodes('a', 'b', { type: 'switch_case', when: 'x' }); },
       )
     }).toThrow('switch_case connection requires a switch node')
   })
@@ -534,9 +535,9 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('a', 'b'))
+    act(() => { result.current.disconnectNodes('a', 'b'); })
 
-    expect((result.current.doc.nodes['a'] as ActionNode).next).toBeUndefined()
+    expect((result.current.doc.nodes.a as ActionNode).next).toBeUndefined()
   })
 
   it('removes a specific switch case', () => {
@@ -556,11 +557,11 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('sw', 'a'))
+    act(() => { result.current.disconnectNodes('sw', 'a'); })
 
-    const sw = result.current.doc.nodes['sw'] as SwitchNode
+    const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]!.next).toBe('b')
+    expect(sw.cases[0].next).toBe('b')
   })
 
   it('removes switch.default reference', () => {
@@ -571,9 +572,9 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('sw', 'x'))
+    act(() => { result.current.disconnectNodes('sw', 'x'); })
 
-    expect((result.current.doc.nodes['sw'] as SwitchNode).default).toBeUndefined()
+    expect((result.current.doc.nodes.sw as SwitchNode).default).toBeUndefined()
   })
 
   it('removes a parallel branch', () => {
@@ -586,9 +587,9 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('p', 'b'))
+    act(() => { result.current.disconnectNodes('p', 'b'); })
 
-    expect((result.current.doc.nodes['p'] as ParallelNode).branches).toEqual([
+    expect((result.current.doc.nodes.p as ParallelNode).branches).toEqual([
       'a',
       'c',
     ])
@@ -602,9 +603,9 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('p', 'j'))
+    act(() => { result.current.disconnectNodes('p', 'j'); })
 
-    expect((result.current.doc.nodes['p'] as ParallelNode).join).toBe('')
+    expect((result.current.doc.nodes.p as ParallelNode).join).toBe('')
   })
 
   it('removes wait.timeout_next reference', () => {
@@ -615,9 +616,9 @@ describe('disconnectNodes', () => {
       useFlowprintState({ initialDoc: doc }),
     )
 
-    act(() => result.current.disconnectNodes('w', 't'))
+    act(() => { result.current.disconnectNodes('w', 't'); })
 
-    expect((result.current.doc.nodes['w'] as WaitNode).timeout_next).toBeUndefined()
+    expect((result.current.doc.nodes.w as WaitNode).timeout_next).toBeUndefined()
   })
 
   it('throws for non-existent source', () => {
@@ -626,7 +627,7 @@ describe('disconnectNodes', () => {
     )
 
     expect(() => {
-      act(() => result.current.disconnectNodes('missing', 'b'))
+      act(() => { result.current.disconnectNodes('missing', 'b'); })
     }).toThrow("Source node 'missing' not found")
   })
 })
@@ -642,14 +643,14 @@ describe('lane mutations', () => {
     )
 
     act(() =>
-      result.current.addLane('api', {
+      { result.current.addLane('api', {
         label: 'API',
         visibility: 'internal',
         order: 2,
-      }),
+      }); },
     )
 
-    expect(result.current.doc.lanes['api']).toEqual({
+    expect(result.current.doc.lanes.api).toEqual({
       label: 'API',
       visibility: 'internal',
       order: 2,
@@ -661,10 +662,10 @@ describe('lane mutations', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.updateLane('user', { label: 'Customer' }))
+    act(() => { result.current.updateLane('user', { label: 'Customer' }); })
 
-    expect(result.current.doc.lanes['user']!.label).toBe('Customer')
-    expect(result.current.doc.lanes['user']!.visibility).toBe('external')
+    expect(result.current.doc.lanes.user!.label).toBe('Customer')
+    expect(result.current.doc.lanes.user!.visibility).toBe('external')
   })
 
   it('updateLane throws for non-existent lane', () => {
@@ -673,7 +674,7 @@ describe('lane mutations', () => {
     )
 
     expect(() => {
-      act(() => result.current.updateLane('missing', { label: 'x' }))
+      act(() => { result.current.updateLane('missing', { label: 'x' }); })
     }).toThrow("Lane 'missing' not found")
   })
 
@@ -682,10 +683,10 @@ describe('lane mutations', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.removeLane('system'))
+    act(() => { result.current.removeLane('system'); })
 
-    expect(result.current.doc.lanes['system']).toBeUndefined()
-    expect(result.current.doc.lanes['user']).toBeDefined()
+    expect(result.current.doc.lanes.system).toBeUndefined()
+    expect(result.current.doc.lanes.user).toBeDefined()
   })
 
   it('reorderLanes updates order values', () => {
@@ -693,10 +694,10 @@ describe('lane mutations', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.reorderLanes(['system', 'user']))
+    act(() => { result.current.reorderLanes(['system', 'user']); })
 
-    expect(result.current.doc.lanes['system']!.order).toBe(0)
-    expect(result.current.doc.lanes['user']!.order).toBe(1)
+    expect(result.current.doc.lanes.system!.order).toBe(0)
+    expect(result.current.doc.lanes.user!.order).toBe(1)
   })
 })
 
@@ -719,12 +720,12 @@ describe('undo / redo', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
-    expect(result.current.doc.nodes['a']).toBeDefined()
+    act(() => { result.current.addNode('a', actionNode()); })
+    expect(result.current.doc.nodes.a).toBeDefined()
     expect(result.current.canUndo).toBe(true)
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['a']).toBeUndefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.a).toBeUndefined()
     expect(result.current.canUndo).toBe(false)
     expect(result.current.canRedo).toBe(true)
   })
@@ -734,11 +735,11 @@ describe('undo / redo', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
-    act(() => result.current.undo())
-    act(() => result.current.redo())
+    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => { result.current.undo(); })
+    act(() => { result.current.redo(); })
 
-    expect(result.current.doc.nodes['a']).toBeDefined()
+    expect(result.current.doc.nodes.a).toBeDefined()
     expect(result.current.canRedo).toBe(false)
     expect(result.current.canUndo).toBe(true)
   })
@@ -748,12 +749,12 @@ describe('undo / redo', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
-    act(() => result.current.addNode('b', actionNode()))
-    act(() => result.current.undo())
+    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => { result.current.addNode('b', actionNode()); })
+    act(() => { result.current.undo(); })
     expect(result.current.canRedo).toBe(true)
 
-    act(() => result.current.addNode('c', actionNode()))
+    act(() => { result.current.addNode('c', actionNode()); })
     expect(result.current.canRedo).toBe(false)
   })
 
@@ -762,20 +763,20 @@ describe('undo / redo', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
-    act(() => result.current.addNode('b', actionNode()))
-    act(() => result.current.addNode('c', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => { result.current.addNode('b', actionNode()); })
+    act(() => { result.current.addNode('c', actionNode()); })
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['c']).toBeUndefined()
-    expect(result.current.doc.nodes['b']).toBeDefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.c).toBeUndefined()
+    expect(result.current.doc.nodes.b).toBeDefined()
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['b']).toBeUndefined()
-    expect(result.current.doc.nodes['a']).toBeDefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.b).toBeUndefined()
+    expect(result.current.doc.nodes.a).toBeDefined()
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['a']).toBeUndefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.a).toBeUndefined()
   })
 
   it('undo with empty past is a no-op', () => {
@@ -784,7 +785,7 @@ describe('undo / redo', () => {
     )
 
     const before = result.current.doc
-    act(() => result.current.undo())
+    act(() => { result.current.undo(); })
 
     expect(result.current.doc).toBe(before)
   })
@@ -795,7 +796,7 @@ describe('undo / redo', () => {
     )
 
     const before = result.current.doc
-    act(() => result.current.redo())
+    act(() => { result.current.redo(); })
 
     expect(result.current.doc).toBe(before)
   })
@@ -812,26 +813,26 @@ describe('maxHistory', () => {
     )
 
     // Make 5 mutations, only the last 3 should be undoable
-    act(() => result.current.addNode('a', actionNode()))
-    act(() => result.current.addNode('b', actionNode()))
-    act(() => result.current.addNode('c', actionNode()))
-    act(() => result.current.addNode('d', actionNode()))
-    act(() => result.current.addNode('e', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => { result.current.addNode('b', actionNode()); })
+    act(() => { result.current.addNode('c', actionNode()); })
+    act(() => { result.current.addNode('d', actionNode()); })
+    act(() => { result.current.addNode('e', actionNode()); })
 
     // Undo 3 times should work
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['e']).toBeUndefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.e).toBeUndefined()
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['d']).toBeUndefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.d).toBeUndefined()
 
-    act(() => result.current.undo())
-    expect(result.current.doc.nodes['c']).toBeUndefined()
+    act(() => { result.current.undo(); })
+    expect(result.current.doc.nodes.c).toBeUndefined()
 
     // 4th undo should be a no-op (oldest entries were trimmed)
     expect(result.current.canUndo).toBe(false)
     const docBeforeExtra = result.current.doc
-    act(() => result.current.undo())
+    act(() => { result.current.undo(); })
     expect(result.current.doc).toBe(docBeforeExtra)
   })
 })
@@ -847,12 +848,14 @@ describe('onChange', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         nodes: expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           a: expect.objectContaining({ type: 'action' }),
         }),
       }),
@@ -865,10 +868,10 @@ describe('onChange', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
     onChange.mockClear()
 
-    act(() => result.current.undo())
+    act(() => { result.current.undo(); })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(
@@ -882,16 +885,20 @@ describe('onChange', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
-    act(() => result.current.undo())
+    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => { result.current.undo(); })
     onChange.mockClear()
 
-    act(() => result.current.redo())
+    act(() => { result.current.redo(); })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        nodes: expect.objectContaining({ a: expect.anything() }),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        nodes: expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          a: expect.anything(),
+        }),
       }),
     )
   })
@@ -902,7 +909,7 @@ describe('onChange', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.undo())
+    act(() => { result.current.undo(); })
 
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -913,7 +920,7 @@ describe('onChange', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.redo())
+    act(() => { result.current.redo(); })
 
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -930,7 +937,7 @@ describe('setDoc', () => {
     )
 
     const newDoc = makeDoc({ name: 'replaced' })
-    act(() => result.current.setDoc(newDoc))
+    act(() => { result.current.setDoc(newDoc); })
 
     expect(result.current.doc.name).toBe('replaced')
   })
@@ -940,17 +947,17 @@ describe('setDoc', () => {
       useFlowprintState({ initialDoc: makeDoc() }),
     )
 
-    act(() => result.current.addNode('a', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
 
     const newDoc = makeDoc({ name: 'external' })
-    act(() => result.current.setDoc(newDoc))
+    act(() => { result.current.setDoc(newDoc); })
 
     // Undo should still restore to state before addNode, not before setDoc
     expect(result.current.canUndo).toBe(true)
-    act(() => result.current.undo())
+    act(() => { result.current.undo(); })
 
     // After undo, we get the state before addNode
-    expect(result.current.doc.nodes['a']).toBeUndefined()
+    expect(result.current.doc.nodes.a).toBeUndefined()
   })
 
   it('does not fire onChange', () => {
@@ -959,7 +966,7 @@ describe('setDoc', () => {
       useFlowprintState({ initialDoc: makeDoc(), onChange }),
     )
 
-    act(() => result.current.setDoc(makeDoc({ name: 'x' })))
+    act(() => { result.current.setDoc(makeDoc({ name: 'x' })); })
 
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -988,7 +995,7 @@ describe('immutability', () => {
     )
 
     const doc1 = result.current.doc
-    act(() => result.current.addNode('a', actionNode()))
+    act(() => { result.current.addNode('a', actionNode()); })
     const doc2 = result.current.doc
 
     expect(doc1).not.toBe(doc2)

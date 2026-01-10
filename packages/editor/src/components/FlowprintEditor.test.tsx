@@ -280,8 +280,8 @@ describe('ValidationBanner', () => {
 
   it('limits displayed errors to 5 and shows overflow count', () => {
     const errors: ValidationError[] = Array.from({ length: 8 }, (_, i) => ({
-      path: `/nodes/n${i}`,
-      message: `Error ${i}`,
+      path: `/nodes/n${String(i)}`,
+      message: `Error ${String(i)}`,
       severity: 'error' as const,
     }))
     const onDismiss = vi.fn()

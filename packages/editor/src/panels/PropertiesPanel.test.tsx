@@ -170,9 +170,9 @@ describe('PropertiesPanel', () => {
 
     expect(screen.getByText('parallel')).toBeTruthy()
     expect(screen.getByLabelText('Join Strategy')).toBeTruthy()
-    expect(
-      (screen.getByLabelText('Join Strategy') as HTMLSelectElement).value,
-    ).toBe('all_reached')
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const joinSelect: HTMLSelectElement = screen.getByLabelText('Join Strategy') as HTMLSelectElement
+    expect(joinSelect.value).toBe('all_reached')
   })
 
   it('renders wait event fields for wait node', () => {
@@ -204,9 +204,9 @@ describe('PropertiesPanel', () => {
 
     expect(screen.getByText('terminal')).toBeTruthy()
     expect(screen.getByLabelText('Outcome')).toBeTruthy()
-    expect(
-      (screen.getByLabelText('Outcome') as HTMLSelectElement).value,
-    ).toBe('success')
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const outcomeSelect: HTMLSelectElement = screen.getByLabelText('Outcome') as HTMLSelectElement
+    expect(outcomeSelect.value).toBe('success')
   })
 
   it('fires onUpdateNode when label is changed', () => {
@@ -365,6 +365,8 @@ describe('TextField', () => {
       <TextField label="Name" value="" onChange={vi.fn()} />,
     )
 
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('')
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const nameInput: HTMLInputElement = screen.getByLabelText('Name') as HTMLInputElement
+    expect(nameInput.value).toBe('')
   })
 })

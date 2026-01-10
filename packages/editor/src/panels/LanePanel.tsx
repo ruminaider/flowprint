@@ -19,10 +19,10 @@ function getSortedLaneEntries(doc: FlowprintDocument): [string, Lane][] {
 
 function generateLaneId(existingIds: string[]): string {
   let n = 1
-  while (existingIds.includes(`new_lane_${n}`)) {
+  while (existingIds.includes(`new_lane_${String(n)}`)) {
     n++
   }
-  return `new_lane_${n}`
+  return `new_lane_${String(n)}`
 }
 
 function getNextOrder(lanes: Record<string, Lane>): number {
@@ -54,14 +54,22 @@ export function LanePanel({
   function handleMoveUp(index: number) {
     if (index <= 0) return
     const ids = sortedLanes.map(([id]) => id)
-    ;[ids[index - 1], ids[index]] = [ids[index]!, ids[index - 1]!]
+    const prev = ids[index - 1]
+    const curr = ids[index]
+    if (prev === undefined || curr === undefined) return
+    ids[index - 1] = curr
+    ids[index] = prev
     onReorderLanes(ids)
   }
 
   function handleMoveDown(index: number) {
     if (index >= sortedLanes.length - 1) return
     const ids = sortedLanes.map(([id]) => id)
-    ;[ids[index], ids[index + 1]] = [ids[index + 1]!, ids[index]!]
+    const curr = ids[index]
+    const next = ids[index + 1]
+    if (curr === undefined || next === undefined) return
+    ids[index] = next
+    ids[index + 1] = curr
     onReorderLanes(ids)
   }
 
@@ -87,14 +95,14 @@ export function LanePanel({
               type="text"
               value={lane.label}
               aria-label={`Lane label for ${id}`}
-              onChange={(e) => onUpdateLane(id, { label: e.target.value })}
+              onChange={(e) => { onUpdateLane(id, { label: e.target.value }); }}
             />
             <button
               type="button"
               onClick={() =>
-                onUpdateLane(id, {
+                { onUpdateLane(id, {
                   visibility: lane.visibility === 'external' ? 'internal' : 'external',
-                })
+                }); }
               }
               aria-label={`Toggle visibility for ${id}`}
             >
@@ -104,7 +112,7 @@ export function LanePanel({
               type="button"
               aria-label={`Move ${id} up`}
               disabled={index === 0}
-              onClick={() => handleMoveUp(index)}
+              onClick={() => { handleMoveUp(index); }}
             >
               &uarr;
             </button>
@@ -112,14 +120,14 @@ export function LanePanel({
               type="button"
               aria-label={`Move ${id} down`}
               disabled={index === sortedLanes.length - 1}
-              onClick={() => handleMoveDown(index)}
+              onClick={() => { handleMoveDown(index); }}
             >
               &darr;
             </button>
             <button
               type="button"
               aria-label={`Delete ${id}`}
-              onClick={() => handleDelete(id)}
+              onClick={() => { handleDelete(id); }}
             >
               Delete
             </button>

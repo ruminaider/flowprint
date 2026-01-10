@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- test assertions guarantee non-null */
 import { describe, it, expect } from 'vitest'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { computeLayout } from './layout-engine'

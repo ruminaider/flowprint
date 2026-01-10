@@ -5,7 +5,7 @@ import {
   BackgroundVariant,
   MiniMap,
 } from '@xyflow/react'
-import type { FlowprintDocument, ValidationResult } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { validate } from '@ruminaider/flowprint-schema'
 import { nodeTypes } from '../nodes'
 import { edgeTypes } from '../edges'
@@ -71,8 +71,8 @@ export function FlowprintEditor({
 
   // --- Keyboard shortcuts ---
   useKeyboardShortcuts({
-    undo: state.undo,
-    redo: state.redo,
+    undo: () => { state.undo() },
+    redo: () => { state.redo() },
     deleteSelected: () => {
       if (selectedNodeId) {
         const node = state.doc.nodes[selectedNodeId]
@@ -81,25 +81,17 @@ export function FlowprintEditor({
         }
       }
     },
-    selectAll: () => {}, // no-op for now
-    deselect: () => setSelectedNodeId(null),
+    selectAll: () => { /* noop */ },
+    deselect: () => { setSelectedNodeId(null) },
     disabled: readOnly,
   })
 
   // --- Validation ---
-  const [validation, setValidation] = useState<ValidationResult>(() =>
-    validate(state.doc),
-  )
-  const [bannerDismissed, setBannerDismissed] = useState(false)
-
-  useEffect(() => {
-    const result = validate(state.doc)
-    setValidation(result)
-    setBannerDismissed(false)
-  }, [state.doc])
+  const validation = useMemo(() => validate(state.doc), [state.doc])
+  const [dismissedForDoc, setDismissedForDoc] = useState<FlowprintDocument | null>(null)
 
   const validationErrors = validation.errors.filter((e) => e.severity === 'error')
-  const showBanner = !bannerDismissed && validationErrors.length > 0
+  const showBanner = dismissedForDoc !== state.doc && validationErrors.length > 0
 
   // --- Pro options (stable reference) ---
   const proOptions = useMemo(() => ({ hideAttribution: true }), [])
@@ -133,7 +125,7 @@ export function FlowprintEditor({
         onSelectionChange={readOnly ? undefined : ({ nodes }) => {
           setSelectedNodeId(nodes.length === 1 ? nodes[0]?.id ?? null : null)
         }}
-        onNodeClick={readOnly ? undefined : (_, node) => setSelectedNodeId(node.id)}
+        onNodeClick={readOnly ? undefined : (_, node) => { setSelectedNodeId(node.id); }}
         panOnDrag
         zoomOnScroll
         zoomOnPinch
@@ -153,7 +145,7 @@ export function FlowprintEditor({
       {showBanner && (
         <ValidationBanner
           errors={validationErrors}
-          onDismiss={() => setBannerDismissed(true)}
+          onDismiss={() => { setDismissedForDoc(state.doc) }}
         />
       )}
       {!readOnly && <NodePalette />}
@@ -161,17 +153,17 @@ export function FlowprintEditor({
         <PropertiesPanel
           selectedNodeId={selectedNodeId}
           doc={state.doc}
-          onUpdateNode={state.updateNode}
+          onUpdateNode={(id, patch) => { state.updateNode(id, patch) }}
           lanes={state.doc.lanes}
         />
       )}
       {!readOnly && (
         <LanePanel
           doc={state.doc}
-          onAddLane={state.addLane}
-          onUpdateLane={state.updateLane}
-          onRemoveLane={state.removeLane}
-          onReorderLanes={state.reorderLanes}
+          onAddLane={(id, lane) => { state.addLane(id, lane) }}
+          onUpdateLane={(id, patch) => { state.updateLane(id, patch) }}
+          onRemoveLane={(id) => { state.removeLane(id) }}
+          onReorderLanes={(ids) => { state.reorderLanes(ids) }}
         />
       )}
       {connectionHandler.pendingSwitchConnection && (

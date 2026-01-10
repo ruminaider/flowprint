@@ -37,7 +37,7 @@ function isEditableTarget(event: KeyboardEvent): boolean {
  * Ctrl on Windows/Linux).
  */
 function hasMod(event: KeyboardEvent): boolean {
-  const isMac = navigator.platform.includes('Mac')
+  const isMac = /mac/i.test(navigator.userAgent)
   return isMac ? event.metaKey : event.ctrlKey
 }
 
