@@ -30,6 +30,24 @@ export function getLaneColor(index: number): string {
   return LANE_COLORS[index % 6] ?? '#f1f5f9'
 }
 
+export const DARK_LANE_COLORS: Record<string, string> = {
+  0: '#1e2e3e', // dark sky tint
+  1: '#1e2638', // dark blue tint
+  2: '#2a1e38', // dark purple tint
+  3: '#381e2e', // dark pink tint
+  4: '#1e3832', // dark teal tint
+  5: '#38341e', // dark yellow tint
+}
+
+export const DARK_LANE_BORDER_COLORS: Record<string, string> = {
+  0: '#89dceb', // Catppuccin Sky
+  1: '#89b4fa', // Catppuccin Blue
+  2: '#cba6f7', // Catppuccin Mauve
+  3: '#f5c2e7', // Catppuccin Pink
+  4: '#94e2d5', // Catppuccin Teal
+  5: '#f9e2af', // Catppuccin Yellow
+}
+
 export function getLaneBorderColor(index: number): string {
   return LANE_BORDER_COLORS[index % 6] ?? '#94a3b8'
 }

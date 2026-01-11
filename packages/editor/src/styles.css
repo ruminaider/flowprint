@@ -575,3 +575,69 @@
 .fp-node-selected {
   box-shadow: 0 0 0 2px var(--fp-selection-ring), 0 1px 3px var(--fp-node-shadow);
 }
+
+/* ---- Dark theme (Catppuccin Mocha) ---- */
+
+[data-fp-theme='dark'] .fp-editor,
+[data-fp-theme='dark'] .fp-viewer,
+.fp-editor[data-fp-theme='dark'],
+.fp-viewer[data-fp-theme='dark'] {
+  /* Canvas */
+  --fp-bg-canvas: #1e1e2e;
+  --fp-bg-grid-dot: #585b70;
+
+  /* Node base */
+  --fp-node-bg: #313244;
+  --fp-node-border: #45475a;
+  --fp-node-shadow: rgba(0, 0, 0, 0.3);
+  --fp-text-primary: #cdd6f4;
+  --fp-text-secondary: #a6adc8;
+
+  /* Node types */
+  --fp-node-switch-bg: #2a2520;
+  --fp-node-switch-border: #f9e2af;
+  --fp-node-parallel-bg: #1e2e24;
+  --fp-node-parallel-border: #a6e3a1;
+  --fp-node-wait-bg: #2a2420;
+  --fp-node-wait-border: #fab387;
+  --fp-node-error-bg: #2e1e24;
+  --fp-node-error-border: #f38ba8;
+  --fp-node-terminal-success-bg: #1e2e24;
+  --fp-node-terminal-success-border: #a6e3a1;
+  --fp-node-terminal-failure-bg: #2e1e24;
+  --fp-node-terminal-failure-border: #f38ba8;
+
+  /* Selection */
+  --fp-selection-ring: #89b4fa;
+
+  /* Edges */
+  --fp-edge-normal: #7f849c;
+  --fp-edge-error: #f38ba8;
+  --fp-edge-default: #6c7086;
+
+  /* Panels */
+  --fp-panel-bg: #181825;
+  --fp-panel-border: #45475a;
+  --fp-panel-header-bg: #313244;
+
+  /* Badges & buttons */
+  --fp-badge-entry: #89b4fa;
+  --fp-btn-primary: #89b4fa;
+  --fp-btn-danger: #f38ba8;
+  --fp-unassigned-border: #f9e2af;
+
+  /* Validation banner */
+  --fp-banner-bg: #2e1e24;
+  --fp-banner-border: #eba0ac;
+  --fp-banner-text: #f38ba8;
+
+  /* Additional colors */
+  --fp-bg-hover: #313244;
+  --fp-border-light: #45475a;
+  --fp-text-dark: #bac2de;
+  --fp-text-muted: #7f849c;
+  --fp-text-error: #f38ba8;
+  --fp-text-success: #a6e3a1;
+  --fp-text-warning: #fab387;
+  --fp-shadow-heavy: rgba(0, 0, 0, 0.4);
+}
