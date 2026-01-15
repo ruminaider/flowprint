@@ -62,6 +62,11 @@
   --fp-text-success: #166534;
   --fp-text-warning: #92400e;
   --fp-shadow-heavy: rgba(0, 0, 0, 0.15);
+
+  /* Entry point picker */
+  --fp-picker-result-hover: #f3f4f6;
+  --fp-picker-kind-bg: #e5e7eb;
+  --fp-picker-kind-text: #374151;
 }
 
 .fp-viewer {
@@ -576,6 +581,155 @@
   box-shadow: 0 0 0 2px var(--fp-selection-ring), 0 1px 3px var(--fp-node-shadow);
 }
 
+/* ---- Entry Point Picker (4C.7) ---- */
+
+.fp-entry-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.fp-entry-picker-search {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--fp-node-border);
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+  background: var(--fp-node-bg);
+  color: var(--fp-text-primary);
+}
+
+.fp-entry-picker-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--fp-panel-bg);
+  border: 1px solid var(--fp-panel-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--fp-node-shadow);
+  margin-top: 2px;
+}
+
+.fp-entry-picker-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  color: var(--fp-text-primary);
+}
+
+.fp-entry-picker-result:hover {
+  background: var(--fp-picker-result-hover);
+}
+
+.fp-entry-picker-result-name {
+  font-weight: 600;
+  color: var(--fp-text-primary);
+}
+
+.fp-entry-picker-result-kind {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--fp-picker-kind-bg);
+  color: var(--fp-picker-kind-text);
+}
+
+.fp-entry-picker-result-file {
+  font-size: 11px;
+  color: var(--fp-text-secondary);
+  font-family: monospace;
+}
+
+.fp-entry-picker-result-preview {
+  width: 100%;
+  font-size: 11px;
+  color: var(--fp-text-muted);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fp-entry-picker-provider {
+  font-size: 10px;
+  color: var(--fp-text-muted);
+  font-style: italic;
+}
+
+.fp-entry-picker-no-results {
+  padding: 8px;
+  font-size: 12px;
+  color: var(--fp-text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ---- YAML Preview Panel ---- */
+
+.fp-yaml-preview {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 5;
+  width: 360px;
+  max-height: 400px;
+  overflow: hidden;
+  background: var(--fp-panel-bg);
+  border: 1px solid var(--fp-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--fp-node-shadow);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-yaml-preview-header {
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--fp-text-primary);
+  border-bottom: 1px solid var(--fp-panel-border);
+  background: var(--fp-panel-header-bg);
+}
+
+.fp-yaml-preview-content {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 340px;
+}
+
+.fp-yaml-preview-fallback {
+  margin: 0;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: pre;
+  color: var(--fp-text-primary);
+  line-height: 1.5;
+}
+
+.fp-yaml-preview-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--fp-text-secondary);
+  font-style: italic;
+}
+
 /* ---- Dark theme (Catppuccin Mocha) ---- */
 
 [data-fp-theme='dark'] .fp-editor,
@@ -640,4 +794,9 @@
   --fp-text-success: #a6e3a1;
   --fp-text-warning: #fab387;
   --fp-shadow-heavy: rgba(0, 0, 0, 0.4);
+
+  /* Entry point picker */
+  --fp-picker-result-hover: #313244;
+  --fp-picker-kind-bg: #45475a;
+  --fp-picker-kind-text: #cdd6f4;
 }
