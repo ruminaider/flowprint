@@ -105,6 +105,7 @@ describe('EntryPointPicker', () => {
     // Advance past the 300ms debounce
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     expect(searchFn).toHaveBeenCalledWith('main')
@@ -128,6 +129,7 @@ describe('EntryPointPicker', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     expect(screen.getByText('main')).toBeTruthy()
@@ -157,10 +159,12 @@ describe('EntryPointPicker', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
-    const resultButtons = screen.getAllByRole('option')
-    fireEvent.click(resultButtons[0]!)
+    const firstResult = screen.getAllByRole('option')[0]
+    expect(firstResult).toBeDefined()
+    if (firstResult) fireEvent.click(firstResult)
 
     expect(onChange).toHaveBeenCalledWith({ file: 'src/main.ts', symbol: 'main' })
   })
@@ -183,6 +187,7 @@ describe('EntryPointPicker', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     expect(screen.getByText('No results')).toBeTruthy()
@@ -206,6 +211,7 @@ describe('EntryPointPicker', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     // Results should be visible
@@ -239,6 +245,7 @@ describe('EntryPointPicker', () => {
 
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     // Results should be visible
@@ -270,16 +277,19 @@ describe('EntryPointPicker', () => {
     fireEvent.change(searchInput, { target: { value: 'm' } })
     await act(async () => {
       vi.advanceTimersByTime(100)
+      await Promise.resolve()
     })
 
     fireEvent.change(searchInput, { target: { value: 'ma' } })
     await act(async () => {
       vi.advanceTimersByTime(100)
+      await Promise.resolve()
     })
 
     fireEvent.change(searchInput, { target: { value: 'mai' } })
     await act(async () => {
       vi.advanceTimersByTime(100)
+      await Promise.resolve()
     })
 
     fireEvent.change(searchInput, { target: { value: 'main' } })
@@ -290,6 +300,7 @@ describe('EntryPointPicker', () => {
     // Now wait for full debounce period
     await act(async () => {
       vi.advanceTimersByTime(300)
+      await Promise.resolve()
     })
 
     // Only one search should have been triggered with the final value

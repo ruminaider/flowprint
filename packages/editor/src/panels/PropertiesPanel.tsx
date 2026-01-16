@@ -11,6 +11,7 @@ import {
   isWaitNode,
   isTerminalNode,
 } from '@ruminaider/flowprint-schema'
+import type { SymbolSearchProvider } from '../symbols/types'
 import { TextField } from './fields/TextField'
 import { LaneSelector } from './fields/LaneSelector'
 import { EntryPointList } from './fields/EntryPointList'
@@ -24,6 +25,7 @@ export interface PropertiesPanelProps {
   doc: FlowprintDocument
   onUpdateNode: (id: string, patch: Partial<Node>) => void
   lanes: Record<string, Lane>
+  symbolSearch?: SymbolSearchProvider
 }
 
 export function PropertiesPanel({
@@ -31,6 +33,7 @@ export function PropertiesPanel({
   doc,
   onUpdateNode,
   lanes,
+  symbolSearch,
 }: PropertiesPanelProps) {
   const node = selectedNodeId ? doc.nodes[selectedNodeId] : undefined
 
@@ -87,6 +90,7 @@ export function PropertiesPanel({
             onChange={(entry_points) =>
               { handlePatch({ entry_points } as Partial<Node>); }
             }
+            symbolSearch={symbolSearch}
           />
           <ErrorHandlerEditor
             error={node.error}

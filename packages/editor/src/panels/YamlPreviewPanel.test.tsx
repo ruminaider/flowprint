@@ -40,7 +40,7 @@ describe('YamlPreviewPanel', () => {
     expect(container.innerHTML).toBe('')
   })
 
-  it('shows header when visible', async () => {
+  it('shows header when visible', () => {
     render(<YamlPreviewPanel doc={baseDoc} visible={true} />)
 
     expect(screen.getByText('YAML Preview')).toBeTruthy()
@@ -83,7 +83,7 @@ describe('YamlPreviewPanel', () => {
     expect(serialize).toHaveBeenCalledWith(baseDoc)
   })
 
-  it('applies correct CSS classes', async () => {
+  it('applies correct CSS classes', () => {
     const { container } = render(
       <YamlPreviewPanel doc={baseDoc} visible={true} />,
     )

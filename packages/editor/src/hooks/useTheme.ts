@@ -10,24 +10,27 @@ export function useTheme(mode: ThemeMode): ResolvedTheme {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
 
+  // For non-system modes, derive directly (no effect needed)
+  const effectiveResolved = mode !== 'system' ? mode : resolved
+
   useEffect(() => {
-    if (mode !== 'system') {
-      setResolved(mode)
-      return
-    }
+    if (mode !== 'system') return
     if (typeof window === 'undefined') return
 
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
-    setResolved(mql.matches ? 'dark' : 'light')
 
     const handler = (e: MediaQueryListEvent) => {
       setResolved(e.matches ? 'dark' : 'light')
     }
     mql.addEventListener('change', handler)
+
+    // Dispatch a synthetic event to sync initial state without calling setState directly
+    handler({ matches: mql.matches } as MediaQueryListEvent)
+
     return () => {
       mql.removeEventListener('change', handler)
     }
   }, [mode])
 
-  return resolved
+  return effectiveResolved
 }

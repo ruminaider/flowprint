@@ -35,7 +35,17 @@
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "web-tree-sitter": "^0.24.0",
+    "@monaco-editor/react": "^4.7.0"
+  },
+  "peerDependenciesMeta": {
+    "web-tree-sitter": {
+      "optional": true
+    },
+    "@monaco-editor/react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.14",

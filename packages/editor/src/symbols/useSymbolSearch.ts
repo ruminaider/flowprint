@@ -36,7 +36,7 @@ export interface UseSymbolSearchReturn {
 export function useSymbolSearch(options: UseSymbolSearchOptions): UseSymbolSearchReturn {
   const [provider, setProvider] = useState<SymbolSearchProvider | null>(null)
   const [loading, setLoading] = useState(false)
-  const cancelRef = useRef(false)
+  const cancelRef = useRef<boolean>(false)
 
   const initialize = useCallback(async () => {
     cancelRef.current = false
@@ -49,7 +49,7 @@ export function useSymbolSearch(options: UseSymbolSearchOptions): UseSymbolSearc
         apiKey: options.codeSearchApiKey,
       })
       const healthy = await cs.checkHealth()
-      if (cancelRef.current) return
+      if (cancelRef.current as boolean) return
       if (healthy) {
         setProvider(cs)
         setLoading(false)
@@ -62,24 +62,28 @@ export function useSymbolSearch(options: UseSymbolSearchOptions): UseSymbolSearc
       const ts = new TreeSitterIndex({ wasmPath: options.wasmPath })
       try {
         await ts.init(options.files)
-        if (cancelRef.current) return
+        if (cancelRef.current as boolean) return
         setProvider(ts)
       } catch {
-        if (cancelRef.current) return
+        if (cancelRef.current as boolean) return
         setProvider(null)
       }
-    } else if (!cancelRef.current) {
+    } else if (!(cancelRef.current as boolean)) {
       setProvider(null)
     }
 
-    if (!cancelRef.current) {
+    if (!(cancelRef.current as boolean)) {
       setLoading(false)
     }
   }, [options.codeSearchUrl, options.codeSearchApiKey, options.files, options.wasmPath])
 
   useEffect(() => {
-    void initialize()
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) void initialize()
+    })
     return () => {
+      cancelled = true
       cancelRef.current = true
     }
   }, [initialize])

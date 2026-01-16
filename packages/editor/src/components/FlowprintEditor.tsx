@@ -23,8 +23,13 @@ import { NodePalette } from './NodePalette'
 import { SwitchConditionPopover } from './SwitchConditionPopover'
 import { DeleteConfirmation } from './DeleteConfirmation'
 import { ErrorBoundary } from './ErrorBoundary'
+import { ExportButton } from './ExportButton'
 import { PropertiesPanel } from '../panels/PropertiesPanel'
 import { LanePanel } from '../panels/LanePanel'
+import { YamlPreviewPanel } from '../panels/YamlPreviewPanel'
+import { useTheme } from '../hooks/useTheme'
+import type { SymbolSearchProvider } from '../symbols/types'
+import type { ThemeMode } from '../hooks/useTheme'
 
 export interface FlowprintEditorProps {
   value: FlowprintDocument
@@ -34,6 +39,10 @@ export interface FlowprintEditorProps {
   showMinimap?: boolean
   showGrid?: boolean
   readOnly?: boolean
+  theme?: ThemeMode
+  symbolSearch?: SymbolSearchProvider
+  showYamlPreview?: boolean
+  showExportButton?: boolean
 }
 
 export function FlowprintEditor({
@@ -44,7 +53,12 @@ export function FlowprintEditor({
   showMinimap = true,
   showGrid = true,
   readOnly = false,
+  theme = 'system',
+  symbolSearch,
+  showYamlPreview = false,
+  showExportButton = false,
 }: FlowprintEditorProps) {
+  const resolvedTheme = useTheme(theme)
   const state = useFlowprintState({ initialDoc: value, onChange })
 
   // --- External value sync ---
@@ -100,6 +114,7 @@ export function FlowprintEditor({
     <ErrorBoundary doc={state.doc}>
     <div
       className={`fp-editor ${className ?? ''}`}
+      data-fp-theme={resolvedTheme}
       style={{
         width: '100%',
         height: '100%',
@@ -155,6 +170,7 @@ export function FlowprintEditor({
           doc={state.doc}
           onUpdateNode={(id, patch) => { state.updateNode(id, patch) }}
           lanes={state.doc.lanes}
+          symbolSearch={symbolSearch}
         />
       )}
       {!readOnly && (
@@ -181,6 +197,8 @@ export function FlowprintEditor({
           onCancel={deleteHandler.cancelDeletion}
         />
       )}
+      {showYamlPreview && <YamlPreviewPanel doc={state.doc} visible />}
+      {showExportButton && !readOnly && <ExportButton doc={state.doc} />}
     </div>
     </ErrorBoundary>
   )

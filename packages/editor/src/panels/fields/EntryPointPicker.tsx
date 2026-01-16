@@ -41,13 +41,17 @@ export function EntryPointPicker({
   useEffect(() => {
     if (!symbolSearch?.ready) return
     if (query.trim() === '') {
-      setResults([])
-      setIsOpen(false)
-      return
+      const timer = setTimeout(() => {
+        setResults([])
+        setIsOpen(false)
+      }, 0)
+      return () => {
+        clearTimeout(timer)
+      }
     }
 
-    setIsSearching(true)
     const timer = setTimeout(() => {
+      setIsSearching(true)
       void symbolSearch.search(query).then(
         (res) => {
           setResults(res)
@@ -109,7 +113,7 @@ export function EntryPointPicker({
   )
 
   // No provider or provider not ready: plain text inputs
-  if (!symbolSearch || !symbolSearch.ready) {
+  if (!symbolSearch?.ready) {
     return (
       <div className="fp-entry-picker">
         <input

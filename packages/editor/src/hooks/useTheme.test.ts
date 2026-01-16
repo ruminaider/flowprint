@@ -94,19 +94,19 @@ describe('useTheme', () => {
 
     // Capture the handler registered via addEventListener
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const handler = mockMql.addEventListener.mock.calls[0]![1] as (
-      e: MediaQueryListEvent,
-    ) => void
+    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const handler = calls?.[1]
+    expect(handler).toBeDefined()
 
     // Simulate OS switching to dark mode
     act(() => {
-      handler({ matches: true } as MediaQueryListEvent)
+      handler?.({ matches: true } as MediaQueryListEvent)
     })
     expect(result.current).toBe('dark')
 
     // Simulate OS switching back to light mode
     act(() => {
-      handler({ matches: false } as MediaQueryListEvent)
+      handler?.({ matches: false } as MediaQueryListEvent)
     })
     expect(result.current).toBe('light')
   })
@@ -118,9 +118,8 @@ describe('useTheme', () => {
     const { unmount } = renderHook(() => useTheme('system'))
 
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const handler = mockMql.addEventListener.mock.calls[0]![1] as (
-      e: MediaQueryListEvent,
-    ) => void
+    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const handler = calls?.[1]
 
     unmount()
 
@@ -137,9 +136,8 @@ describe('useTheme', () => {
     )
 
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const handler = mockMql.addEventListener.mock.calls[0]![1] as (
-      e: MediaQueryListEvent,
-    ) => void
+    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const handler = calls?.[1]
 
     rerender({ mode: 'light' })
 

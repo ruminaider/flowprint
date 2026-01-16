@@ -96,10 +96,10 @@ export class CodeSearchProvider implements SymbolSearchProvider {
           r !== null && typeof r === 'object' && 'file' in r && 'symbol' in r,
       )
       .map((r) => ({
-        file: String(r.file),
-        symbol: String(r.symbol),
+        file: typeof r.file === 'string' ? r.file : '',
+        symbol: typeof r.symbol === 'string' ? r.symbol : '',
         kind: this._parseKind(r.kind),
-        ...(r.preview ? { preview: String(r.preview) } : {}),
+        ...(r.preview ? { preview: typeof r.preview === 'string' ? r.preview : '' } : {}),
       }))
   }
 
@@ -109,13 +109,13 @@ export class CodeSearchProvider implements SymbolSearchProvider {
     if (!d.file || !d.symbol) return null
 
     return {
-      file: String(d.file),
-      symbol: String(d.symbol),
+      file: typeof d.file === 'string' ? d.file : '',
+      symbol: typeof d.symbol === 'string' ? d.symbol : '',
       kind: this._parseKind(d.kind),
       startLine: typeof d.startLine === 'number' ? d.startLine : 0,
       endLine: typeof d.endLine === 'number' ? d.endLine : 0,
-      ...(d.preview ? { preview: String(d.preview) } : {}),
-      ...(d.signature ? { signature: String(d.signature) } : {}),
+      ...(d.preview ? { preview: typeof d.preview === 'string' ? d.preview : '' } : {}),
+      ...(d.signature ? { signature: typeof d.signature === 'string' ? d.signature : '' } : {}),
     }
   }
 

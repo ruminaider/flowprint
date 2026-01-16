@@ -16,3 +16,24 @@ export { PropertiesPanel } from './panels/PropertiesPanel'
 export type { PropertiesPanelProps } from './panels/PropertiesPanel'
 export { LanePanel } from './panels/LanePanel'
 export type { LanePanelProps } from './panels/LanePanel'
+
+// Symbol search
+export type { SymbolResult, SymbolDetail, SymbolSearchProvider } from './symbols/types'
+export { TreeSitterIndex } from './symbols/TreeSitterIndex'
+export type { TreeSitterIndexOptions } from './symbols/TreeSitterIndex'
+export { CodeSearchProvider } from './symbols/CodeSearchProvider'
+export type { CodeSearchProviderOptions } from './symbols/CodeSearchProvider'
+export { useSymbolSearch } from './symbols/useSymbolSearch'
+export type { UseSymbolSearchOptions, UseSymbolSearchReturn } from './symbols/useSymbolSearch'
+
+// Theme
+export { useTheme } from './hooks/useTheme'
+export type { ThemeMode, ResolvedTheme } from './hooks/useTheme'
+
+// Panels
+export { YamlPreviewPanel } from './panels/YamlPreviewPanel'
+export type { YamlPreviewPanelProps } from './panels/YamlPreviewPanel'
+
+// Components
+export { ExportButton } from './components/ExportButton'
+export type { ExportButtonProps } from './components/ExportButton'

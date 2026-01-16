@@ -1,12 +1,15 @@
 import { useCallback } from 'react'
 import type { EntryPoint } from '@ruminaider/flowprint-schema'
+import type { SymbolSearchProvider } from '../../symbols/types'
+import { EntryPointPicker } from './EntryPointPicker'
 
 export interface EntryPointListProps {
   entries: EntryPoint[]
   onChange: (entries: EntryPoint[]) => void
+  symbolSearch?: SymbolSearchProvider
 }
 
-export function EntryPointList({ entries, onChange }: EntryPointListProps) {
+export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointListProps) {
   const handleAdd = useCallback(() => {
     onChange([...entries, { file: '', symbol: '' }])
   }, [entries, onChange])
@@ -43,22 +46,39 @@ export function EntryPointList({ entries, onChange }: EntryPointListProps) {
       </div>
       {entries.map((ep, i) => (
         <div key={i} className="fp-panel-list-item">
-          <input
-            type="text"
-            className="fp-panel-field-input"
-            value={ep.file}
-            onChange={(e) => { handleUpdate(i, 'file', e.target.value); }}
-            placeholder="file"
-            aria-label={`Entry point ${String(i + 1)} file`}
-          />
-          <input
-            type="text"
-            className="fp-panel-field-input"
-            value={ep.symbol}
-            onChange={(e) => { handleUpdate(i, 'symbol', e.target.value); }}
-            placeholder="symbol"
-            aria-label={`Entry point ${String(i + 1)} symbol`}
-          />
+          {symbolSearch ? (
+            <EntryPointPicker
+              file={ep.file}
+              symbol={ep.symbol}
+              onChange={(entry) => {
+                const updated = entries.map((e, idx) =>
+                  idx === i ? entry : e,
+                )
+                onChange(updated)
+              }}
+              symbolSearch={symbolSearch}
+              ariaLabelPrefix={`Entry point ${String(i + 1)}`}
+            />
+          ) : (
+            <>
+              <input
+                type="text"
+                className="fp-panel-field-input"
+                value={ep.file}
+                onChange={(e) => { handleUpdate(i, 'file', e.target.value); }}
+                placeholder="file"
+                aria-label={`Entry point ${String(i + 1)} file`}
+              />
+              <input
+                type="text"
+                className="fp-panel-field-input"
+                value={ep.symbol}
+                onChange={(e) => { handleUpdate(i, 'symbol', e.target.value); }}
+                placeholder="symbol"
+                aria-label={`Entry point ${String(i + 1)} symbol`}
+              />
+            </>
+          )}
           <button
             type="button"
             className="fp-panel-remove-btn"

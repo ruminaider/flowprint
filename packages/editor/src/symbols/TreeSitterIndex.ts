@@ -119,31 +119,33 @@ export class TreeSitterIndex implements SymbolSearchProvider {
     this._initialized = true
   }
 
-  async search(query: string): Promise<SymbolResult[]> {
-    if (!this._initialized) return []
+  search(query: string): Promise<SymbolResult[]> {
+    if (!this._initialized) return Promise.resolve([])
     const lower = query.toLowerCase()
 
-    return this._symbols
-      .filter((s) => s.symbol.toLowerCase().includes(lower))
-      .sort((a, b) => {
-        // Exact prefix match first, then by position in name
-        const aIdx = a.symbol.toLowerCase().indexOf(lower)
-        const bIdx = b.symbol.toLowerCase().indexOf(lower)
-        return aIdx - bIdx
-      })
-      .slice(0, SEARCH_LIMIT)
-      .map((s) => ({
-        file: s.file,
-        symbol: s.symbol,
-        kind: s.kind,
-        preview: s.preview,
-      }))
+    return Promise.resolve(
+      this._symbols
+        .filter((s) => s.symbol.toLowerCase().includes(lower))
+        .sort((a, b) => {
+          // Exact prefix match first, then by position in name
+          const aIdx = a.symbol.toLowerCase().indexOf(lower)
+          const bIdx = b.symbol.toLowerCase().indexOf(lower)
+          return aIdx - bIdx
+        })
+        .slice(0, SEARCH_LIMIT)
+        .map((s) => ({
+          file: s.file,
+          symbol: s.symbol,
+          kind: s.kind,
+          preview: s.preview,
+        })),
+    )
   }
 
-  async resolve(file: string, symbol: string): Promise<SymbolDetail | null> {
+  resolve(file: string, symbol: string): Promise<SymbolDetail | null> {
     const found = this._symbols.find((s) => s.file === file && s.symbol === symbol)
-    if (!found) return null
-    return {
+    if (!found) return Promise.resolve(null)
+    return Promise.resolve({
       file: found.file,
       symbol: found.symbol,
       kind: found.kind,
@@ -151,7 +153,7 @@ export class TreeSitterIndex implements SymbolSearchProvider {
       startLine: found.startLine,
       endLine: found.endLine,
       signature: found.signature,
-    }
+    })
   }
 
   // ---- private helpers -----------------------------------------------------

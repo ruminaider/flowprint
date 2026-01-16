@@ -12,7 +12,7 @@ import type { SymbolSearchProvider } from './types'
  * `_initialized` flag and directly push into `_symbols`.
  */
 function createPopulatedIndex(
-  symbols: Array<{
+  symbols: {
     file: string
     symbol: string
     kind: 'function' | 'class' | 'method' | 'variable' | 'type' | 'interface'
@@ -20,7 +20,7 @@ function createPopulatedIndex(
     startLine: number
     endLine: number
     signature: string
-  }>,
+  }[],
 ): TreeSitterIndex {
   const idx = new TreeSitterIndex()
   // Mark as initialized so search/resolve work
@@ -154,8 +154,8 @@ describe('TreeSitterIndex', () => {
     const provider: SymbolSearchProvider = new TreeSitterIndex()
     expect(provider.name).toBe('tree-sitter')
     expect(provider.ready).toBe(false)
-    expect(provider.search).toBeDefined()
-    expect(provider.resolve).toBeDefined()
+    expect(typeof provider.search).toBe('function')
+    expect(typeof provider.resolve).toBe('function')
   })
 
   // ---- search with mock symbols -------------------------------------------
@@ -174,15 +174,16 @@ describe('TreeSitterIndex', () => {
       const idx = createPopulatedIndex(MOCK_SYMBOLS)
       const results = await idx.search('getUser')
       expect(results).toHaveLength(1)
-      const r = results[0]!
-      expect(r.file).toBe('src/user.ts')
-      expect(r.symbol).toBe('getUser')
-      expect(r.kind).toBe('function')
-      expect(r.preview).toBe('export function getUser(id: string) {')
+      const r = results[0]
+      expect(r).toBeDefined()
+      expect(r?.file).toBe('src/user.ts')
+      expect(r?.symbol).toBe('getUser')
+      expect(r?.kind).toBe('function')
+      expect(r?.preview).toBe('export function getUser(id: string) {')
       // SymbolResult should NOT include startLine/endLine/signature
-      expect('startLine' in r).toBe(false)
-      expect('endLine' in r).toBe(false)
-      expect('signature' in r).toBe(false)
+      expect(r != null && 'startLine' in r).toBe(false)
+      expect(r != null && 'endLine' in r).toBe(false)
+      expect(r != null && 'signature' in r).toBe(false)
     })
 
     it('is case-insensitive', async () => {
@@ -245,7 +246,7 @@ describe('TreeSitterIndex', () => {
       const results = await rankedIdx.search('auth')
       expect(results).toHaveLength(3)
       // authHandler should come first (index 0)
-      expect(results[0]!.symbol).toBe('authHandler')
+      expect(results[0]?.symbol).toBe('authHandler')
     })
   })
 
@@ -277,13 +278,13 @@ describe('TreeSitterIndex', () => {
       const idx = createPopulatedIndex(MOCK_SYMBOLS)
       const detail = await idx.resolve('src/auth.ts', 'authenticate')
       expect(detail).not.toBeNull()
-      expect(detail!.file).toBe('src/auth.ts')
-      expect(detail!.symbol).toBe('authenticate')
-      expect(detail!.kind).toBe('function')
-      expect(detail!.startLine).toBe(1)
-      expect(detail!.endLine).toBe(10)
-      expect(detail!.signature).toBe('export function authenticate(token: string) {')
-      expect(detail!.preview).toBe('export function authenticate(token: string) {')
+      expect(detail?.file).toBe('src/auth.ts')
+      expect(detail?.symbol).toBe('authenticate')
+      expect(detail?.kind).toBe('function')
+      expect(detail?.startLine).toBe(1)
+      expect(detail?.endLine).toBe(10)
+      expect(detail?.signature).toBe('export function authenticate(token: string) {')
+      expect(detail?.preview).toBe('export function authenticate(token: string) {')
     })
 
     it('returns null for an unknown symbol', async () => {
@@ -329,8 +330,8 @@ describe('TreeSitterIndex', () => {
 
       const detailA = await idx.resolve('a.ts', 'init')
       const detailB = await idx.resolve('b.ts', 'init')
-      expect(detailA!.startLine).toBe(1)
-      expect(detailB!.startLine).toBe(10)
+      expect(detailA?.startLine).toBe(1)
+      expect(detailB?.startLine).toBe(10)
     })
   })
 

@@ -112,8 +112,8 @@ describe('CodeSearchProvider', () => {
 
       await provider.checkHealth()
 
-      const call = vi.mocked(globalThis.fetch).mock.calls[0]
-      const options = call?.[1] as RequestInit | undefined
+      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit | undefined] | undefined
+      const options = calls?.[1]
       expect(options?.signal).toBeDefined()
     })
   })
@@ -210,6 +210,7 @@ describe('CodeSearchProvider', () => {
         'http://localhost:8080/api/search',
         expect.objectContaining({
           method: 'POST',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
@@ -310,6 +311,7 @@ describe('CodeSearchProvider', () => {
         'http://localhost:8080/api/resolve',
         expect.objectContaining({
           method: 'POST',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
@@ -336,6 +338,7 @@ describe('CodeSearchProvider', () => {
       expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           headers: expect.objectContaining({
             Authorization: 'Bearer secret-key',
           }),
@@ -348,8 +351,8 @@ describe('CodeSearchProvider', () => {
       const provider = new CodeSearchProvider({ url: BASE_URL })
       await provider.checkHealth()
 
-      const call = vi.mocked(globalThis.fetch).mock.calls[0]
-      const options = call?.[1] as RequestInit | undefined
+      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit | undefined] | undefined
+      const options = calls?.[1]
       const headers = options?.headers as Record<string, string> | undefined
       expect(headers?.Authorization).toBeUndefined()
     })

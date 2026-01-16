@@ -6,8 +6,26 @@ import { useSymbolSearch } from './useSymbolSearch'
 // Mocks
 // ---------------------------------------------------------------------------
 
+interface MockCodeSearchProto {
+  name: string
+  ready: boolean
+  checkHealth: ReturnType<typeof vi.fn>
+  search: ReturnType<typeof vi.fn>
+  resolve: ReturnType<typeof vi.fn>
+}
+
+interface MockTreeSitterProto {
+  name: string
+  ready: boolean
+  init: ReturnType<typeof vi.fn>
+  search: ReturnType<typeof vi.fn>
+  resolve: ReturnType<typeof vi.fn>
+}
+
 vi.mock('./CodeSearchProvider', () => {
-  const MockCodeSearchProvider = vi.fn()
+  const MockCodeSearchProvider = vi.fn() as ReturnType<typeof vi.fn> & {
+    prototype: MockCodeSearchProto
+  }
   MockCodeSearchProvider.prototype.name = 'code-search'
   MockCodeSearchProvider.prototype.ready = false
   MockCodeSearchProvider.prototype.checkHealth = vi.fn().mockResolvedValue(false)
@@ -17,7 +35,9 @@ vi.mock('./CodeSearchProvider', () => {
 })
 
 vi.mock('./TreeSitterIndex', () => {
-  const MockTreeSitterIndex = vi.fn()
+  const MockTreeSitterIndex = vi.fn() as ReturnType<typeof vi.fn> & {
+    prototype: MockTreeSitterProto
+  }
   MockTreeSitterIndex.prototype.name = 'tree-sitter'
   MockTreeSitterIndex.prototype.ready = false
   MockTreeSitterIndex.prototype.init = vi.fn().mockResolvedValue(undefined)
@@ -30,20 +50,24 @@ vi.mock('./TreeSitterIndex', () => {
 const { CodeSearchProvider } = await import('./CodeSearchProvider')
 const { TreeSitterIndex } = await import('./TreeSitterIndex')
 
+// Typed prototype references for mock helpers
+const csProto = CodeSearchProvider.prototype as unknown as MockCodeSearchProto
+const tsProto = TreeSitterIndex.prototype as unknown as MockTreeSitterProto
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function mockCodeSearchHealthy(healthy: boolean) {
-  vi.mocked(CodeSearchProvider.prototype.checkHealth).mockResolvedValue(healthy)
+  csProto.checkHealth.mockResolvedValue(healthy)
 }
 
 function mockTreeSitterInitSuccess() {
-  vi.mocked(TreeSitterIndex.prototype.init).mockResolvedValue(undefined)
+  tsProto.init.mockResolvedValue(undefined)
 }
 
 function mockTreeSitterInitFailure() {
-  vi.mocked(TreeSitterIndex.prototype.init).mockRejectedValue(new Error('WASM load failed'))
+  tsProto.init.mockRejectedValue(new Error('WASM load failed'))
 }
 
 const TEST_FILES = [{ path: 'src/main.ts', content: 'function main() {}' }]
@@ -69,11 +93,11 @@ describe('useSymbolSearch', () => {
     )
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(result.current.providerName).toBe('code-search')
     })
 
     expect(result.current.provider).not.toBeNull()
-    expect(result.current.providerName).toBe('code-search')
+    expect(result.current.loading).toBe(false)
   })
 
   // ---- Code-search unavailable, files provided → tree-sitter ---------------
@@ -90,11 +114,11 @@ describe('useSymbolSearch', () => {
     )
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(result.current.providerName).toBe('tree-sitter')
     })
 
     expect(result.current.provider).not.toBeNull()
-    expect(result.current.providerName).toBe('tree-sitter')
+    expect(result.current.loading).toBe(false)
   })
 
   // ---- Both unavailable → null ---------------------------------------------
@@ -136,7 +160,7 @@ describe('useSymbolSearch', () => {
   it('starts loading and finishes after initialization', async () => {
     // Make checkHealth take time by using a delayed promise
     let resolveHealth!: (value: boolean) => void
-    vi.mocked(CodeSearchProvider.prototype.checkHealth).mockReturnValue(
+    csProto.checkHealth.mockReturnValue(
       new Promise((resolve) => {
         resolveHealth = resolve
       }),
@@ -146,12 +170,15 @@ describe('useSymbolSearch', () => {
       useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }),
     )
 
-    // Should be loading while checkHealth is pending
-    expect(result.current.loading).toBe(true)
+    // Should be loading while checkHealth is pending (after microtask runs)
+    await waitFor(() => {
+      expect(result.current.loading).toBe(true)
+    })
 
     // Resolve the health check
     await act(async () => {
       resolveHealth(true)
+      await Promise.resolve()
     })
 
     await waitFor(() => {
@@ -203,9 +230,8 @@ describe('useSymbolSearch', () => {
     )
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(result.current.providerName).toBe('tree-sitter')
     })
-    expect(result.current.providerName).toBe('tree-sitter')
 
     // Code-search still down
     mockCodeSearchHealthy(false)
@@ -224,7 +250,7 @@ describe('useSymbolSearch', () => {
   it('does not update state after unmount', async () => {
     // Make checkHealth take time so we can unmount during it
     let resolveHealth!: (value: boolean) => void
-    vi.mocked(CodeSearchProvider.prototype.checkHealth).mockReturnValue(
+    csProto.checkHealth.mockReturnValue(
       new Promise((resolve) => {
         resolveHealth = resolve
       }),
@@ -234,7 +260,10 @@ describe('useSymbolSearch', () => {
       useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }),
     )
 
-    expect(result.current.loading).toBe(true)
+    // Wait for microtask to start initialization
+    await waitFor(() => {
+      expect(result.current.loading).toBe(true)
+    })
 
     // Unmount before health check resolves
     unmount()
@@ -242,6 +271,7 @@ describe('useSymbolSearch', () => {
     // Resolve health check after unmount — should not cause state updates
     await act(async () => {
       resolveHealth(true)
+      await Promise.resolve()
     })
 
     // Provider should still be null since the effect was cancelled
@@ -262,7 +292,7 @@ describe('useSymbolSearch', () => {
     })
 
     // checkHealth should not have been called since there is no codeSearchUrl
-    expect(CodeSearchProvider.prototype.checkHealth).not.toHaveBeenCalled()
+    expect(csProto.checkHealth).not.toHaveBeenCalled()
   })
 
   // ---- Tree-sitter only (no code-search URL) --------------------------------
@@ -273,9 +303,9 @@ describe('useSymbolSearch', () => {
     const { result } = renderHook(() => useSymbolSearch({ files: TEST_FILES }))
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(result.current.providerName).toBe('tree-sitter')
     })
 
-    expect(result.current.providerName).toBe('tree-sitter')
+    expect(result.current.loading).toBe(false)
   })
 })
