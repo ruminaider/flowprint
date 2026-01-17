@@ -9,9 +9,7 @@ import type { ValidationError } from './types.js'
  *
  * This function assumes the document has already passed schema validation.
  */
-export function validateStructure(
-  doc: Record<string, unknown>,
-): ValidationError[] {
+export function validateStructure(doc: Record<string, unknown>): ValidationError[] {
   const errors: ValidationError[] = []
 
   const lanes = doc.lanes as Record<string, unknown> | undefined
@@ -46,11 +44,27 @@ export function validateStructure(
     // Check node references based on type
     switch (type) {
       case 'action': {
-        checkRef(nodeId, 'next', node.next as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+        checkRef(
+          nodeId,
+          'next',
+          node.next as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
         // Check error.catch
         const error = node.error as Record<string, unknown> | undefined
         if (error?.catch) {
-          checkRef(nodeId, 'error/catch', error.catch as string, nodeIds, errors, hasOutgoing, hasIncoming)
+          checkRef(
+            nodeId,
+            'error/catch',
+            error.catch as string,
+            nodeIds,
+            errors,
+            hasOutgoing,
+            hasIncoming,
+          )
         }
         break
       }
@@ -61,11 +75,27 @@ export function validateStructure(
           for (let i = 0; i < cases.length; i++) {
             const c = cases[i]
             if (c) {
-              checkRef(nodeId, `cases/${i}/next`, c.next as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+              checkRef(
+                nodeId,
+                `cases/${i}/next`,
+                c.next as string | undefined,
+                nodeIds,
+                errors,
+                hasOutgoing,
+                hasIncoming,
+              )
             }
           }
         }
-        checkRef(nodeId, 'default', node.default as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+        checkRef(
+          nodeId,
+          'default',
+          node.default as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
         break
       }
 
@@ -79,18 +109,50 @@ export function validateStructure(
             }
           }
         }
-        checkRef(nodeId, 'join', node.join as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+        checkRef(
+          nodeId,
+          'join',
+          node.join as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
         break
       }
 
       case 'wait': {
-        checkRef(nodeId, 'next', node.next as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
-        checkRef(nodeId, 'timeout_next', node.timeout_next as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+        checkRef(
+          nodeId,
+          'next',
+          node.next as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
+        checkRef(
+          nodeId,
+          'timeout_next',
+          node.timeout_next as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
         break
       }
 
       case 'error': {
-        checkRef(nodeId, 'next', node.next as string | undefined, nodeIds, errors, hasOutgoing, hasIncoming)
+        checkRef(
+          nodeId,
+          'next',
+          node.next as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
         break
       }
 
@@ -111,10 +173,7 @@ export function validateStructure(
     const incoming = hasIncoming.has(nodeId)
     const outgoing = hasOutgoing.has(nodeId)
 
-    const isOrphan =
-      type === 'terminal'
-        ? !incoming && nodeIds.size > 1
-        : !incoming && !outgoing
+    const isOrphan = type === 'terminal' ? !incoming && nodeIds.size > 1 : !incoming && !outgoing
 
     if (isOrphan) {
       errors.push({

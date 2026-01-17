@@ -60,7 +60,9 @@ const terminalNode: TerminalNode = {
   outcome: 'success',
 }
 
-function makeDoc(nodes: Record<string, ActionNode | SwitchNode | ParallelNode | WaitNode | TerminalNode>): FlowprintDocument {
+function makeDoc(
+  nodes: Record<string, ActionNode | SwitchNode | ParallelNode | WaitNode | TerminalNode>,
+): FlowprintDocument {
   return {
     schema: 'flowprint/1.0',
     name: 'test',
@@ -77,14 +79,7 @@ describe('PropertiesPanel', () => {
 
   it('shows placeholder when no node is selected', () => {
     const doc = makeDoc({ start: actionNode })
-    render(
-      <PropertiesPanel
-        selectedNodeId={null}
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
-    )
+    render(<PropertiesPanel selectedNodeId={null} doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />)
 
     expect(screen.getByText('Select a node to edit')).toBeTruthy()
   })
@@ -106,12 +101,7 @@ describe('PropertiesPanel', () => {
   it('renders common fields for an action node', () => {
     const doc = makeDoc({ start: actionNode })
     render(
-      <PropertiesPanel
-        selectedNodeId="start"
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
+      <PropertiesPanel selectedNodeId="start" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
     )
 
     expect(screen.getByText('action')).toBeTruthy()
@@ -123,12 +113,7 @@ describe('PropertiesPanel', () => {
   it('renders entry points and error handler for action node', () => {
     const doc = makeDoc({ start: actionNode })
     render(
-      <PropertiesPanel
-        selectedNodeId="start"
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
+      <PropertiesPanel selectedNodeId="start" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
     )
 
     expect(screen.getByText('Entry Points')).toBeTruthy()
@@ -141,12 +126,7 @@ describe('PropertiesPanel', () => {
   it('renders cases for switch node', () => {
     const doc = makeDoc({ evaluate: switchNode })
     render(
-      <PropertiesPanel
-        selectedNodeId="evaluate"
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
+      <PropertiesPanel selectedNodeId="evaluate" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
     )
 
     expect(screen.getByText('switch')).toBeTruthy()
@@ -160,18 +140,15 @@ describe('PropertiesPanel', () => {
   it('renders join strategy for parallel node', () => {
     const doc = makeDoc({ fork_step: parallelNode })
     render(
-      <PropertiesPanel
-        selectedNodeId="fork_step"
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
+      <PropertiesPanel selectedNodeId="fork_step" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
     )
 
     expect(screen.getByText('parallel')).toBeTruthy()
     expect(screen.getByLabelText('Join Strategy')).toBeTruthy()
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    const joinSelect: HTMLSelectElement = screen.getByLabelText('Join Strategy') as HTMLSelectElement
+    const joinSelect: HTMLSelectElement = screen.getByLabelText(
+      'Join Strategy',
+    ) as HTMLSelectElement
     expect(joinSelect.value).toBe('all_reached')
   })
 
@@ -193,14 +170,7 @@ describe('PropertiesPanel', () => {
 
   it('renders outcome selector for terminal node', () => {
     const doc = makeDoc({ done: terminalNode })
-    render(
-      <PropertiesPanel
-        selectedNodeId="done"
-        doc={doc}
-        onUpdateNode={vi.fn()}
-        lanes={lanes}
-      />,
-    )
+    render(<PropertiesPanel selectedNodeId="done" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />)
 
     expect(screen.getByText('terminal')).toBeTruthy()
     expect(screen.getByLabelText('Outcome')).toBeTruthy()
@@ -275,12 +245,7 @@ describe('PropertiesPanel', () => {
     const onUpdateNode = vi.fn()
     const doc = makeDoc({ done: terminalNode })
     render(
-      <PropertiesPanel
-        selectedNodeId="done"
-        doc={doc}
-        onUpdateNode={onUpdateNode}
-        lanes={lanes}
-      />,
+      <PropertiesPanel selectedNodeId="done" doc={doc} onUpdateNode={onUpdateNode} lanes={lanes} />,
     )
 
     fireEvent.change(screen.getByLabelText('Outcome'), {
@@ -339,9 +304,7 @@ describe('TextField', () => {
   })
 
   it('renders label and value', () => {
-    render(
-      <TextField label="Name" value="hello" onChange={vi.fn()} />,
-    )
+    render(<TextField label="Name" value="hello" onChange={vi.fn()} />)
 
     expect(screen.getByLabelText('Name')).toBeTruthy()
     expect(screen.getByDisplayValue('hello')).toBeTruthy()
@@ -349,9 +312,7 @@ describe('TextField', () => {
 
   it('calls onChange with new value on input change', () => {
     const onChange = vi.fn()
-    render(
-      <TextField label="Name" value="hello" onChange={onChange} />,
-    )
+    render(<TextField label="Name" value="hello" onChange={onChange} />)
 
     fireEvent.change(screen.getByLabelText('Name'), {
       target: { value: 'world' },
@@ -361,9 +322,7 @@ describe('TextField', () => {
   })
 
   it('renders empty input when value is empty string', () => {
-    render(
-      <TextField label="Name" value="" onChange={vi.fn()} />,
-    )
+    render(<TextField label="Name" value="" onChange={vi.fn()} />)
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const nameInput: HTMLInputElement = screen.getByLabelText('Name') as HTMLInputElement

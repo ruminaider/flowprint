@@ -91,9 +91,7 @@ export function serialize(doc: FlowprintDocument): string {
 /**
  * Serialize the nodes map with deterministic key ordering per node type.
  */
-function serializeNodes(
-  nodes: Record<string, Node>,
-): YAMLMap {
+function serializeNodes(nodes: Record<string, Node>): YAMLMap {
   const nodesMap = new YAMLMap()
 
   for (const [nodeId, node] of Object.entries(nodes)) {
@@ -195,9 +193,7 @@ function serializeErrorHandler(error: Record<string, unknown>): YAMLMap {
 /**
  * Serialize a plain object as a YAMLMap, preserving insertion order of keys.
  */
-function serializeOrderedMap(
-  obj: Record<string, unknown>,
-): YAMLMap {
+function serializeOrderedMap(obj: Record<string, unknown>): YAMLMap {
   const map = new YAMLMap()
 
   for (const [key, value] of Object.entries(obj)) {

@@ -3,7 +3,9 @@ import { snapToLane } from './useLaneSnap'
 import { NODE_HEIGHT } from '../layout/constants'
 import type { LaneBand } from '../layout/types'
 
-function makeLane(overrides: Partial<LaneBand> & { laneId: string; y: number; height: number }): LaneBand {
+function makeLane(
+  overrides: Partial<LaneBand> & { laneId: string; y: number; height: number },
+): LaneBand {
   return {
     label: overrides.laneId,
     visibility: 'external',

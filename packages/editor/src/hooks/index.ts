@@ -1,5 +1,9 @@
 export { useFlowprintState } from './useFlowprintState'
-export type { UseFlowprintStateReturn, UseFlowprintStateOptions, ConnectionConfig } from './useFlowprintState'
+export type {
+  UseFlowprintStateReturn,
+  UseFlowprintStateOptions,
+  ConnectionConfig,
+} from './useFlowprintState'
 export { useLaneSnap, snapToLane } from './useLaneSnap'
 export { useConnectionHandler } from './useConnectionHandler'
 export type { UseConnectionHandlerReturn, PendingSwitchConnection } from './useConnectionHandler'

@@ -24,8 +24,8 @@ flowprint validate "**/*.flowprint.yaml" --check-entry-points
 
 **Options:**
 
-| Option | Description |
-|---|---|
+| Option                 | Description                                                            |
+| ---------------------- | ---------------------------------------------------------------------- |
 | `--check-entry-points` | Verify that referenced files exist and entry point symbols are defined |
 
 **Output:**
@@ -36,11 +36,11 @@ flowprint validate "**/*.flowprint.yaml" --check-entry-points
 
 **Exit codes:**
 
-| Code | Meaning |
-|---|---|
-| 0 | All files valid |
-| 1 | Validation errors found |
-| 2 | File not found or parse error |
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | All files valid               |
+| 1    | Validation errors found       |
+| 2    | File not found or parse error |
 
 ### `flowprint lint <glob>`
 
@@ -53,18 +53,18 @@ flowprint lint "**/*.flowprint.yaml" --config .flowprintrc.yaml
 
 **Options:**
 
-| Option | Description |
-|---|---|
+| Option            | Description                               |
+| ----------------- | ----------------------------------------- |
 | `--config <path>` | Path to a `.flowprintrc.yaml` config file |
 
 **Rules:**
 
-| Rule | Default | Description |
-|---|---|---|
-| `node-naming` | `warn` | Enforce snake_case for node IDs |
-| `lane-ordering` | `error` | External lanes should come before internal lanes (by order) |
-| `require-description` | `off` | Action nodes should have descriptions |
-| `no-empty-branches` | `error` | Parallel nodes must have non-empty branches |
+| Rule                  | Default | Description                                                 |
+| --------------------- | ------- | ----------------------------------------------------------- |
+| `node-naming`         | `warn`  | Enforce snake_case for node IDs                             |
+| `lane-ordering`       | `error` | External lanes should come before internal lanes (by order) |
+| `require-description` | `off`   | Action nodes should have descriptions                       |
+| `no-empty-branches`   | `error` | Parallel nodes must have non-empty branches                 |
 
 Each rule can be set to `error`, `warn`, or `off`.
 
@@ -82,11 +82,11 @@ The CLI looks for `.flowprintrc.yaml` or `.flowprintrc.yml` in the current direc
 
 **Exit codes:**
 
-| Code | Meaning |
-|---|---|
-| 0 | No lint errors |
-| 1 | Lint errors found |
-| 2 | File not found or parse error |
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | No lint errors                |
+| 1    | Lint errors found             |
+| 2    | File not found or parse error |
 
 ### `flowprint diff <file1> <file2>`
 
@@ -97,15 +97,16 @@ flowprint diff old.flowprint.yaml new.flowprint.yaml
 ```
 
 Reports:
+
 - Nodes added, removed, or modified
 - Edges added or removed
 - Lanes added, removed, or modified
 
 **Exit codes:**
 
-| Code | Meaning |
-|---|---|
-| 0 | Always (informational command) |
+| Code | Meaning                        |
+| ---- | ------------------------------ |
+| 0    | Always (informational command) |
 
 ### `flowprint migrate`
 
@@ -119,9 +120,9 @@ Currently a placeholder that reports the latest version.
 
 **Exit codes:**
 
-| Code | Meaning |
-|---|---|
-| 0 | Already at latest version |
+| Code | Meaning                   |
+| ---- | ------------------------- |
+| 0    | Already at latest version |
 
 ### `flowprint init [name]`
 
@@ -135,12 +136,13 @@ flowprint init my-service -o path/to/output.flowprint.yaml
 
 **Options:**
 
-| Option | Description |
-|---|---|
-| `--non-interactive` | Skip interactive prompts and use defaults |
+| Option                | Description                                            |
+| --------------------- | ------------------------------------------------------ |
+| `--non-interactive`   | Skip interactive prompts and use defaults              |
 | `-o, --output <path>` | Output file path (defaults to `<name>.flowprint.yaml`) |
 
 The generated blueprint includes:
+
 - Schema version `flowprint/1.0`
 - Two default lanes: frontstage (external) and backstage (internal)
 - One action node and one terminal node
@@ -149,18 +151,18 @@ Uses `serialize()` from `@ruminaider/flowprint-schema` to produce canonical YAML
 
 **Exit codes:**
 
-| Code | Meaning |
-|---|---|
-| 0 | Blueprint created successfully |
-| 2 | File already exists |
+| Code | Meaning                        |
+| ---- | ------------------------------ |
+| 0    | Blueprint created successfully |
+| 2    | File already exists            |
 
 ## Global Exit Codes
 
-| Code | Meaning |
-|---|---|
-| 0 | Success |
-| 1 | Validation or lint errors found |
-| 2 | File not found, parse error, or other I/O error |
+| Code | Meaning                                         |
+| ---- | ----------------------------------------------- |
+| 0    | Success                                         |
+| 1    | Validation or lint errors found                 |
+| 2    | File not found, parse error, or other I/O error |
 
 ## Entry Point Checking
 
@@ -170,6 +172,7 @@ The `--check-entry-points` flag on the `validate` command verifies that:
 2. Symbols referenced in `entry_points[].symbol` are defined in the file
 
 Symbol checking uses regex-based heuristics for supported languages:
+
 - **Python**: `def <symbol>` or `class <symbol>`
 - **TypeScript/JavaScript**: `function <symbol>`, `const <symbol>`, `class <symbol>` (with optional `export` and `async` prefixes)
 

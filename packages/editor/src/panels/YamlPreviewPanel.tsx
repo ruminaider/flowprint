@@ -72,18 +72,10 @@ export function YamlPreviewPanel({ doc, visible }: YamlPreviewPanelProps) {
     <div className="fp-yaml-preview">
       <div className="fp-yaml-preview-header">YAML Preview</div>
       <div className="fp-yaml-preview-content">
-        {monacoAvailable === null && (
-          <div className="fp-yaml-preview-loading">Loading...</div>
-        )}
-        {monacoAvailable === false && (
-          <pre className="fp-yaml-preview-fallback">{yaml}</pre>
-        )}
+        {monacoAvailable === null && <div className="fp-yaml-preview-loading">Loading...</div>}
+        {monacoAvailable === false && <pre className="fp-yaml-preview-fallback">{yaml}</pre>}
         {monacoAvailable === true && (
-          <Suspense
-            fallback={
-              <div className="fp-yaml-preview-loading">Loading editor...</div>
-            }
-          >
+          <Suspense fallback={<div className="fp-yaml-preview-loading">Loading editor...</div>}>
             <MonacoEditor
               value={yaml}
               language="yaml"

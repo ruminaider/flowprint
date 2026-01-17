@@ -6,9 +6,7 @@ import type { FlowprintDocument } from '../types.js'
  * Minimal helper to build a FlowprintDocument with the given nodes.
  * All nodes default to lane "main".
  */
-function makeDoc(
-  nodes: FlowprintDocument['nodes'],
-): FlowprintDocument {
+function makeDoc(nodes: FlowprintDocument['nodes']): FlowprintDocument {
   return {
     schema: 'flowprint/1.0',
     name: 'test-blueprint',
@@ -31,9 +29,7 @@ describe('getEdges', () => {
       b: { type: 'terminal', lane: 'main', label: 'B', outcome: 'success' },
     })
     const edges = getEdges(doc)
-    expect(edges).toEqual([
-      { source: 'a', target: 'b', type: 'normal' },
-    ])
+    expect(edges).toEqual([{ source: 'a', target: 'b', type: 'normal' }])
   })
 
   it('extracts error edges from action.error.catch', () => {
@@ -113,9 +109,7 @@ describe('getEdges', () => {
       a: { type: 'terminal', lane: 'main', label: 'A', outcome: 'failure' },
     })
     const edges = getEdges(doc)
-    expect(edges).toEqual([
-      { source: 'e', target: 'a', type: 'normal' },
-    ])
+    expect(edges).toEqual([{ source: 'e', target: 'a', type: 'normal' }])
   })
 
   it('returns empty array for terminal-only graph', () => {
@@ -138,9 +132,7 @@ describe('getEdges', () => {
       b: { type: 'terminal', lane: 'main', label: 'B', outcome: 'success' },
     })
     const edges = getEdges(doc)
-    expect(edges).toEqual([
-      { source: 'a', target: 'b', type: 'normal' },
-    ])
+    expect(edges).toEqual([{ source: 'a', target: 'b', type: 'normal' }])
   })
 })
 
@@ -233,13 +225,13 @@ describe('topoSort', () => {
       merge: { type: 'terminal', lane: 'main', label: 'Merge', outcome: 'success' },
     })
     const result = topoSort(doc)
-    const rootNodes = result.filter(n => n.order === 0)
+    const rootNodes = result.filter((n) => n.order === 0)
     expect(rootNodes).toHaveLength(2)
-    const rootIds = rootNodes.map(n => n.id)
+    const rootIds = rootNodes.map((n) => n.id)
     expect(rootIds).toContain('root1')
     expect(rootIds).toContain('root2')
 
-    const mergeNode = result.find(n => n.id === 'merge')
+    const mergeNode = result.find((n) => n.id === 'merge')
     expect(mergeNode?.order).toBe(1)
   })
 
@@ -257,10 +249,10 @@ describe('topoSort', () => {
       end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
     })
     const result = topoSort(doc)
-    const startNode = result.find(n => n.id === 'start')
-    const leftNode = result.find(n => n.id === 'left')
-    const rightNode = result.find(n => n.id === 'right')
-    const endNode = result.find(n => n.id === 'end')
+    const startNode = result.find((n) => n.id === 'start')
+    const leftNode = result.find((n) => n.id === 'left')
+    const rightNode = result.find((n) => n.id === 'right')
+    const endNode = result.find((n) => n.id === 'end')
 
     expect(startNode?.order).toBe(0)
     expect(leftNode?.order).toBe(1)
@@ -308,9 +300,9 @@ describe('topoSort', () => {
       done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
     })
     const result = topoSort(doc)
-    const swNode = result.find(n => n.id === 'sw')
-    const extraNode = result.find(n => n.id === 'extra')
-    const doneNode = result.find(n => n.id === 'done')
+    const swNode = result.find((n) => n.id === 'sw')
+    const extraNode = result.find((n) => n.id === 'extra')
+    const doneNode = result.find((n) => n.id === 'done')
 
     expect(swNode?.order).toBe(0)
     expect(extraNode?.order).toBe(1)

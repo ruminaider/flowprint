@@ -33,9 +33,7 @@ describe('YamlPreviewPanel', () => {
   })
 
   it('returns null when not visible', () => {
-    const { container } = render(
-      <YamlPreviewPanel doc={baseDoc} visible={false} />,
-    )
+    const { container } = render(<YamlPreviewPanel doc={baseDoc} visible={false} />)
 
     expect(container.innerHTML).toBe('')
   })
@@ -57,9 +55,7 @@ describe('YamlPreviewPanel', () => {
   })
 
   it('updates when doc changes', async () => {
-    const { rerender } = render(
-      <YamlPreviewPanel doc={baseDoc} visible={true} />,
-    )
+    const { rerender } = render(<YamlPreviewPanel doc={baseDoc} visible={true} />)
 
     // Wait for fallback to appear
     await screen.findByText(/schema: flowprint\/1\.0/, {}, { timeout: 3000 })
@@ -84,9 +80,7 @@ describe('YamlPreviewPanel', () => {
   })
 
   it('applies correct CSS classes', () => {
-    const { container } = render(
-      <YamlPreviewPanel doc={baseDoc} visible={true} />,
-    )
+    const { container } = render(<YamlPreviewPanel doc={baseDoc} visible={true} />)
 
     expect(container.querySelector('.fp-yaml-preview')).toBeTruthy()
     expect(container.querySelector('.fp-yaml-preview-header')).toBeTruthy()

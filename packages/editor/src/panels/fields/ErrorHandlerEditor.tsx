@@ -27,9 +27,7 @@ export function ErrorHandlerEditor({ error, onChange }: ErrorHandlerEditorProps)
       const limit = parseInt(e.target.value, 10)
       if (isNaN(limit)) {
         const current = error ?? {}
-        const rest = Object.fromEntries(
-          Object.entries(current).filter(([key]) => key !== 'retry'),
-        )
+        const rest = Object.fromEntries(Object.entries(current).filter(([key]) => key !== 'retry'))
         onChange(Object.keys(rest).length > 0 ? (rest as typeof current) : undefined)
       } else {
         onChange({

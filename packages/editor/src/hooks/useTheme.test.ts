@@ -35,7 +35,10 @@ function createMockMql(matches: boolean): MockMediaQueryList {
 
 beforeEach(() => {
   mockMql = createMockMql(false)
-  vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => mockMql),
+  )
 })
 
 afterEach(() => {
@@ -59,7 +62,10 @@ describe('useTheme', () => {
 
   it('returns "light" in system mode when OS prefers light', () => {
     mockMql = createMockMql(false)
-    vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mockMql),
+    )
 
     const { result } = renderHook(() => useTheme('system'))
     expect(result.current).toBe('light')
@@ -67,17 +73,19 @@ describe('useTheme', () => {
 
   it('returns "dark" in system mode when OS prefers dark', () => {
     mockMql = createMockMql(true)
-    vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mockMql),
+    )
 
     const { result } = renderHook(() => useTheme('system'))
     expect(result.current).toBe('dark')
   })
 
   it('re-renders when mode changes from "light" to "dark"', () => {
-    const { result, rerender } = renderHook(
-      ({ mode }: { mode: ThemeMode }) => useTheme(mode),
-      { initialProps: { mode: 'light' as ThemeMode } },
-    )
+    const { result, rerender } = renderHook(({ mode }: { mode: ThemeMode }) => useTheme(mode), {
+      initialProps: { mode: 'light' as ThemeMode },
+    })
 
     expect(result.current).toBe('light')
 
@@ -87,14 +95,19 @@ describe('useTheme', () => {
 
   it('responds to live OS theme changes in system mode', () => {
     mockMql = createMockMql(false)
-    vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mockMql),
+    )
 
     const { result } = renderHook(() => useTheme('system'))
     expect(result.current).toBe('light')
 
     // Capture the handler registered via addEventListener
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const calls = mockMql.addEventListener.mock.calls[0] as
+      | [string, (e: MediaQueryListEvent) => void]
+      | undefined
     const handler = calls?.[1]
     expect(handler).toBeDefined()
 
@@ -113,12 +126,17 @@ describe('useTheme', () => {
 
   it('cleans up event listener on unmount', () => {
     mockMql = createMockMql(false)
-    vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mockMql),
+    )
 
     const { unmount } = renderHook(() => useTheme('system'))
 
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const calls = mockMql.addEventListener.mock.calls[0] as
+      | [string, (e: MediaQueryListEvent) => void]
+      | undefined
     const handler = calls?.[1]
 
     unmount()
@@ -128,15 +146,19 @@ describe('useTheme', () => {
 
   it('cleans up event listener when mode changes away from "system"', () => {
     mockMql = createMockMql(false)
-    vi.stubGlobal('matchMedia', vi.fn(() => mockMql))
-
-    const { rerender } = renderHook(
-      ({ mode }: { mode: ThemeMode }) => useTheme(mode),
-      { initialProps: { mode: 'system' as ThemeMode } },
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mockMql),
     )
 
+    const { rerender } = renderHook(({ mode }: { mode: ThemeMode }) => useTheme(mode), {
+      initialProps: { mode: 'system' as ThemeMode },
+    })
+
     expect(mockMql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
-    const calls = mockMql.addEventListener.mock.calls[0] as [string, (e: MediaQueryListEvent) => void] | undefined
+    const calls = mockMql.addEventListener.mock.calls[0] as
+      | [string, (e: MediaQueryListEvent) => void]
+      | undefined
     const handler = calls?.[1]
 
     rerender({ mode: 'light' })

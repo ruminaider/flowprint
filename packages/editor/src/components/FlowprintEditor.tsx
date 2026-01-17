@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ReactFlow,
-  Background,
-  BackgroundVariant,
-  MiniMap,
-} from '@xyflow/react'
+import { ReactFlow, Background, BackgroundVariant, MiniMap } from '@xyflow/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { validate } from '@ruminaider/flowprint-schema'
 import { nodeTypes } from '../nodes'
@@ -113,8 +108,12 @@ export function FlowprintEditor({
 
   // --- Keyboard shortcuts ---
   useKeyboardShortcuts({
-    undo: () => { state.undo() },
-    redo: () => { state.redo() },
+    undo: () => {
+      state.undo()
+    },
+    redo: () => {
+      state.redo()
+    },
     deleteSelected: () => {
       if (selectedNodeId) {
         const node = state.doc.nodes[selectedNodeId]
@@ -123,8 +122,12 @@ export function FlowprintEditor({
         }
       }
     },
-    selectAll: () => { /* noop */ },
-    deselect: () => { setSelectedNodeId(null) },
+    selectAll: () => {
+      /* noop */
+    },
+    deselect: () => {
+      setSelectedNodeId(null)
+    },
     disabled: readOnly,
   })
 
@@ -140,94 +143,116 @@ export function FlowprintEditor({
 
   return (
     <ErrorBoundary doc={state.doc}>
-    <div
-      className={`fp-editor ${className ?? ''}`}
-      data-fp-theme={resolvedTheme}
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        ...style,
-      }}
-    >
-      <ReactFlow
-        nodes={layout.nodes}
-        edges={layout.edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        elementsSelectable={!readOnly}
-        onConnect={readOnly ? undefined : connectionHandler.onConnect}
-        isValidConnection={connectionHandler.isValidConnection}
-        onNodesDelete={readOnly ? undefined : deleteHandler.onNodesDelete}
-        onEdgesDelete={readOnly ? undefined : deleteHandler.onEdgesDelete}
-        onDrop={readOnly ? undefined : addNode.onDrop}
-        onDragOver={readOnly ? undefined : addNode.onDragOver}
-        onNodeDragStop={readOnly ? undefined : laneSnap.onNodeDragStop}
-        onSelectionChange={readOnly ? undefined : ({ nodes }) => {
-          setSelectedNodeId(nodes.length === 1 ? nodes[0]?.id ?? null : null)
+      <div
+        className={`fp-editor ${className ?? ''}`}
+        data-fp-theme={resolvedTheme}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          ...style,
         }}
-        onNodeClick={readOnly ? undefined : (_, node) => { setSelectedNodeId(node.id); }}
-        panOnDrag
-        zoomOnScroll
-        zoomOnPinch
-        fitView
-        fitViewOptions={{ padding: 0.1 }}
-        snapToGrid
-        snapGrid={[20, 20]}
-        proOptions={proOptions}
       >
-        <LaneBackground lanes={layout.lanes} totalWidth={layout.width} />
-        {layout.lineOfVisibilityY !== null && (
-          <LineOfVisibility y={layout.lineOfVisibilityY} totalWidth={layout.width} />
+        <ReactFlow
+          nodes={layout.nodes}
+          edges={layout.edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
+          elementsSelectable={!readOnly}
+          onConnect={readOnly ? undefined : connectionHandler.onConnect}
+          isValidConnection={connectionHandler.isValidConnection}
+          onNodesDelete={readOnly ? undefined : deleteHandler.onNodesDelete}
+          onEdgesDelete={readOnly ? undefined : deleteHandler.onEdgesDelete}
+          onDrop={readOnly ? undefined : addNode.onDrop}
+          onDragOver={readOnly ? undefined : addNode.onDragOver}
+          onNodeDragStop={readOnly ? undefined : laneSnap.onNodeDragStop}
+          onSelectionChange={
+            readOnly
+              ? undefined
+              : ({ nodes }) => {
+                  setSelectedNodeId(nodes.length === 1 ? (nodes[0]?.id ?? null) : null)
+                }
+          }
+          onNodeClick={
+            readOnly
+              ? undefined
+              : (_, node) => {
+                  setSelectedNodeId(node.id)
+                }
+          }
+          panOnDrag
+          zoomOnScroll
+          zoomOnPinch
+          fitView
+          fitViewOptions={{ padding: 0.1 }}
+          snapToGrid
+          snapGrid={[20, 20]}
+          proOptions={proOptions}
+        >
+          <LaneBackground lanes={layout.lanes} totalWidth={layout.width} />
+          {layout.lineOfVisibilityY !== null && (
+            <LineOfVisibility y={layout.lineOfVisibilityY} totalWidth={layout.width} />
+          )}
+          {showGrid && <Background variant={BackgroundVariant.Dots} gap={20} size={1} />}
+          {showMinimap && <MiniMap pannable zoomable />}
+        </ReactFlow>
+        {showBanner && (
+          <ValidationBanner
+            errors={validationErrors}
+            onDismiss={() => {
+              setDismissedForDoc(state.doc)
+            }}
+          />
         )}
-        {showGrid && <Background variant={BackgroundVariant.Dots} gap={20} size={1} />}
-        {showMinimap && <MiniMap pannable zoomable />}
-      </ReactFlow>
-      {showBanner && (
-        <ValidationBanner
-          errors={validationErrors}
-          onDismiss={() => { setDismissedForDoc(state.doc) }}
-        />
-      )}
-      {!readOnly && <NodePalette />}
-      {!readOnly && (
-        <PropertiesPanel
-          selectedNodeId={selectedNodeId}
-          doc={state.doc}
-          onUpdateNode={(id, patch) => { state.updateNode(id, patch) }}
-          lanes={state.doc.lanes}
-          symbolSearch={symbolSearch}
-        />
-      )}
-      {!readOnly && (
-        <LanePanel
-          doc={state.doc}
-          onAddLane={(id, lane) => { state.addLane(id, lane) }}
-          onUpdateLane={(id, patch) => { state.updateLane(id, patch) }}
-          onRemoveLane={(id) => { state.removeLane(id) }}
-          onReorderLanes={(ids) => { state.reorderLanes(ids) }}
-        />
-      )}
-      {connectionHandler.pendingSwitchConnection && (
-        <SwitchConditionPopover
-          connection={connectionHandler.pendingSwitchConnection}
-          onConfirm={connectionHandler.confirmSwitchConnection}
-          onCancel={connectionHandler.cancelSwitchConnection}
-        />
-      )}
-      {deleteHandler.pendingDeletion && (
-        <DeleteConfirmation
-          nodeId={deleteHandler.pendingDeletion.id}
-          connectionCount={deleteHandler.pendingDeletion.connectionCount}
-          onConfirm={deleteHandler.confirmDeletion}
-          onCancel={deleteHandler.cancelDeletion}
-        />
-      )}
-      {showYamlPreview && <YamlPreviewPanel doc={state.doc} visible />}
-      {showExportButton && !readOnly && <ExportButton doc={state.doc} />}
-    </div>
+        {!readOnly && <NodePalette />}
+        {!readOnly && (
+          <PropertiesPanel
+            selectedNodeId={selectedNodeId}
+            doc={state.doc}
+            onUpdateNode={(id, patch) => {
+              state.updateNode(id, patch)
+            }}
+            lanes={state.doc.lanes}
+            symbolSearch={symbolSearch}
+          />
+        )}
+        {!readOnly && (
+          <LanePanel
+            doc={state.doc}
+            onAddLane={(id, lane) => {
+              state.addLane(id, lane)
+            }}
+            onUpdateLane={(id, patch) => {
+              state.updateLane(id, patch)
+            }}
+            onRemoveLane={(id) => {
+              state.removeLane(id)
+            }}
+            onReorderLanes={(ids) => {
+              state.reorderLanes(ids)
+            }}
+          />
+        )}
+        {connectionHandler.pendingSwitchConnection && (
+          <SwitchConditionPopover
+            connection={connectionHandler.pendingSwitchConnection}
+            onConfirm={connectionHandler.confirmSwitchConnection}
+            onCancel={connectionHandler.cancelSwitchConnection}
+          />
+        )}
+        {deleteHandler.pendingDeletion && (
+          <DeleteConfirmation
+            nodeId={deleteHandler.pendingDeletion.id}
+            connectionCount={deleteHandler.pendingDeletion.connectionCount}
+            onConfirm={deleteHandler.confirmDeletion}
+            onCancel={deleteHandler.cancelDeletion}
+          />
+        )}
+        {showYamlPreview && <YamlPreviewPanel doc={state.doc} visible />}
+        {showExportButton && !readOnly && <ExportButton doc={state.doc} />}
+      </div>
     </ErrorBoundary>
   )
 }

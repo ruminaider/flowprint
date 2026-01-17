@@ -23,9 +23,7 @@ export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointLi
 
   const handleUpdate = useCallback(
     (index: number, field: keyof EntryPoint, value: string) => {
-      const updated = entries.map((ep, i) =>
-        i === index ? { ...ep, [field]: value } : ep,
-      )
+      const updated = entries.map((ep, i) => (i === index ? { ...ep, [field]: value } : ep))
       onChange(updated)
     },
     [entries, onChange],
@@ -51,9 +49,7 @@ export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointLi
               file={ep.file}
               symbol={ep.symbol}
               onChange={(entry) => {
-                const updated = entries.map((e, idx) =>
-                  idx === i ? entry : e,
-                )
+                const updated = entries.map((e, idx) => (idx === i ? entry : e))
                 onChange(updated)
               }}
               symbolSearch={symbolSearch}
@@ -65,7 +61,9 @@ export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointLi
                 type="text"
                 className="fp-panel-field-input"
                 value={ep.file}
-                onChange={(e) => { handleUpdate(i, 'file', e.target.value); }}
+                onChange={(e) => {
+                  handleUpdate(i, 'file', e.target.value)
+                }}
                 placeholder="file"
                 aria-label={`Entry point ${String(i + 1)} file`}
               />
@@ -73,7 +71,9 @@ export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointLi
                 type="text"
                 className="fp-panel-field-input"
                 value={ep.symbol}
-                onChange={(e) => { handleUpdate(i, 'symbol', e.target.value); }}
+                onChange={(e) => {
+                  handleUpdate(i, 'symbol', e.target.value)
+                }}
                 placeholder="symbol"
                 aria-label={`Entry point ${String(i + 1)} symbol`}
               />
@@ -82,7 +82,9 @@ export function EntryPointList({ entries, onChange, symbolSearch }: EntryPointLi
           <button
             type="button"
             className="fp-panel-remove-btn"
-            onClick={() => { handleRemove(i); }}
+            onClick={() => {
+              handleRemove(i)
+            }}
             aria-label={`Remove entry point ${String(i + 1)}`}
           >
             x

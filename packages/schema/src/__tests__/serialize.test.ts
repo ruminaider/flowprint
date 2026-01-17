@@ -6,9 +6,7 @@ import type { FlowprintDocument } from '../types.js'
 /**
  * Helper to create a minimal valid FlowprintDocument.
  */
-function makeDoc(
-  overrides: Partial<FlowprintDocument> = {},
-): FlowprintDocument {
+function makeDoc(overrides: Partial<FlowprintDocument> = {}): FlowprintDocument {
   return {
     schema: 'flowprint/1.0',
     name: 'test-blueprint',
@@ -95,9 +93,17 @@ describe('serialize', () => {
         }
       }
 
-      const expectedOrder = ['schema', 'name', 'version', 'description', 'metadata', 'lanes', 'nodes']
+      const expectedOrder = [
+        'schema',
+        'name',
+        'version',
+        'description',
+        'metadata',
+        'lanes',
+        'nodes',
+      ]
       const actualKeys = [...keyPositions.keys()]
-      const filteredActual = actualKeys.filter(k => expectedOrder.includes(k))
+      const filteredActual = actualKeys.filter((k) => expectedOrder.includes(k))
       expect(filteredActual).toEqual(expectedOrder)
     })
 
@@ -122,7 +128,7 @@ describe('serialize', () => {
 
       // Find the my_node section and extract its keys
       const lines = yaml.split('\n')
-      const nodeStart = lines.findIndex(l => l.trimStart().startsWith('my_node:'))
+      const nodeStart = lines.findIndex((l) => l.trimStart().startsWith('my_node:'))
       expect(nodeStart).toBeGreaterThan(-1)
 
       // Collect keys at 4-space indentation under the node
@@ -138,7 +144,15 @@ describe('serialize', () => {
         }
       }
 
-      const expectedOrder = ['type', 'lane', 'label', 'description', 'entry_points', 'next', 'error']
+      const expectedOrder = [
+        'type',
+        'lane',
+        'label',
+        'description',
+        'entry_points',
+        'next',
+        'error',
+      ]
       expect(nodeKeys).toEqual(expectedOrder)
     })
   })
@@ -262,7 +276,9 @@ describe('serialize', () => {
       })
       const yaml = serialize(doc)
       const parsed = parse(yaml) as FlowprintDocument
-      const action = parsed.nodes.a as { error?: { retry?: { limit: number, backoff: string }, catch?: string } }
+      const action = parsed.nodes.a as {
+        error?: { retry?: { limit: number; backoff: string }; catch?: string }
+      }
       expect(action.error?.retry?.limit).toBe(3)
       expect(action.error?.retry?.backoff).toBe('exponential')
       expect(action.error?.catch).toBe('err')
@@ -319,7 +335,7 @@ describe('serialize', () => {
       const yaml = serialize(doc)
       // There should be no top-level metadata key
       const lines = yaml.split('\n')
-      const topLevelMetadata = lines.some(l => l === 'metadata:' || l.startsWith('metadata:'))
+      const topLevelMetadata = lines.some((l) => l === 'metadata:' || l.startsWith('metadata:'))
       expect(topLevelMetadata).toBe(false)
     })
 
@@ -403,7 +419,7 @@ describe('serialize', () => {
       })
       const yaml = serialize(doc)
       const parsed = parse(yaml) as FlowprintDocument
-      const node = parsed.nodes.a as { entry_points?: Array<{ file: string, symbol: string }> }
+      const node = parsed.nodes.a as { entry_points?: Array<{ file: string; symbol: string }> }
       expect(node.entry_points).toHaveLength(2)
       expect(node.entry_points![0]!.file).toBe('src/api/handler.ts')
       expect(node.entry_points![0]!.symbol).toBe('handleRequest')

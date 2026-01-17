@@ -43,7 +43,9 @@ describe('ErrorBoundary', () => {
   let consoleErrorSpy: MockInstance
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* noop */ })
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      /* noop */
+    })
   })
 
   afterEach(() => {

@@ -95,9 +95,12 @@ describe('LanePanel', () => {
 
     fireEvent.click(screen.getByText('Add Lane'))
 
-    expect(onAddLane).toHaveBeenCalledWith('new_lane_2', expect.objectContaining({
-      label: 'New Lane',
-    }))
+    expect(onAddLane).toHaveBeenCalledWith(
+      'new_lane_2',
+      expect.objectContaining({
+        label: 'New Lane',
+      }),
+    )
   })
 
   it('add lane assigns order 0 when no lanes exist', () => {
@@ -105,9 +108,12 @@ describe('LanePanel', () => {
 
     fireEvent.click(screen.getByText('Add Lane'))
 
-    expect(onAddLane).toHaveBeenCalledWith('new_lane_1', expect.objectContaining({
-      order: 0,
-    }))
+    expect(onAddLane).toHaveBeenCalledWith(
+      'new_lane_1',
+      expect.objectContaining({
+        order: 0,
+      }),
+    )
   })
 
   it('edit label fires onUpdateLane', () => {

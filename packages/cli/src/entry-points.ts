@@ -40,19 +40,14 @@ async function initTreeSitter(): Promise<boolean> {
   try {
     // Use createRequire to load native/WASM modules at runtime.
     // This works whether the bundle is CJS or ESM.
-    const req = createRequire(
-      typeof __filename !== 'undefined' ? __filename : import.meta.url,
-    )
+    const req = createRequire(typeof __filename !== 'undefined' ? __filename : import.meta.url)
     resolveRequire = req
 
     const mod = req('web-tree-sitter') as Record<string, unknown>
     ParserClass = mod.Parser as typeof import('web-tree-sitter').Parser
     LanguageClass = mod.Language as typeof import('web-tree-sitter').Language
 
-    const wasmPath = join(
-      dirname(req.resolve('web-tree-sitter')),
-      'tree-sitter.wasm',
-    )
+    const wasmPath = join(dirname(req.resolve('web-tree-sitter')), 'tree-sitter.wasm')
 
     await ParserClass.init({
       locateFile: () => wasmPath,
@@ -135,10 +130,7 @@ async function checkSymbolTreeSitter(
 function findPythonSymbol(root: import('web-tree-sitter').Node, symbol: string): boolean {
   // Look for function_definition and class_definition at the module level
   // and also async function definitions
-  const defs = root.descendantsOfType([
-    'function_definition',
-    'class_definition',
-  ])
+  const defs = root.descendantsOfType(['function_definition', 'class_definition'])
 
   for (const def of defs) {
     if (!def) continue
@@ -196,10 +188,7 @@ function findTsJsSymbol(root: import('web-tree-sitter').Node, symbol: string): b
  *
  * For unsupported file types, only file existence is checked.
  */
-export async function checkEntryPoints(
-  yamlContent: string,
-  filePath: string,
-): Promise<string[]> {
+export async function checkEntryPoints(yamlContent: string, filePath: string): Promise<string[]> {
   const warnings: string[] = []
   const doc = parse(yamlContent) as FlowprintDocument
 

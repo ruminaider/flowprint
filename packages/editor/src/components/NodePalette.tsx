@@ -33,11 +33,7 @@ function PaletteItem({ type }: { type: PaletteNodeType }) {
   )
 
   return (
-    <div
-      className={`fp-palette-item fp-palette-item-${type}`}
-      draggable
-      onDragStart={onDragStart}
-    >
+    <div className={`fp-palette-item fp-palette-item-${type}`} draggable onDragStart={onDragStart}>
       <span className="fp-palette-icon">{icon}</span>
       <span className="fp-palette-label">{label}</span>
     </div>

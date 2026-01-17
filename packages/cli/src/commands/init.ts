@@ -26,7 +26,8 @@ export const initCommand = new Command('init')
         blueprintName = await input({
           message: 'Blueprint name:',
           default: 'my-blueprint',
-          validate: (v) => (/^[a-z][a-z0-9-]*$/.test(v) ? true : 'Use lowercase letters, numbers, and hyphens'),
+          validate: (v) =>
+            /^[a-z][a-z0-9-]*$/.test(v) ? true : 'Use lowercase letters, numbers, and hyphens',
         })
 
         const customizeLanes = await confirm({

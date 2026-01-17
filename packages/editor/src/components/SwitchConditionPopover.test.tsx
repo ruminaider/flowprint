@@ -15,11 +15,7 @@ describe('SwitchConditionPopover', () => {
 
   it('renders condition input and buttons', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
     expect(screen.getByText('Condition')).toBeTruthy()
@@ -31,11 +27,7 @@ describe('SwitchConditionPopover', () => {
 
   it('confirm button is disabled when condition is empty and default not checked', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
     const confirmBtn = screen.getByRole('button', { name: 'Confirm' })
@@ -45,11 +37,7 @@ describe('SwitchConditionPopover', () => {
 
   it('confirm button is enabled when condition has text', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
     const input = screen.getByPlaceholderText("e.g., status === 'approved'")
@@ -63,11 +51,7 @@ describe('SwitchConditionPopover', () => {
     const onConfirm = vi.fn()
 
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={onConfirm}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={onConfirm} onCancel={vi.fn()} />,
     )
 
     const input = screen.getByPlaceholderText("e.g., status === 'approved'")
@@ -82,11 +66,7 @@ describe('SwitchConditionPopover', () => {
     const onCancel = vi.fn()
 
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={onCancel}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={onCancel} />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
@@ -96,11 +76,7 @@ describe('SwitchConditionPopover', () => {
 
   it('checking "Make Default" enables confirm even with empty condition', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
     const confirmBtn = screen.getByRole('button', { name: 'Confirm' })
@@ -116,11 +92,7 @@ describe('SwitchConditionPopover', () => {
     const onConfirm = vi.fn()
 
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={onConfirm}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={onConfirm} onCancel={vi.fn()} />,
     )
 
     const checkbox = screen.getByLabelText('Make Default')
@@ -133,16 +105,10 @@ describe('SwitchConditionPopover', () => {
 
   it('"Make Default" disables the condition input', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
-    const input = screen.getByPlaceholderText(
-      "e.g., status === 'approved'",
-    )
+    const input = screen.getByPlaceholderText("e.g., status === 'approved'")
 
     expect((input as HTMLInputElement).disabled).toBe(false)
 
@@ -154,11 +120,7 @@ describe('SwitchConditionPopover', () => {
 
   it('auto-focuses condition input on mount', () => {
     render(
-      <SwitchConditionPopover
-        connection={connection}
-        onConfirm={vi.fn()}
-        onCancel={vi.fn()}
-      />,
+      <SwitchConditionPopover connection={connection} onConfirm={vi.fn()} onCancel={vi.fn()} />,
     )
 
     const input = screen.getByPlaceholderText("e.g., status === 'approved'")

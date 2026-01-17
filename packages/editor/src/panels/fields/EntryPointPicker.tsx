@@ -170,9 +170,7 @@ export function EntryPointPicker({
               }}
             >
               <span className="fp-entry-picker-result-name">{result.symbol}</span>
-              <span className="fp-entry-picker-result-kind">
-                {KIND_LABELS[result.kind]}
-              </span>
+              <span className="fp-entry-picker-result-kind">{KIND_LABELS[result.kind]}</span>
               <span className="fp-entry-picker-result-file">{result.file}</span>
               {result.preview && (
                 <span className="fp-entry-picker-result-preview">{result.preview}</span>

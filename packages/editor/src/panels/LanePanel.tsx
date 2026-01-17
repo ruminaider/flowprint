@@ -120,15 +120,17 @@ export function LanePanel({
               type="text"
               value={lane.label}
               aria-label={`Lane label for ${id}`}
-              onChange={(e) => { onUpdateLane(id, { label: e.target.value }); }}
+              onChange={(e) => {
+                onUpdateLane(id, { label: e.target.value })
+              }}
             />
             <button
               type="button"
-              onClick={() =>
-                { onUpdateLane(id, {
+              onClick={() => {
+                onUpdateLane(id, {
                   visibility: lane.visibility === 'external' ? 'internal' : 'external',
-                }); }
-              }
+                })
+              }}
               aria-label={`Toggle visibility for ${id}`}
             >
               {lane.visibility}
@@ -137,7 +139,9 @@ export function LanePanel({
               type="button"
               aria-label={`Move ${id} up`}
               disabled={index === 0}
-              onClick={() => { handleMoveUp(index); }}
+              onClick={() => {
+                handleMoveUp(index)
+              }}
             >
               &uarr;
             </button>
@@ -145,14 +149,18 @@ export function LanePanel({
               type="button"
               aria-label={`Move ${id} down`}
               disabled={index === sortedLanes.length - 1}
-              onClick={() => { handleMoveDown(index); }}
+              onClick={() => {
+                handleMoveDown(index)
+              }}
             >
               &darr;
             </button>
             <button
               type="button"
               aria-label={`Delete ${id}`}
-              onClick={() => { handleDelete(id); }}
+              onClick={() => {
+                handleDelete(id)
+              }}
             >
               Delete
             </button>

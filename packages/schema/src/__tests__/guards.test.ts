@@ -37,21 +37,14 @@ const terminalNode: Node = {
   outcome: 'success',
 }
 
-const allNodes: Node[] = [
-  actionNode,
-  switchNode,
-  parallelNode,
-  waitNode,
-  errorNode,
-  terminalNode,
-]
+const allNodes: Node[] = [actionNode, switchNode, parallelNode, waitNode, errorNode, terminalNode]
 
 describe('isActionNode', () => {
   it('returns true for action nodes', () => {
     expect(isActionNode(actionNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'action')) {
+    for (const node of allNodes.filter((n) => n.type !== 'action')) {
       expect(isActionNode(node)).toBe(false)
     }
   })
@@ -62,7 +55,7 @@ describe('isSwitchNode', () => {
     expect(isSwitchNode(switchNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'switch')) {
+    for (const node of allNodes.filter((n) => n.type !== 'switch')) {
       expect(isSwitchNode(node)).toBe(false)
     }
   })
@@ -73,7 +66,7 @@ describe('isParallelNode', () => {
     expect(isParallelNode(parallelNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'parallel')) {
+    for (const node of allNodes.filter((n) => n.type !== 'parallel')) {
       expect(isParallelNode(node)).toBe(false)
     }
   })
@@ -84,7 +77,7 @@ describe('isWaitNode', () => {
     expect(isWaitNode(waitNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'wait')) {
+    for (const node of allNodes.filter((n) => n.type !== 'wait')) {
       expect(isWaitNode(node)).toBe(false)
     }
   })
@@ -95,7 +88,7 @@ describe('isErrorNode', () => {
     expect(isErrorNode(errorNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'error')) {
+    for (const node of allNodes.filter((n) => n.type !== 'error')) {
       expect(isErrorNode(node)).toBe(false)
     }
   })
@@ -106,7 +99,7 @@ describe('isTerminalNode', () => {
     expect(isTerminalNode(terminalNode)).toBe(true)
   })
   it('returns false for all other node types', () => {
-    for (const node of allNodes.filter(n => n.type !== 'terminal')) {
+    for (const node of allNodes.filter((n) => n.type !== 'terminal')) {
       expect(isTerminalNode(node)).toBe(false)
     }
   })

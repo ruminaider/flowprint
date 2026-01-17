@@ -40,14 +40,7 @@ export function UnassignedBadge({ visible }: UnassignedBadgeProps) {
           stroke="#d97706"
           strokeWidth="0.5"
         />
-        <text
-          x="8"
-          y="11.5"
-          textAnchor="middle"
-          fontSize="9"
-          fontWeight="bold"
-          fill="#fff"
-        >
+        <text x="8" y="11.5" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#fff">
           !
         </text>
       </svg>

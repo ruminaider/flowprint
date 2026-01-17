@@ -36,10 +36,30 @@ const sampleDoc: FlowprintDocument = {
 }
 
 const mockResults: SymbolResult[] = [
-  { file: 'src/main.ts', symbol: 'handleStart', kind: 'function', preview: 'export function handleStart()' },
-  { file: 'src/api.ts', symbol: 'fetchData', kind: 'function', preview: 'async function fetchData()' },
-  { file: 'src/types.ts', symbol: 'AppConfig', kind: 'interface', preview: 'interface AppConfig {' },
-  { file: 'src/utils.ts', symbol: 'formatDate', kind: 'function', preview: 'export function formatDate(d: Date)' },
+  {
+    file: 'src/main.ts',
+    symbol: 'handleStart',
+    kind: 'function',
+    preview: 'export function handleStart()',
+  },
+  {
+    file: 'src/api.ts',
+    symbol: 'fetchData',
+    kind: 'function',
+    preview: 'async function fetchData()',
+  },
+  {
+    file: 'src/types.ts',
+    symbol: 'AppConfig',
+    kind: 'interface',
+    preview: 'interface AppConfig {',
+  },
+  {
+    file: 'src/utils.ts',
+    symbol: 'formatDate',
+    kind: 'function',
+    preview: 'export function formatDate(d: Date)',
+  },
 ]
 
 const mockSymbolSearch: SymbolSearchProvider = {
@@ -101,9 +121,7 @@ export const SystemTheme: StoryObj = {
 }
 
 export const WithSymbolSearch: StoryObj = {
-  render: () => (
-    <ControlledEditor initialDoc={sampleDoc} symbolSearch={mockSymbolSearch} />
-  ),
+  render: () => <ControlledEditor initialDoc={sampleDoc} symbolSearch={mockSymbolSearch} />,
 }
 
 export const WithYamlPreview: StoryObj = {

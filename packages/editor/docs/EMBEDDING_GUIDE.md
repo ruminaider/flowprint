@@ -32,19 +32,19 @@ The editor must be placed inside a container with explicit dimensions (width and
 
 ## Props API Reference
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `value` | `FlowprintDocument` | *required* | The document to edit |
-| `onChange` | `(doc: FlowprintDocument) => void` | *required* | Callback fired on every document mutation |
-| `className` | `string` | `undefined` | Additional CSS class on the editor root element |
-| `style` | `React.CSSProperties` | `undefined` | Inline styles for the editor container |
-| `showMinimap` | `boolean` | `true` | Show the navigation minimap |
-| `showGrid` | `boolean` | `true` | Show background grid dots |
-| `readOnly` | `boolean` | `false` | Disable all editing (palette, panels, connections) |
-| `theme` | `'light' \| 'dark' \| 'system'` | `'system'` | Color theme mode |
-| `symbolSearch` | `SymbolSearchProvider` | `undefined` | Symbol search provider for entry point lookup |
-| `showYamlPreview` | `boolean` | `false` | Show the YAML preview panel |
-| `showExportButton` | `boolean` | `false` | Show the SVG export button |
+| Prop               | Type                               | Default     | Description                                        |
+| ------------------ | ---------------------------------- | ----------- | -------------------------------------------------- |
+| `value`            | `FlowprintDocument`                | _required_  | The document to edit                               |
+| `onChange`         | `(doc: FlowprintDocument) => void` | _required_  | Callback fired on every document mutation          |
+| `className`        | `string`                           | `undefined` | Additional CSS class on the editor root element    |
+| `style`            | `React.CSSProperties`              | `undefined` | Inline styles for the editor container             |
+| `showMinimap`      | `boolean`                          | `true`      | Show the navigation minimap                        |
+| `showGrid`         | `boolean`                          | `true`      | Show background grid dots                          |
+| `readOnly`         | `boolean`                          | `false`     | Disable all editing (palette, panels, connections) |
+| `theme`            | `'light' \| 'dark' \| 'system'`    | `'system'`  | Color theme mode                                   |
+| `symbolSearch`     | `SymbolSearchProvider`             | `undefined` | Symbol search provider for entry point lookup      |
+| `showYamlPreview`  | `boolean`                          | `false`     | Show the YAML preview panel                        |
+| `showExportButton` | `boolean`                          | `false`     | Show the SVG export button                         |
 
 ## Theming
 
@@ -73,97 +73,97 @@ All design tokens use the `--fp-*` prefix. Override them on a parent element or 
 
 #### Canvas
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-bg-canvas` | `#f8fafc` | `#1e1e2e` | Canvas background |
-| `--fp-bg-grid-dot` | `#94a3b8` | `#585b70` | Grid dot color |
+| Variable           | Light     | Dark      | Description       |
+| ------------------ | --------- | --------- | ----------------- |
+| `--fp-bg-canvas`   | `#f8fafc` | `#1e1e2e` | Canvas background |
+| `--fp-bg-grid-dot` | `#94a3b8` | `#585b70` | Grid dot color    |
 
 #### Node Base
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-node-bg` | `#ffffff` | `#313244` | Default node background |
-| `--fp-node-border` | `#d1d5db` | `#45475a` | Default node border |
-| `--fp-node-shadow` | `rgba(0,0,0,0.1)` | `rgba(0,0,0,0.3)` | Node box shadow |
-| `--fp-text-primary` | `#1f2937` | `#cdd6f4` | Primary text |
-| `--fp-text-secondary` | `#6b7280` | `#a6adc8` | Secondary text |
+| Variable              | Light             | Dark              | Description             |
+| --------------------- | ----------------- | ----------------- | ----------------------- |
+| `--fp-node-bg`        | `#ffffff`         | `#313244`         | Default node background |
+| `--fp-node-border`    | `#d1d5db`         | `#45475a`         | Default node border     |
+| `--fp-node-shadow`    | `rgba(0,0,0,0.1)` | `rgba(0,0,0,0.3)` | Node box shadow         |
+| `--fp-text-primary`   | `#1f2937`         | `#cdd6f4`         | Primary text            |
+| `--fp-text-secondary` | `#6b7280`         | `#a6adc8`         | Secondary text          |
 
 #### Node Types
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-node-switch-bg` | `#fffbeb` | `#2a2520` | Switch node background |
-| `--fp-node-switch-border` | `#f59e0b` | `#f9e2af` | Switch node border |
-| `--fp-node-parallel-bg` | `#f0fdf4` | `#1e2e24` | Parallel node background |
-| `--fp-node-parallel-border` | `#22c55e` | `#a6e3a1` | Parallel node border |
-| `--fp-node-wait-bg` | `#fefce8` | `#2a2420` | Wait node background |
-| `--fp-node-wait-border` | `#eab308` | `#fab387` | Wait node border |
-| `--fp-node-error-bg` | `#fef2f2` | `#2e1e24` | Error node background |
-| `--fp-node-error-border` | `#ef4444` | `#f38ba8` | Error node border |
-| `--fp-node-terminal-success-bg` | `#dcfce7` | `#1e2e24` | Terminal (success) background |
-| `--fp-node-terminal-success-border` | `#22c55e` | `#a6e3a1` | Terminal (success) border |
-| `--fp-node-terminal-failure-bg` | `#fef2f2` | `#2e1e24` | Terminal (failure) background |
-| `--fp-node-terminal-failure-border` | `#ef4444` | `#f38ba8` | Terminal (failure) border |
+| Variable                            | Light     | Dark      | Description                   |
+| ----------------------------------- | --------- | --------- | ----------------------------- |
+| `--fp-node-switch-bg`               | `#fffbeb` | `#2a2520` | Switch node background        |
+| `--fp-node-switch-border`           | `#f59e0b` | `#f9e2af` | Switch node border            |
+| `--fp-node-parallel-bg`             | `#f0fdf4` | `#1e2e24` | Parallel node background      |
+| `--fp-node-parallel-border`         | `#22c55e` | `#a6e3a1` | Parallel node border          |
+| `--fp-node-wait-bg`                 | `#fefce8` | `#2a2420` | Wait node background          |
+| `--fp-node-wait-border`             | `#eab308` | `#fab387` | Wait node border              |
+| `--fp-node-error-bg`                | `#fef2f2` | `#2e1e24` | Error node background         |
+| `--fp-node-error-border`            | `#ef4444` | `#f38ba8` | Error node border             |
+| `--fp-node-terminal-success-bg`     | `#dcfce7` | `#1e2e24` | Terminal (success) background |
+| `--fp-node-terminal-success-border` | `#22c55e` | `#a6e3a1` | Terminal (success) border     |
+| `--fp-node-terminal-failure-bg`     | `#fef2f2` | `#2e1e24` | Terminal (failure) background |
+| `--fp-node-terminal-failure-border` | `#ef4444` | `#f38ba8` | Terminal (failure) border     |
 
 #### Selection
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
+| Variable              | Light     | Dark      | Description        |
+| --------------------- | --------- | --------- | ------------------ |
 | `--fp-selection-ring` | `#3b82f6` | `#89b4fa` | Selected node ring |
 
 #### Edges
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-edge-normal` | `#6b7280` | `#7f849c` | Normal edge color |
-| `--fp-edge-error` | `#ef4444` | `#f38ba8` | Error edge color |
+| Variable            | Light     | Dark      | Description                   |
+| ------------------- | --------- | --------- | ----------------------------- |
+| `--fp-edge-normal`  | `#6b7280` | `#7f849c` | Normal edge color             |
+| `--fp-edge-error`   | `#ef4444` | `#f38ba8` | Error edge color              |
 | `--fp-edge-default` | `#9ca3af` | `#6c7086` | Default (fallback) edge color |
 
 #### Panels
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-panel-bg` | `#ffffff` | `#181825` | Panel background |
-| `--fp-panel-border` | `#e5e7eb` | `#45475a` | Panel border |
+| Variable               | Light     | Dark      | Description             |
+| ---------------------- | --------- | --------- | ----------------------- |
+| `--fp-panel-bg`        | `#ffffff` | `#181825` | Panel background        |
+| `--fp-panel-border`    | `#e5e7eb` | `#45475a` | Panel border            |
 | `--fp-panel-header-bg` | `#f9fafb` | `#313244` | Panel header background |
 
 #### Badges and Buttons
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-badge-entry` | `#3b82f6` | `#89b4fa` | Entry point badge color |
-| `--fp-btn-primary` | `#3b82f6` | `#89b4fa` | Primary button color |
-| `--fp-btn-danger` | `#ef4444` | `#f38ba8` | Danger button color |
+| Variable                 | Light     | Dark      | Description                   |
+| ------------------------ | --------- | --------- | ----------------------------- |
+| `--fp-badge-entry`       | `#3b82f6` | `#89b4fa` | Entry point badge color       |
+| `--fp-btn-primary`       | `#3b82f6` | `#89b4fa` | Primary button color          |
+| `--fp-btn-danger`        | `#ef4444` | `#f38ba8` | Danger button color           |
 | `--fp-unassigned-border` | `#f59e0b` | `#f9e2af` | Unassigned node dashed border |
 
 #### Validation Banner
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-banner-bg` | `#fef2f2` | `#2e1e24` | Banner background |
-| `--fp-banner-border` | `#fca5a5` | `#eba0ac` | Banner border |
-| `--fp-banner-text` | `#991b1b` | `#f38ba8` | Banner text |
+| Variable             | Light     | Dark      | Description       |
+| -------------------- | --------- | --------- | ----------------- |
+| `--fp-banner-bg`     | `#fef2f2` | `#2e1e24` | Banner background |
+| `--fp-banner-border` | `#fca5a5` | `#eba0ac` | Banner border     |
+| `--fp-banner-text`   | `#991b1b` | `#f38ba8` | Banner text       |
 
 #### Additional Colors
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-bg-hover` | `#f3f4f6` | `#313244` | Hover background |
-| `--fp-border-light` | `#f3f4f6` | `#45475a` | Light border |
-| `--fp-text-dark` | `#374151` | `#bac2de` | Dark text |
-| `--fp-text-muted` | `#9ca3af` | `#7f849c` | Muted text |
-| `--fp-text-error` | `#dc2626` | `#f38ba8` | Error text |
-| `--fp-text-success` | `#166534` | `#a6e3a1` | Success text |
-| `--fp-text-warning` | `#92400e` | `#fab387` | Warning text |
-| `--fp-shadow-heavy` | `rgba(0,0,0,0.15)` | `rgba(0,0,0,0.4)` | Heavy shadow |
+| Variable            | Light              | Dark              | Description      |
+| ------------------- | ------------------ | ----------------- | ---------------- |
+| `--fp-bg-hover`     | `#f3f4f6`          | `#313244`         | Hover background |
+| `--fp-border-light` | `#f3f4f6`          | `#45475a`         | Light border     |
+| `--fp-text-dark`    | `#374151`          | `#bac2de`         | Dark text        |
+| `--fp-text-muted`   | `#9ca3af`          | `#7f849c`         | Muted text       |
+| `--fp-text-error`   | `#dc2626`          | `#f38ba8`         | Error text       |
+| `--fp-text-success` | `#166534`          | `#a6e3a1`         | Success text     |
+| `--fp-text-warning` | `#92400e`          | `#fab387`         | Warning text     |
+| `--fp-shadow-heavy` | `rgba(0,0,0,0.15)` | `rgba(0,0,0,0.4)` | Heavy shadow     |
 
 #### Entry Point Picker
 
-| Variable | Light | Dark | Description |
-|----------|-------|------|-------------|
-| `--fp-picker-result-hover` | `#f3f4f6` | `#313244` | Search result hover |
-| `--fp-picker-kind-bg` | `#e5e7eb` | `#45475a` | Symbol kind badge background |
-| `--fp-picker-kind-text` | `#374151` | `#cdd6f4` | Symbol kind badge text |
+| Variable                   | Light     | Dark      | Description                  |
+| -------------------------- | --------- | --------- | ---------------------------- |
+| `--fp-picker-result-hover` | `#f3f4f6` | `#313244` | Search result hover          |
+| `--fp-picker-kind-bg`      | `#e5e7eb` | `#45475a` | Symbol kind badge background |
+| `--fp-picker-kind-text`    | `#374151` | `#cdd6f4` | Symbol kind badge text       |
 
 ### Custom Theme Example
 
@@ -247,33 +247,27 @@ function App() {
     codeSearchUrl: 'http://localhost:8080',
   })
 
-  return (
-    <FlowprintEditor
-      value={doc}
-      onChange={setDoc}
-      symbolSearch={provider ?? undefined}
-    />
-  )
+  return <FlowprintEditor value={doc} onChange={setDoc} symbolSearch={provider ?? undefined} />
 }
 ```
 
 #### Options
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `codeSearchUrl` | `string` | URL to probe for code-search server |
-| `codeSearchApiKey` | `string` | API key for authentication |
-| `files` | `{ path: string; content: string }[]` | Files to index with tree-sitter |
-| `wasmPath` | `string` | Base URL for tree-sitter WASM files |
+| Option             | Type                                  | Description                         |
+| ------------------ | ------------------------------------- | ----------------------------------- |
+| `codeSearchUrl`    | `string`                              | URL to probe for code-search server |
+| `codeSearchApiKey` | `string`                              | API key for authentication          |
+| `files`            | `{ path: string; content: string }[]` | Files to index with tree-sitter     |
+| `wasmPath`         | `string`                              | Base URL for tree-sitter WASM files |
 
 #### Return Value
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `provider` | `SymbolSearchProvider \| null` | The active provider, or null |
-| `providerName` | `string \| null` | Name of the active provider |
-| `loading` | `boolean` | Whether initialization is in progress |
-| `reconnect` | `() => Promise<void>` | Re-probe the code-search server |
+| Field          | Type                           | Description                           |
+| -------------- | ------------------------------ | ------------------------------------- |
+| `provider`     | `SymbolSearchProvider \| null` | The active provider, or null          |
+| `providerName` | `string \| null`               | Name of the active provider           |
+| `loading`      | `boolean`                      | Whether initialization is in progress |
+| `reconnect`    | `() => Promise<void>`          | Re-probe the code-search server       |
 
 ### Custom Provider Example
 

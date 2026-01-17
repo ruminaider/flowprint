@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import React from 'react'
-import type { FlowprintDocument, ValidationError, ValidationResult } from '@ruminaider/flowprint-schema'
+import type {
+  FlowprintDocument,
+  ValidationError,
+  ValidationResult,
+} from '@ruminaider/flowprint-schema'
 import { FlowprintEditor } from './FlowprintEditor'
 import { ValidationBanner } from './ValidationBanner'
 
@@ -128,9 +132,7 @@ describe('FlowprintEditor', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
-    const { container } = render(
-      <FlowprintEditor value={doc} onChange={onChange} readOnly />,
-    )
+    const { container } = render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
 
     expect(container.querySelector('.fp-editor')).toBeTruthy()
     expect(screen.getByTestId('react-flow')).toBeTruthy()
@@ -221,14 +223,7 @@ describe('FlowprintEditor', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
-    render(
-      <FlowprintEditor
-        value={doc}
-        onChange={onChange}
-        showMinimap={false}
-        showGrid={false}
-      />,
-    )
+    render(<FlowprintEditor value={doc} onChange={onChange} showMinimap={false} showGrid={false} />)
 
     expect(screen.queryByTestId('minimap')).toBeNull()
     expect(screen.queryByTestId('background')).toBeNull()
@@ -273,9 +268,7 @@ describe('ValidationBanner', () => {
   })
 
   it('dismiss button calls onDismiss', () => {
-    const errors: ValidationError[] = [
-      { path: '/nodes/a', message: 'Error', severity: 'error' },
-    ]
+    const errors: ValidationError[] = [{ path: '/nodes/a', message: 'Error', severity: 'error' }]
     const onDismiss = vi.fn()
 
     render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)

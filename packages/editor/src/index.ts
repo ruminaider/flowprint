@@ -8,7 +8,11 @@ export type { LaneBand, LayoutResult } from './layout'
 export { FlowprintEditor } from './components/FlowprintEditor'
 export type { FlowprintEditorProps } from './components/FlowprintEditor'
 export { useFlowprintState } from './hooks/useFlowprintState'
-export type { UseFlowprintStateReturn, UseFlowprintStateOptions, ConnectionConfig } from './hooks/useFlowprintState'
+export type {
+  UseFlowprintStateReturn,
+  UseFlowprintStateOptions,
+  ConnectionConfig,
+} from './hooks/useFlowprintState'
 export { ErrorBoundary } from './components/ErrorBoundary'
 export type { ErrorBoundaryProps } from './components/ErrorBoundary'
 export { NodePalette } from './components/NodePalette'

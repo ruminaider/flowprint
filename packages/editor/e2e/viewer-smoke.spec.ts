@@ -3,9 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('FlowprintViewer smoke test', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the PrescriptionFulfillment story
-    await page.goto(
-      '/iframe.html?id=flowprintviewer--prescription-fulfillment&viewMode=story',
-    )
+    await page.goto('/iframe.html?id=flowprintviewer--prescription-fulfillment&viewMode=story')
     // Wait for React Flow to render
     await page.waitForSelector('.react-flow', { timeout: 15000 })
   })

@@ -160,9 +160,7 @@ describe('invalid lane reference', () => {
     })
     expect(result.valid).toBe(false)
     expect(
-      result.errors.some(
-        (e) => e.path === '/nodes/step/lane' && e.message.includes('nonexistent'),
-      ),
+      result.errors.some((e) => e.path === '/nodes/step/lane' && e.message.includes('nonexistent')),
     ).toBe(true)
   })
 })
@@ -183,9 +181,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/step/next' &&
-          e.message.includes('does_not_exist'),
+        (e) => e.path === '/nodes/step/next' && e.message.includes('does_not_exist'),
       ),
     ).toBe(true)
   })
@@ -208,9 +204,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/decision/cases/0/next' &&
-          e.message.includes('missing_node'),
+        (e) => e.path === '/nodes/decision/cases/0/next' && e.message.includes('missing_node'),
       ),
     ).toBe(true)
   })
@@ -235,9 +229,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/decision/default' &&
-          e.message.includes('ghost'),
+        (e) => e.path === '/nodes/decision/default' && e.message.includes('ghost'),
       ),
     ).toBe(true)
   })
@@ -262,9 +254,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/fork/branches/0' &&
-          e.message.includes('missing_branch'),
+        (e) => e.path === '/nodes/fork/branches/0' && e.message.includes('missing_branch'),
       ),
     ).toBe(true)
   })
@@ -290,9 +280,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/fork/join' &&
-          e.message.includes('missing_join'),
+        (e) => e.path === '/nodes/fork/join' && e.message.includes('missing_join'),
       ),
     ).toBe(true)
   })
@@ -317,9 +305,7 @@ describe('dangling node reference', () => {
     expect(result.valid).toBe(false)
     expect(
       result.errors.some(
-        (e) =>
-          e.path === '/nodes/step/error/catch' &&
-          e.message.includes('missing_handler'),
+        (e) => e.path === '/nodes/step/error/catch' && e.message.includes('missing_handler'),
       ),
     ).toBe(true)
   })
@@ -346,8 +332,7 @@ describe('dangling node reference', () => {
     expect(
       result.errors.some(
         (e) =>
-          e.path === '/nodes/wait_step/timeout_next' &&
-          e.message.includes('missing_timeout_node'),
+          e.path === '/nodes/wait_step/timeout_next' && e.message.includes('missing_timeout_node'),
       ),
     ).toBe(true)
   })
@@ -370,15 +355,9 @@ describe('orphan nodes', () => {
     })
     expect(result.valid).toBe(false)
     expect(
-      result.errors.some(
-        (e) => e.path === '/nodes/orphan' && e.message.includes('Orphan'),
-      ),
+      result.errors.some((e) => e.path === '/nodes/orphan' && e.message.includes('Orphan')),
     ).toBe(true)
-    expect(
-      result.errors.find(
-        (e) => e.path === '/nodes/orphan',
-      )?.severity,
-    ).toBe('warning')
+    expect(result.errors.find((e) => e.path === '/nodes/orphan')?.severity).toBe('warning')
   })
 
   it('does not flag terminal nodes with incoming edges as orphans', () => {
@@ -414,9 +393,7 @@ describe('orphan nodes', () => {
         (e) => e.path === '/nodes/unreachable' && e.message.includes('Unreachable'),
       ),
     ).toBe(true)
-    expect(
-      result.errors.find((e) => e.path === '/nodes/unreachable')?.severity,
-    ).toBe('warning')
+    expect(result.errors.find((e) => e.path === '/nodes/unreachable')?.severity).toBe('warning')
   })
 
   it('does not flag root nodes (no incoming but have outgoing) as orphans', () => {
@@ -450,9 +427,7 @@ describe('invalid schema version', () => {
     })
     expect(result.valid).toBe(false)
     expect(
-      result.errors.some(
-        (e) => e.path === '/schema' && e.message.includes('Unsupported'),
-      ),
+      result.errors.some((e) => e.path === '/schema' && e.message.includes('Unsupported')),
     ).toBe(true)
   })
 
@@ -467,9 +442,7 @@ describe('invalid schema version', () => {
       },
     })
     expect(result.valid).toBe(false)
-    expect(
-      result.errors.some((e) => e.path === '/schema'),
-    ).toBe(true)
+    expect(result.errors.some((e) => e.path === '/schema')).toBe(true)
   })
 })
 
@@ -535,9 +508,7 @@ describe('malformed input', () => {
       extra_field: 'should not be here',
     })
     expect(result.valid).toBe(false)
-    expect(
-      result.errors.some((e) => e.message.includes('extra_field')),
-    ).toBe(true)
+    expect(result.errors.some((e) => e.message.includes('extra_field'))).toBe(true)
   })
 })
 

@@ -24,9 +24,7 @@ export function SwitchCaseEditor({ cases, onChange }: SwitchCaseEditorProps) {
 
   const handleUpdate = useCallback(
     (index: number, field: keyof SwitchCase, value: string) => {
-      const updated = cases.map((c, i) =>
-        i === index ? { ...c, [field]: value } : c,
-      )
+      const updated = cases.map((c, i) => (i === index ? { ...c, [field]: value } : c))
       onChange(updated)
     },
     [cases, onChange],
@@ -51,7 +49,9 @@ export function SwitchCaseEditor({ cases, onChange }: SwitchCaseEditorProps) {
             type="text"
             className="fp-panel-field-input"
             value={c.when}
-            onChange={(e) => { handleUpdate(i, 'when', e.target.value); }}
+            onChange={(e) => {
+              handleUpdate(i, 'when', e.target.value)
+            }}
             placeholder="when"
             aria-label={`Case ${String(i + 1)} when`}
           />
@@ -59,14 +59,18 @@ export function SwitchCaseEditor({ cases, onChange }: SwitchCaseEditorProps) {
             type="text"
             className="fp-panel-field-input"
             value={c.next}
-            onChange={(e) => { handleUpdate(i, 'next', e.target.value); }}
+            onChange={(e) => {
+              handleUpdate(i, 'next', e.target.value)
+            }}
             placeholder="next"
             aria-label={`Case ${String(i + 1)} next`}
           />
           <button
             type="button"
             className="fp-panel-remove-btn"
-            onClick={() => { handleRemove(i); }}
+            onClick={() => {
+              handleRemove(i)
+            }}
             aria-label={`Remove case ${String(i + 1)}`}
           >
             x

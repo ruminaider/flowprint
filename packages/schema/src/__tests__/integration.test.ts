@@ -173,17 +173,13 @@ describe('integration: serialize round-trip', () => {
       }
 
       // Lanes
-      expect(Object.keys(reparsed.lanes).sort()).toEqual(
-        Object.keys(original.lanes).sort(),
-      )
+      expect(Object.keys(reparsed.lanes).sort()).toEqual(Object.keys(original.lanes).sort())
       for (const [laneId, lane] of Object.entries(original.lanes)) {
         expect(reparsed.lanes[laneId]).toEqual(lane)
       }
 
       // Nodes — same set of IDs
-      expect(Object.keys(reparsed.nodes).sort()).toEqual(
-        Object.keys(original.nodes).sort(),
-      )
+      expect(Object.keys(reparsed.nodes).sort()).toEqual(Object.keys(original.nodes).sort())
 
       // Each node matches the original
       for (const [nodeId, node] of Object.entries(original.nodes)) {
@@ -387,8 +383,7 @@ describe('integration: cross-example checks', () => {
       const roots = findRoots(doc)
       expect(roots.length).toBeGreaterThan(0)
 
-      const terminals = Object.entries(doc.nodes)
-        .filter(([_, n]) => isTerminalNode(n))
+      const terminals = Object.entries(doc.nodes).filter(([_, n]) => isTerminalNode(n))
       expect(terminals.length).toBeGreaterThan(0)
     }
   })

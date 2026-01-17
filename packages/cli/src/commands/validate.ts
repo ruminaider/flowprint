@@ -10,7 +10,10 @@ import { checkEntryPoints } from '../entry-points.js'
 export const validateCommand = new Command('validate')
   .description('Validate .flowprint.yaml files against the schema')
   .argument('<glob>', 'Glob pattern matching .flowprint.yaml files')
-  .option('--check-entry-points', 'Verify referenced files exist and entry point symbols are defined')
+  .option(
+    '--check-entry-points',
+    'Verify referenced files exist and entry point symbols are defined',
+  )
   .addHelpText(
     'after',
     '\nExit codes:\n  0  All files valid\n  1  Validation errors found\n  2  File not found or parse error',

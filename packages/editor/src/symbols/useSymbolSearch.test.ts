@@ -88,9 +88,7 @@ describe('useSymbolSearch', () => {
   it('uses CodeSearchProvider when code-search is healthy', async () => {
     mockCodeSearchHealthy(true)
 
-    const { result } = renderHook(() =>
-      useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }),
-    )
+    const { result } = renderHook(() => useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }))
 
     await waitFor(() => {
       expect(result.current.providerName).toBe('code-search')
@@ -166,9 +164,7 @@ describe('useSymbolSearch', () => {
       }),
     )
 
-    const { result } = renderHook(() =>
-      useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }),
-    )
+    const { result } = renderHook(() => useSymbolSearch({ codeSearchUrl: 'http://localhost:8080' }))
 
     // Should be loading while checkHealth is pending (after microtask runs)
     await waitFor(() => {

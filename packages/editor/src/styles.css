@@ -578,7 +578,9 @@
 /* ---- Node selection highlight ---- */
 
 .fp-node-selected {
-  box-shadow: 0 0 0 2px var(--fp-selection-ring), 0 1px 3px var(--fp-node-shadow);
+  box-shadow:
+    0 0 0 2px var(--fp-selection-ring),
+    0 1px 3px var(--fp-node-shadow);
 }
 
 /* ---- Entry Point Picker (4C.7) ---- */

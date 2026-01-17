@@ -56,7 +56,9 @@ describe('useKeyboardShortcuts', () => {
     it('Ctrl+Z calls undo (non-Mac)', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' })
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('z', { ctrlKey: true })
 
@@ -67,7 +69,9 @@ describe('useKeyboardShortcuts', () => {
     it('Cmd+Z calls undo (Mac)', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' })
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('z', { metaKey: true })
 
@@ -79,7 +83,9 @@ describe('useKeyboardShortcuts', () => {
     it('Ctrl+Shift+Z calls redo', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' })
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('z', { ctrlKey: true, shiftKey: true })
 
@@ -91,7 +97,9 @@ describe('useKeyboardShortcuts', () => {
   describe('delete', () => {
     it('Delete key calls deleteSelected', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('Delete')
 
@@ -100,7 +108,9 @@ describe('useKeyboardShortcuts', () => {
 
     it('Backspace key calls deleteSelected', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('Backspace')
 
@@ -111,7 +121,9 @@ describe('useKeyboardShortcuts', () => {
   describe('deselect', () => {
     it('Escape calls deselect', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('Escape')
 
@@ -124,7 +136,9 @@ describe('useKeyboardShortcuts', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' })
       const onSave = vi.fn()
       const opts = makeOptions({ onSave })
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       const event = fireKey('s', { ctrlKey: true })
 
@@ -135,7 +149,9 @@ describe('useKeyboardShortcuts', () => {
     it('Ctrl+S does nothing when onSave not provided', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' })
       const opts = makeOptions({ onSave: undefined })
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       // Should not throw
       const event = fireKey('s', { ctrlKey: true })
@@ -147,7 +163,9 @@ describe('useKeyboardShortcuts', () => {
   describe('editable element suppression', () => {
     it('shortcuts do not fire when target is an INPUT element', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       const input = document.createElement('input')
       fireKey('Delete', { target: input })
@@ -157,7 +175,9 @@ describe('useKeyboardShortcuts', () => {
 
     it('shortcuts do not fire when target is a TEXTAREA element', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       const textarea = document.createElement('textarea')
       fireKey('Escape', { target: textarea })
@@ -167,7 +187,9 @@ describe('useKeyboardShortcuts', () => {
 
     it('shortcuts do not fire when target is a SELECT element', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       const select = document.createElement('select')
       fireKey('Backspace', { target: select })
@@ -177,7 +199,9 @@ describe('useKeyboardShortcuts', () => {
 
     it('shortcuts do not fire when target has contentEditable=true', () => {
       const opts = makeOptions()
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       const div = document.createElement('div')
       div.contentEditable = 'true'
@@ -191,7 +215,9 @@ describe('useKeyboardShortcuts', () => {
     it('shortcuts do not fire when disabled=true', () => {
       vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' })
       const opts = makeOptions({ disabled: true })
-      renderHook(() => { useKeyboardShortcuts(opts); })
+      renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       fireKey('z', { ctrlKey: true })
       fireKey('Delete')
@@ -206,7 +232,9 @@ describe('useKeyboardShortcuts', () => {
   describe('cleanup', () => {
     it('unregisters listener on unmount', () => {
       const opts = makeOptions()
-      const { unmount } = renderHook(() => { useKeyboardShortcuts(opts); })
+      const { unmount } = renderHook(() => {
+        useKeyboardShortcuts(opts)
+      })
 
       unmount()
 

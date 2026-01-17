@@ -1,9 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import type {
-  FlowprintDocument,
-  Node,
-  Lane,
-} from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, Node, Lane } from '@ruminaider/flowprint-schema'
 import {
   isActionNode,
   isSwitchNode,
@@ -103,10 +99,7 @@ const DEFAULT_MAX_HISTORY = 50
  * Remove all references to `targetId` from every node in the document.
  * Mutates `nodes` in place (caller should have already cloned).
  */
-function purgeNodeReferences(
-  nodes: Record<string, Node>,
-  targetId: string,
-): void {
+function purgeNodeReferences(nodes: Record<string, Node>, targetId: string): void {
   for (const node of Object.values(nodes)) {
     if (isActionNode(node)) {
       if (node.next === targetId) node.next = undefined
@@ -136,11 +129,7 @@ function purgeNodeReferences(
  * Apply a connection from `source` to `target` based on `config`.
  * Mutates `sourceNode` in place (caller should have already cloned).
  */
-function applyConnection(
-  sourceNode: Node,
-  target: string,
-  config: ConnectionConfig,
-): void {
+function applyConnection(sourceNode: Node, target: string, config: ConnectionConfig): void {
   switch (config.type) {
     case 'next': {
       if (isTerminalNode(sourceNode)) {
@@ -157,7 +146,10 @@ function applyConnection(
       if (!isSwitchNode(sourceNode)) {
         throw new Error(`switch_case connection requires a switch node`)
       }
-      sourceNode.cases = [...sourceNode.cases, { when: config.when, next: target }] as typeof sourceNode.cases
+      sourceNode.cases = [
+        ...sourceNode.cases,
+        { when: config.when, next: target },
+      ] as typeof sourceNode.cases
       break
     }
     case 'switch_default': {
@@ -245,9 +237,7 @@ function removeConnection(sourceNode: Node, target: string): void {
  * state.addNode('new_step', { type: 'action', lane: 'backend', label: 'Process' })
  * ```
  */
-export function useFlowprintState(
-  options: UseFlowprintStateOptions,
-): UseFlowprintStateReturn {
+export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowprintStateReturn {
   const { initialDoc, onChange, maxHistory = DEFAULT_MAX_HISTORY } = options
 
   const [doc, setDocState] = useState<FlowprintDocument>(() => structuredClone(initialDoc))
@@ -429,13 +419,10 @@ export function useFlowprintState(
   // Controlled mode sync
   // -----------------------------------------------------------------------
 
-  const setDoc = useCallback(
-    (newDoc: FlowprintDocument) => {
-      setDocState(newDoc)
-      // setDoc is for external sync -- do not push to history
-    },
-    [],
-  )
+  const setDoc = useCallback((newDoc: FlowprintDocument) => {
+    setDocState(newDoc)
+    // setDoc is for external sync -- do not push to history
+  }, [])
 
   return {
     doc,

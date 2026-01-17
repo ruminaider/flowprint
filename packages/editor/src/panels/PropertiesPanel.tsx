@@ -1,9 +1,5 @@
 import { useCallback } from 'react'
-import type {
-  FlowprintDocument,
-  Node,
-  Lane,
-} from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, Node, Lane } from '@ruminaider/flowprint-schema'
 import {
   isActionNode,
   isSwitchNode,
@@ -90,20 +86,24 @@ export function PropertiesPanel({
       <TextField
         label="Label"
         value={node.label}
-        onChange={(label) => { handlePatch({ label } as Partial<Node>); }}
+        onChange={(label) => {
+          handlePatch({ label } as Partial<Node>)
+        }}
       />
       <LaneSelector
         value={node.lane}
         lanes={lanes}
-        onChange={(lane) => { handlePatch({ lane } as Partial<Node>); }}
+        onChange={(lane) => {
+          handlePatch({ lane } as Partial<Node>)
+        }}
       />
       {!isTerminalNode(node) && (
         <TextField
           label="Description"
           value={node.description ?? ''}
-          onChange={(description) =>
-            { handlePatch({ description: description || undefined } as Partial<Node>); }
-          }
+          onChange={(description) => {
+            handlePatch({ description: description || undefined } as Partial<Node>)
+          }}
         />
       )}
 
@@ -112,14 +112,16 @@ export function PropertiesPanel({
         <div className="fp-panel-section">
           <EntryPointList
             entries={node.entry_points ?? []}
-            onChange={(entry_points) =>
-              { handlePatch({ entry_points } as Partial<Node>); }
-            }
+            onChange={(entry_points) => {
+              handlePatch({ entry_points } as Partial<Node>)
+            }}
             symbolSearch={symbolSearch}
           />
           <ErrorHandlerEditor
             error={node.error}
-            onChange={(error) => { handlePatch({ error } as Partial<Node>); }}
+            onChange={(error) => {
+              handlePatch({ error } as Partial<Node>)
+            }}
           />
         </div>
       )}
@@ -128,11 +130,14 @@ export function PropertiesPanel({
         <div className="fp-panel-section">
           <SwitchCaseEditor
             cases={[...node.cases]}
-            onChange={(cases) =>
-              { handlePatch({
-                cases: cases as [{ when: string; next: string }, ...{ when: string; next: string }[]],
-              } as Partial<Node>); }
-            }
+            onChange={(cases) => {
+              handlePatch({
+                cases: cases as [
+                  { when: string; next: string },
+                  ...{ when: string; next: string }[],
+                ],
+              } as Partial<Node>)
+            }}
           />
         </div>
       )}
@@ -144,11 +149,11 @@ export function PropertiesPanel({
             <select
               className="fp-panel-field-select"
               value={node.join_strategy ?? 'all_reached'}
-              onChange={(e) =>
-                { handlePatch({
+              onChange={(e) => {
+                handlePatch({
                   join_strategy: e.target.value as 'all_reached' | 'await_all',
-                } as Partial<Node>); }
-              }
+                } as Partial<Node>)
+              }}
               aria-label="Join Strategy"
             >
               <option value="all_reached">All Reached</option>
@@ -163,7 +168,9 @@ export function PropertiesPanel({
           <WaitEventEditor
             event={node.event}
             timeout={node.timeout}
-            onChange={(patch) => { handlePatch(patch as Partial<Node>); }}
+            onChange={(patch) => {
+              handlePatch(patch as Partial<Node>)
+            }}
           />
         </div>
       )}
@@ -172,7 +179,9 @@ export function PropertiesPanel({
         <div className="fp-panel-section">
           <TerminalOutcomeSelector
             outcome={node.outcome}
-            onChange={(outcome) => { handlePatch({ outcome } as Partial<Node>); }}
+            onChange={(outcome) => {
+              handlePatch({ outcome } as Partial<Node>)
+            }}
           />
         </div>
       )}

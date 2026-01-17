@@ -38,9 +38,7 @@ describe('EntryPointPicker', () => {
 
   it('renders file and symbol inputs when no provider', () => {
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker file="src/a.ts" symbol="foo" onChange={onChange} />,
-    )
+    render(<EntryPointPicker file="src/a.ts" symbol="foo" onChange={onChange} />)
 
     const fileInput = screen.getByLabelText('Entry point file')
     const symbolInput = screen.getByLabelText('Entry point symbol')
@@ -55,12 +53,7 @@ describe('EntryPointPicker', () => {
     const provider = makeProvider({ ready: false })
     const onChange = vi.fn()
     render(
-      <EntryPointPicker
-        file="src/b.ts"
-        symbol="bar"
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
+      <EntryPointPicker file="src/b.ts" symbol="bar" onChange={onChange} symbolSearch={provider} />,
     )
 
     expect(screen.getByLabelText('Entry point file')).toBeTruthy()
@@ -71,14 +64,7 @@ describe('EntryPointPicker', () => {
   it('shows provider name when provider is ready', () => {
     const provider = makeProvider({ name: 'tree-sitter' })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     expect(screen.getByText('Using tree-sitter')).toBeTruthy()
   })
@@ -87,14 +73,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue(sampleResults)
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
     fireEvent.change(searchInput, { target: { value: 'main' } })
@@ -115,14 +94,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue(sampleResults)
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
     fireEvent.change(searchInput, { target: { value: 'main' } })
@@ -145,14 +117,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue(sampleResults)
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
     fireEvent.change(searchInput, { target: { value: 'main' } })
@@ -173,14 +138,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue([])
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
     fireEvent.change(searchInput, { target: { value: 'nonexistent' } })
@@ -197,14 +155,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue(sampleResults)
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
     fireEvent.change(searchInput, { target: { value: 'main' } })
@@ -231,12 +182,7 @@ describe('EntryPointPicker', () => {
     render(
       <div>
         <button type="button">Outside</button>
-        <EntryPointPicker
-          file=""
-          symbol=""
-          onChange={onChange}
-          symbolSearch={provider}
-        />
+        <EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />
       </div>,
     )
 
@@ -262,14 +208,7 @@ describe('EntryPointPicker', () => {
     const searchFn = vi.fn().mockResolvedValue([])
     const provider = makeProvider({ search: searchFn })
     const onChange = vi.fn()
-    render(
-      <EntryPointPicker
-        file=""
-        symbol=""
-        onChange={onChange}
-        symbolSearch={provider}
-      />,
-    )
+    render(<EntryPointPicker file="" symbol="" onChange={onChange} symbolSearch={provider} />)
 
     const searchInput = screen.getByLabelText('Entry point search')
 

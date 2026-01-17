@@ -5,11 +5,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { NodePalette } from './NodePalette'
-import {
-  useAddNode,
-  PALETTE_NODE_TYPES,
-  resetCounter,
-} from '../hooks/useAddNode'
+import { useAddNode, PALETTE_NODE_TYPES, resetCounter } from '../hooks/useAddNode'
 import type { UseFlowprintStateReturn } from '../hooks/useFlowprintState'
 import type { LaneBand } from '../layout/types'
 
@@ -58,10 +54,7 @@ function makeState(overrides?: Partial<UseFlowprintStateReturn>): UseFlowprintSt
   }
 }
 
-function makeDragEvent(
-  data: Record<string, string>,
-  clientY = 0,
-): React.DragEvent {
+function makeDragEvent(data: Record<string, string>, clientY = 0): React.DragEvent {
   const dataStore = new Map(Object.entries(data))
   return {
     preventDefault: vi.fn(),
@@ -137,10 +130,7 @@ describe('NodePalette', () => {
       }
       fireEvent.dragStart(item, { dataTransfer })
 
-      expect(setData).toHaveBeenCalledWith(
-        'application/flowprint-node-type',
-        type,
-      )
+      expect(setData).toHaveBeenCalledWith('application/flowprint-node-type', type)
       expect(dataTransfer.effectAllowed).toBe('move')
     }
   })
@@ -175,9 +165,7 @@ describe('useAddNode', () => {
     const state = makeState({ addNode })
     const { result } = renderHook(() => useAddNode(state, []))
 
-    const event = makeDragEvent(
-      { 'application/flowprint-node-type': 'action' },
-    )
+    const event = makeDragEvent({ 'application/flowprint-node-type': 'action' })
     result.current.onDrop(event)
 
     expect(event.preventDefault).toHaveBeenCalled()
@@ -193,15 +181,9 @@ describe('useAddNode', () => {
     const state = makeState({ addNode })
     const { result } = renderHook(() => useAddNode(state, []))
 
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'action' }),
-    )
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'action' }),
-    )
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'wait' }),
-    )
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'action' }))
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'action' }))
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'wait' }))
 
     expect(addNode).toHaveBeenNthCalledWith(1, 'new_action_1', expect.anything())
     expect(addNode).toHaveBeenNthCalledWith(2, 'new_action_2', expect.anything())
@@ -215,9 +197,7 @@ describe('useAddNode', () => {
 
     const types = PALETTE_NODE_TYPES
     for (const type of types) {
-      result.current.onDrop(
-        makeDragEvent({ 'application/flowprint-node-type': type }),
-      )
+      result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': type }))
     }
 
     expect(addNode).toHaveBeenCalledTimes(6)
@@ -280,9 +260,7 @@ describe('useAddNode', () => {
     const { result } = renderHook(() => useAddNode(state, lanes))
 
     // Drop within the 'system' lane band (y=160..300)
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'action' }, 200),
-    )
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'action' }, 200))
 
     expect(addNode).toHaveBeenCalledWith('new_action_1', {
       type: 'action',
@@ -294,15 +272,11 @@ describe('useAddNode', () => {
   it('onDrop assigns empty lane when drop is outside all lanes', () => {
     const addNode = vi.fn()
     const state = makeState({ addNode })
-    const lanes: LaneBand[] = [
-      makeLane({ laneId: 'user', y: 0, height: 140, order: 0 }),
-    ]
+    const lanes: LaneBand[] = [makeLane({ laneId: 'user', y: 0, height: 140, order: 0 })]
     const { result } = renderHook(() => useAddNode(state, lanes))
 
     // Drop well below all lanes
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'action' }, 500),
-    )
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'action' }, 500))
 
     expect(addNode).toHaveBeenCalledWith('new_action_1', {
       type: 'action',
@@ -316,9 +290,7 @@ describe('useAddNode', () => {
     const state = makeState({ addNode })
     const { result } = renderHook(() => useAddNode(state, []))
 
-    result.current.onDrop(
-      makeDragEvent({ 'application/flowprint-node-type': 'bogus' }),
-    )
+    result.current.onDrop(makeDragEvent({ 'application/flowprint-node-type': 'bogus' }))
 
     expect(addNode).not.toHaveBeenCalled()
   })

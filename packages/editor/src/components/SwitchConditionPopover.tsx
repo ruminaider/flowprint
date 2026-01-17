@@ -31,9 +31,7 @@ export function SwitchConditionPopover({
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     zIndex: 1000,
     minWidth: 260,
-    ...(position
-      ? { position: 'absolute', left: position.x, top: position.y }
-      : {}),
+    ...(position ? { position: 'absolute', left: position.x, top: position.y } : {}),
   }
 
   return (
@@ -46,7 +44,9 @@ export function SwitchConditionPopover({
           type="text"
           placeholder="e.g., status === 'approved'"
           value={when}
-          onChange={(e) => { setWhen(e.target.value); }}
+          onChange={(e) => {
+            setWhen(e.target.value)
+          }}
           disabled={isDefault}
           style={{
             width: '100%',
@@ -67,7 +67,9 @@ export function SwitchConditionPopover({
           type="checkbox"
           id="fp-make-default"
           checked={isDefault}
-          onChange={(e) => { setIsDefault(e.target.checked); }}
+          onChange={(e) => {
+            setIsDefault(e.target.checked)
+          }}
         />
         <label htmlFor="fp-make-default">Make Default</label>
       </div>
@@ -87,7 +89,9 @@ export function SwitchConditionPopover({
         <button
           type="button"
           disabled={!canConfirm}
-          onClick={() => { onConfirm(when, isDefault || undefined); }}
+          onClick={() => {
+            onConfirm(when, isDefault || undefined)
+          }}
         >
           Confirm
         </button>

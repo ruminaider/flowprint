@@ -5,10 +5,7 @@ export interface TerminalOutcomeSelectorProps {
   onChange: (outcome: 'success' | 'failure') => void
 }
 
-export function TerminalOutcomeSelector({
-  outcome,
-  onChange,
-}: TerminalOutcomeSelectorProps) {
+export function TerminalOutcomeSelector({ outcome, onChange }: TerminalOutcomeSelectorProps) {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       onChange(e.target.value as 'success' | 'failure')

@@ -95,11 +95,11 @@ function terminalNode(overrides?: Partial<TerminalNode>): TerminalNode {
 
 describe('addNode', () => {
   it('adds a node to the document', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('step1', actionNode()); })
+    act(() => {
+      result.current.addNode('step1', actionNode())
+    })
 
     expect(result.current.doc.nodes.step1).toBeDefined()
     expect(result.current.doc.nodes.step1!.label).toBe('Do something')
@@ -107,12 +107,12 @@ describe('addNode', () => {
 
   it('does not mutate the previous document', () => {
     const initial = makeDoc()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: initial }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: initial }))
 
     const docBefore = result.current.doc
-    act(() => { result.current.addNode('step1', actionNode()); })
+    act(() => {
+      result.current.addNode('step1', actionNode())
+    })
 
     expect(docBefore.nodes.step1).toBeUndefined()
     expect(result.current.doc.nodes.step1).toBeDefined()
@@ -126,23 +126,23 @@ describe('addNode', () => {
 describe('updateNode', () => {
   it('applies a partial patch to an existing node', () => {
     const doc = makeDoc({ nodes: { a: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.updateNode('a', { label: 'Updated' }); })
+    act(() => {
+      result.current.updateNode('a', { label: 'Updated' })
+    })
 
     expect(result.current.doc.nodes.a!.label).toBe('Updated')
     expect(result.current.doc.nodes.a!.type).toBe('action')
   })
 
   it('throws for non-existent node', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     expect(() => {
-      act(() => { result.current.updateNode('missing', { label: 'x' }); })
+      act(() => {
+        result.current.updateNode('missing', { label: 'x' })
+      })
     }).toThrow("Node 'missing' not found")
   })
 })
@@ -154,11 +154,11 @@ describe('updateNode', () => {
 describe('removeNode', () => {
   it('removes the node from the document', () => {
     const doc = makeDoc({ nodes: { a: actionNode(), b: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('a'); })
+    act(() => {
+      result.current.removeNode('a')
+    })
 
     expect(result.current.doc.nodes.a).toBeUndefined()
     expect(result.current.doc.nodes.b).toBeDefined()
@@ -171,11 +171,11 @@ describe('removeNode', () => {
         b: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('b'); })
+    act(() => {
+      result.current.removeNode('b')
+    })
 
     const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.next).toBeUndefined()
@@ -188,11 +188,11 @@ describe('removeNode', () => {
         err: errorNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('err'); })
+    act(() => {
+      result.current.removeNode('err')
+    })
 
     const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.error?.catch).toBeUndefined()
@@ -211,11 +211,11 @@ describe('removeNode', () => {
         other: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('target'); })
+    act(() => {
+      result.current.removeNode('target')
+    })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(1)
@@ -229,11 +229,11 @@ describe('removeNode', () => {
         target: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('target'); })
+    act(() => {
+      result.current.removeNode('target')
+    })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.default).toBeUndefined()
@@ -252,11 +252,11 @@ describe('removeNode', () => {
     // Set join to something other than 'b' so we only test branches
     ;(doc.nodes.p as ParallelNode).join = 'j'
 
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('b'); })
+    act(() => {
+      result.current.removeNode('b')
+    })
 
     const p = result.current.doc.nodes.p as ParallelNode
     expect(p.branches).toEqual(['a', 'c'])
@@ -269,11 +269,11 @@ describe('removeNode', () => {
         j: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('j'); })
+    act(() => {
+      result.current.removeNode('j')
+    })
 
     const p = result.current.doc.nodes.p as ParallelNode
     expect(p.join).toBe('')
@@ -286,11 +286,11 @@ describe('removeNode', () => {
         target: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('target'); })
+    act(() => {
+      result.current.removeNode('target')
+    })
 
     const w = result.current.doc.nodes.w as WaitNode
     expect(w.next).toBeUndefined()
@@ -303,11 +303,11 @@ describe('removeNode', () => {
         target: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('target'); })
+    act(() => {
+      result.current.removeNode('target')
+    })
 
     const w = result.current.doc.nodes.w as WaitNode
     expect(w.timeout_next).toBeUndefined()
@@ -320,11 +320,11 @@ describe('removeNode', () => {
         target: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.removeNode('target'); })
+    act(() => {
+      result.current.removeNode('target')
+    })
 
     const e = result.current.doc.nodes.e as ErrorNode
     expect(e.next).toBeUndefined()
@@ -338,11 +338,11 @@ describe('removeNode', () => {
 describe('connectNodes', () => {
   it('sets next on an action node', () => {
     const doc = makeDoc({ nodes: { a: actionNode(), b: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.connectNodes('a', 'b', { type: 'next' }); })
+    act(() => {
+      result.current.connectNodes('a', 'b', { type: 'next' })
+    })
 
     expect((result.current.doc.nodes.a as ActionNode).next).toBe('b')
   })
@@ -355,13 +355,11 @@ describe('connectNodes', () => {
         b: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('sw', 'b', { type: 'switch_case', when: 'no' }); },
-    )
+    act(() => {
+      result.current.connectNodes('sw', 'b', { type: 'switch_case', when: 'no' })
+    })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(2)
@@ -373,11 +371,11 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { sw: switchNode(), b: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.connectNodes('sw', 'b', { type: 'switch_default' }); })
+    act(() => {
+      result.current.connectNodes('sw', 'b', { type: 'switch_default' })
+    })
 
     expect((result.current.doc.nodes.sw as SwitchNode).default).toBe('b')
   })
@@ -386,13 +384,11 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { p: parallelNode(), d: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('p', 'd', { type: 'parallel_branch' }); },
-    )
+    act(() => {
+      result.current.connectNodes('p', 'd', { type: 'parallel_branch' })
+    })
 
     const p = result.current.doc.nodes.p as ParallelNode
     expect(p.branches).toContain('d')
@@ -402,24 +398,22 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { p: parallelNode(), j: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('p', 'j', { type: 'parallel_join' }); },
-    )
+    act(() => {
+      result.current.connectNodes('p', 'j', { type: 'parallel_join' })
+    })
 
     expect((result.current.doc.nodes.p as ParallelNode).join).toBe('j')
   })
 
   it('sets next on a wait node', () => {
     const doc = makeDoc({ nodes: { w: waitNode(), b: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.connectNodes('w', 'b', { type: 'next' }); })
+    act(() => {
+      result.current.connectNodes('w', 'b', { type: 'next' })
+    })
 
     expect((result.current.doc.nodes.w as WaitNode).next).toBe('b')
   })
@@ -428,13 +422,11 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { w: waitNode({ timeout: '7d' }), t: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('w', 't', { type: 'timeout_next' }); },
-    )
+    act(() => {
+      result.current.connectNodes('w', 't', { type: 'timeout_next' })
+    })
 
     expect((result.current.doc.nodes.w as WaitNode).timeout_next).toBe('t')
   })
@@ -443,13 +435,11 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { a: actionNode(), e: errorNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('a', 'e', { type: 'error_catch' }); },
-    )
+    act(() => {
+      result.current.connectNodes('a', 'e', { type: 'error_catch' })
+    })
 
     expect((result.current.doc.nodes.a as ActionNode).error?.catch).toBe('e')
   })
@@ -461,13 +451,11 @@ describe('connectNodes', () => {
         e: errorNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() =>
-      { result.current.connectNodes('a', 'e', { type: 'error_catch' }); },
-    )
+    act(() => {
+      result.current.connectNodes('a', 'e', { type: 'error_catch' })
+    })
 
     const nodeA = result.current.doc.nodes.a as ActionNode
     expect(nodeA.error?.catch).toBe('e')
@@ -476,11 +464,11 @@ describe('connectNodes', () => {
 
   it('sets next on an error node', () => {
     const doc = makeDoc({ nodes: { e: errorNode(), b: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.connectNodes('e', 'b', { type: 'next' }); })
+    act(() => {
+      result.current.connectNodes('e', 'b', { type: 'next' })
+    })
 
     expect((result.current.doc.nodes.e as ErrorNode).next).toBe('b')
   })
@@ -489,35 +477,33 @@ describe('connectNodes', () => {
     const doc = makeDoc({
       nodes: { t: terminalNode(), b: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
     expect(() => {
-      act(() => { result.current.connectNodes('t', 'b', { type: 'next' }); })
+      act(() => {
+        result.current.connectNodes('t', 'b', { type: 'next' })
+      })
     }).toThrow('Terminal nodes cannot have outgoing connections')
   })
 
   it('throws for non-existent source node', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     expect(() => {
-      act(() => { result.current.connectNodes('missing', 'b', { type: 'next' }); })
+      act(() => {
+        result.current.connectNodes('missing', 'b', { type: 'next' })
+      })
     }).toThrow("Source node 'missing' not found")
   })
 
   it('throws when applying switch_case to non-switch node', () => {
     const doc = makeDoc({ nodes: { a: actionNode() } })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
     expect(() => {
-      act(() =>
-        { result.current.connectNodes('a', 'b', { type: 'switch_case', when: 'x' }); },
-      )
+      act(() => {
+        result.current.connectNodes('a', 'b', { type: 'switch_case', when: 'x' })
+      })
     }).toThrow('switch_case connection requires a switch node')
   })
 })
@@ -531,11 +517,11 @@ describe('disconnectNodes', () => {
     const doc = makeDoc({
       nodes: { a: actionNode({ next: 'b' }), b: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('a', 'b'); })
+    act(() => {
+      result.current.disconnectNodes('a', 'b')
+    })
 
     expect((result.current.doc.nodes.a as ActionNode).next).toBeUndefined()
   })
@@ -553,11 +539,11 @@ describe('disconnectNodes', () => {
         b: actionNode(),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('sw', 'a'); })
+    act(() => {
+      result.current.disconnectNodes('sw', 'a')
+    })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
     expect(sw.cases.length).toBe(1)
@@ -568,11 +554,11 @@ describe('disconnectNodes', () => {
     const doc = makeDoc({
       nodes: { sw: switchNode({ default: 'x' }), x: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('sw', 'x'); })
+    act(() => {
+      result.current.disconnectNodes('sw', 'x')
+    })
 
     expect((result.current.doc.nodes.sw as SwitchNode).default).toBeUndefined()
   })
@@ -583,27 +569,24 @@ describe('disconnectNodes', () => {
         p: parallelNode({ branches: ['a', 'b', 'c'] as [string, ...string[]] }),
       },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('p', 'b'); })
+    act(() => {
+      result.current.disconnectNodes('p', 'b')
+    })
 
-    expect((result.current.doc.nodes.p as ParallelNode).branches).toEqual([
-      'a',
-      'c',
-    ])
+    expect((result.current.doc.nodes.p as ParallelNode).branches).toEqual(['a', 'c'])
   })
 
   it('removes parallel.join reference', () => {
     const doc = makeDoc({
       nodes: { p: parallelNode({ join: 'j' }), j: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('p', 'j'); })
+    act(() => {
+      result.current.disconnectNodes('p', 'j')
+    })
 
     expect((result.current.doc.nodes.p as ParallelNode).join).toBe('')
   })
@@ -612,22 +595,22 @@ describe('disconnectNodes', () => {
     const doc = makeDoc({
       nodes: { w: waitNode({ timeout_next: 't', timeout: '7d' }), t: actionNode() },
     })
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: doc }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
 
-    act(() => { result.current.disconnectNodes('w', 't'); })
+    act(() => {
+      result.current.disconnectNodes('w', 't')
+    })
 
     expect((result.current.doc.nodes.w as WaitNode).timeout_next).toBeUndefined()
   })
 
   it('throws for non-existent source', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     expect(() => {
-      act(() => { result.current.disconnectNodes('missing', 'b'); })
+      act(() => {
+        result.current.disconnectNodes('missing', 'b')
+      })
     }).toThrow("Source node 'missing' not found")
   })
 })
@@ -638,17 +621,15 @@ describe('disconnectNodes', () => {
 
 describe('lane mutations', () => {
   it('addLane adds a lane', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() =>
-      { result.current.addLane('api', {
+    act(() => {
+      result.current.addLane('api', {
         label: 'API',
         visibility: 'internal',
         order: 2,
-      }); },
-    )
+      })
+    })
 
     expect(result.current.doc.lanes.api).toEqual({
       label: 'API',
@@ -658,43 +639,43 @@ describe('lane mutations', () => {
   })
 
   it('updateLane patches a lane', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.updateLane('user', { label: 'Customer' }); })
+    act(() => {
+      result.current.updateLane('user', { label: 'Customer' })
+    })
 
     expect(result.current.doc.lanes.user!.label).toBe('Customer')
     expect(result.current.doc.lanes.user!.visibility).toBe('external')
   })
 
   it('updateLane throws for non-existent lane', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     expect(() => {
-      act(() => { result.current.updateLane('missing', { label: 'x' }); })
+      act(() => {
+        result.current.updateLane('missing', { label: 'x' })
+      })
     }).toThrow("Lane 'missing' not found")
   })
 
   it('removeLane removes a lane', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.removeLane('system'); })
+    act(() => {
+      result.current.removeLane('system')
+    })
 
     expect(result.current.doc.lanes.system).toBeUndefined()
     expect(result.current.doc.lanes.user).toBeDefined()
   })
 
   it('reorderLanes updates order values', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.reorderLanes(['system', 'user']); })
+    act(() => {
+      result.current.reorderLanes(['system', 'user'])
+    })
 
     expect(result.current.doc.lanes.system!.order).toBe(0)
     expect(result.current.doc.lanes.user!.order).toBe(1)
@@ -707,37 +688,41 @@ describe('lane mutations', () => {
 
 describe('undo / redo', () => {
   it('starts with canUndo=false and canRedo=false', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     expect(result.current.canUndo).toBe(false)
     expect(result.current.canRedo).toBe(false)
   })
 
   it('can undo a mutation', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
     expect(result.current.doc.nodes.a).toBeDefined()
     expect(result.current.canUndo).toBe(true)
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.a).toBeUndefined()
     expect(result.current.canUndo).toBe(false)
     expect(result.current.canRedo).toBe(true)
   })
 
   it('can redo after undo', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
-    act(() => { result.current.undo(); })
-    act(() => { result.current.redo(); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
+    act(() => {
+      result.current.undo()
+    })
+    act(() => {
+      result.current.redo()
+    })
 
     expect(result.current.doc.nodes.a).toBeDefined()
     expect(result.current.canRedo).toBe(false)
@@ -745,58 +730,74 @@ describe('undo / redo', () => {
   })
 
   it('clears future on new mutation after undo', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
-    act(() => { result.current.addNode('b', actionNode()); })
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
+    act(() => {
+      result.current.addNode('b', actionNode())
+    })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.canRedo).toBe(true)
 
-    act(() => { result.current.addNode('c', actionNode()); })
+    act(() => {
+      result.current.addNode('c', actionNode())
+    })
     expect(result.current.canRedo).toBe(false)
   })
 
   it('supports multiple undo steps', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
-    act(() => { result.current.addNode('b', actionNode()); })
-    act(() => { result.current.addNode('c', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
+    act(() => {
+      result.current.addNode('b', actionNode())
+    })
+    act(() => {
+      result.current.addNode('c', actionNode())
+    })
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.c).toBeUndefined()
     expect(result.current.doc.nodes.b).toBeDefined()
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.b).toBeUndefined()
     expect(result.current.doc.nodes.a).toBeDefined()
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.a).toBeUndefined()
   })
 
   it('undo with empty past is a no-op', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     const before = result.current.doc
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
 
     expect(result.current.doc).toBe(before)
   })
 
   it('redo with empty future is a no-op', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     const before = result.current.doc
-    act(() => { result.current.redo(); })
+    act(() => {
+      result.current.redo()
+    })
 
     expect(result.current.doc).toBe(before)
   })
@@ -808,31 +809,47 @@ describe('undo / redo', () => {
 
 describe('maxHistory', () => {
   it('trims oldest entries when exceeded', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), maxHistory: 3 }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), maxHistory: 3 }))
 
     // Make 5 mutations, only the last 3 should be undoable
-    act(() => { result.current.addNode('a', actionNode()); })
-    act(() => { result.current.addNode('b', actionNode()); })
-    act(() => { result.current.addNode('c', actionNode()); })
-    act(() => { result.current.addNode('d', actionNode()); })
-    act(() => { result.current.addNode('e', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
+    act(() => {
+      result.current.addNode('b', actionNode())
+    })
+    act(() => {
+      result.current.addNode('c', actionNode())
+    })
+    act(() => {
+      result.current.addNode('d', actionNode())
+    })
+    act(() => {
+      result.current.addNode('e', actionNode())
+    })
 
     // Undo 3 times should work
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.e).toBeUndefined()
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.d).toBeUndefined()
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc.nodes.c).toBeUndefined()
 
     // 4th undo should be a no-op (oldest entries were trimmed)
     expect(result.current.canUndo).toBe(false)
     const docBeforeExtra = result.current.doc
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
     expect(result.current.doc).toBe(docBeforeExtra)
   })
 })
@@ -844,11 +861,11 @@ describe('maxHistory', () => {
 describe('onChange', () => {
   it('fires after a mutation', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(
@@ -864,32 +881,36 @@ describe('onChange', () => {
 
   it('fires after undo', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
     onChange.mockClear()
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
 
     expect(onChange).toHaveBeenCalledTimes(1)
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ nodes: {} }),
-    )
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ nodes: {} }))
   })
 
   it('fires after redo', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
+    act(() => {
+      result.current.undo()
+    })
     onChange.mockClear()
 
-    act(() => { result.current.redo(); })
+    act(() => {
+      result.current.redo()
+    })
 
     expect(onChange).toHaveBeenCalledTimes(1)
     expect(onChange).toHaveBeenCalledWith(
@@ -905,22 +926,22 @@ describe('onChange', () => {
 
   it('does not fire for no-op undo', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
 
     expect(onChange).not.toHaveBeenCalled()
   })
 
   it('does not fire for no-op redo', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.redo(); })
+    act(() => {
+      result.current.redo()
+    })
 
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -932,29 +953,33 @@ describe('onChange', () => {
 
 describe('setDoc', () => {
   it('replaces the document', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     const newDoc = makeDoc({ name: 'replaced' })
-    act(() => { result.current.setDoc(newDoc); })
+    act(() => {
+      result.current.setDoc(newDoc)
+    })
 
     expect(result.current.doc.name).toBe('replaced')
   })
 
   it('does not affect undo history', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
-    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
 
     const newDoc = makeDoc({ name: 'external' })
-    act(() => { result.current.setDoc(newDoc); })
+    act(() => {
+      result.current.setDoc(newDoc)
+    })
 
     // Undo should still restore to state before addNode, not before setDoc
     expect(result.current.canUndo).toBe(true)
-    act(() => { result.current.undo(); })
+    act(() => {
+      result.current.undo()
+    })
 
     // After undo, we get the state before addNode
     expect(result.current.doc.nodes.a).toBeUndefined()
@@ -962,11 +987,11 @@ describe('setDoc', () => {
 
   it('does not fire onChange', () => {
     const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc(), onChange }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc(), onChange }))
 
-    act(() => { result.current.setDoc(makeDoc({ name: 'x' })); })
+    act(() => {
+      result.current.setDoc(makeDoc({ name: 'x' }))
+    })
 
     expect(onChange).not.toHaveBeenCalled()
   })
@@ -979,9 +1004,7 @@ describe('setDoc', () => {
 describe('immutability', () => {
   it('initialDoc is not referenced by the hook', () => {
     const initial = makeDoc()
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: initial }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: initial }))
 
     // Mutate the original
     initial.name = 'mutated'
@@ -990,12 +1013,12 @@ describe('immutability', () => {
   })
 
   it('each mutation produces a new document reference', () => {
-    const { result } = renderHook(() =>
-      useFlowprintState({ initialDoc: makeDoc() }),
-    )
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 
     const doc1 = result.current.doc
-    act(() => { result.current.addNode('a', actionNode()); })
+    act(() => {
+      result.current.addNode('a', actionNode())
+    })
     const doc2 = result.current.doc
 
     expect(doc1).not.toBe(doc2)

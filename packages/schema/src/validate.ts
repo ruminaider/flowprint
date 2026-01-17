@@ -15,14 +15,7 @@ export const SUPPORTED_VERSIONS = ['flowprint/1.0'] as const
 /**
  * All valid node types.
  */
-export const NODE_TYPES = [
-  'action',
-  'switch',
-  'parallel',
-  'wait',
-  'error',
-  'terminal',
-] as const
+export const NODE_TYPES = ['action', 'switch', 'parallel', 'wait', 'error', 'terminal'] as const
 
 /**
  * Validate a parsed Flowprint document against the JSON Schema and
@@ -57,11 +50,7 @@ export function validate(doc: unknown): ValidationResult {
     typeof (doc as Record<string, unknown>).schema === 'string'
   ) {
     const schemaVersion = (doc as Record<string, unknown>).schema as string
-    if (
-      !SUPPORTED_VERSIONS.includes(
-        schemaVersion as (typeof SUPPORTED_VERSIONS)[number],
-      )
-    ) {
+    if (!SUPPORTED_VERSIONS.includes(schemaVersion as (typeof SUPPORTED_VERSIONS)[number])) {
       errors.push({
         path: '/schema',
         message: `Unsupported schema version "${schemaVersion}". Supported versions: ${SUPPORTED_VERSIONS.join(', ')}`,
@@ -72,9 +61,7 @@ export function validate(doc: unknown): ValidationResult {
 
   // If schema validation passed (document is well-formed), run structural validation
   if (valid) {
-    const structuralErrors = validateStructure(
-      doc as Record<string, unknown>,
-    )
+    const structuralErrors = validateStructure(doc as Record<string, unknown>)
     errors.push(...structuralErrors)
   }
 
@@ -96,8 +83,7 @@ export function validateYaml(yamlString: string): ValidationResult {
   try {
     doc = parse(yamlString)
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Failed to parse YAML'
+    const message = err instanceof Error ? err.message : 'Failed to parse YAML'
     return {
       valid: false,
       errors: [

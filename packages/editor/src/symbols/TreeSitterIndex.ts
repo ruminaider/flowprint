@@ -209,11 +209,7 @@ export class TreeSitterIndex implements SymbolSearchProvider {
     return null
   }
 
-  private _extractSymbols(
-    rootNode: unknown,
-    filePath: string,
-    content: string,
-  ): IndexedSymbol[] {
+  private _extractSymbols(rootNode: unknown, filePath: string, content: string): IndexedSymbol[] {
     const symbols: IndexedSymbol[] = []
     const lines = content.split('\n')
     this._walkNode(rootNode as TreeSitterNode, filePath, lines, symbols)

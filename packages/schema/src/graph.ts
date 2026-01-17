@@ -1,8 +1,4 @@
-import type {
-  FlowprintDocument,
-  OrderedNode,
-  Edge,
-} from './types.js'
+import type { FlowprintDocument, OrderedNode, Edge } from './types.js'
 
 /**
  * Extract all edges from a Flowprint document's node definitions.
@@ -184,7 +180,7 @@ export function detectCycles(doc: FlowprintDocument): string[][] | null {
   }
 
   const WHITE = 0 // unvisited
-  const GRAY = 1  // in current DFS path
+  const GRAY = 1 // in current DFS path
   const BLACK = 2 // fully processed
 
   const color = new Map<string, number>()

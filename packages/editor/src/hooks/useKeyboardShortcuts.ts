@@ -46,14 +46,7 @@ function hasMod(event: KeyboardEvent): boolean {
 // ---------------------------------------------------------------------------
 
 export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions): void {
-  const {
-    undo,
-    redo,
-    deleteSelected,
-    onSave,
-    deselect,
-    disabled,
-  } = options
+  const { undo, redo, deleteSelected, onSave, deselect, disabled } = options
 
   useEffect(() => {
     if (disabled) return

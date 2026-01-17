@@ -112,7 +112,9 @@ describe('CodeSearchProvider', () => {
 
       await provider.checkHealth()
 
-      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit | undefined] | undefined
+      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as
+        | [string, RequestInit | undefined]
+        | undefined
       const options = calls?.[1]
       expect(options?.signal).toBeDefined()
     })
@@ -351,7 +353,9 @@ describe('CodeSearchProvider', () => {
       const provider = new CodeSearchProvider({ url: BASE_URL })
       await provider.checkHealth()
 
-      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as [string, RequestInit | undefined] | undefined
+      const calls = vi.mocked(globalThis.fetch).mock.calls[0] as
+        | [string, RequestInit | undefined]
+        | undefined
       const options = calls?.[1]
       const headers = options?.headers as Record<string, string> | undefined
       expect(headers?.Authorization).toBeUndefined()
