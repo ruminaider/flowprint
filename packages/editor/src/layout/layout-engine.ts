@@ -17,6 +17,16 @@ import {
   getLaneBorderColor,
 } from './constants'
 
+/**
+ * Compute the visual layout for a Flowprint document.
+ *
+ * Performs topological sorting of nodes, groups them into swim lanes, computes
+ * positions, and generates React Flow nodes/edges with lane bands and the line
+ * of visibility separator.
+ *
+ * @param doc - The Flowprint document to layout.
+ * @returns Positioned nodes, edges, lane bands, and canvas dimensions.
+ */
 export function computeLayout(doc: FlowprintDocument): LayoutResult {
   const orderedNodes = topoSort(doc)
   const schemaEdges = getEdges(doc)

@@ -13,14 +13,34 @@ import { computeLayout } from '../layout'
 import LaneBackground from './LaneBackground'
 import LineOfVisibility from './LineOfVisibility'
 
+/**
+ * Props for {@link FlowprintViewer}.
+ */
 export interface FlowprintViewerProps {
+  /** The Flowprint document to render. */
   document: FlowprintDocument
+  /** Additional CSS class name applied to the viewer root `div`. */
   className?: string
+  /** Inline styles applied to the viewer root `div`. */
   style?: React.CSSProperties
+  /** Show the navigation minimap overlay. Defaults to `true`. */
   showMinimap?: boolean
+  /** Show background grid dots. Defaults to `true`. */
   showGrid?: boolean
 }
 
+/**
+ * Read-only Flowprint service blueprint viewer.
+ *
+ * A lightweight alternative to {@link FlowprintEditor} that renders a blueprint
+ * without any editing infrastructure (no palette, panels, or connection handlers).
+ * Supports pan, zoom, and minimap navigation.
+ *
+ * @example
+ * ```tsx
+ * <FlowprintViewer document={doc} showMinimap />
+ * ```
+ */
 export function FlowprintViewer({
   document: doc,
   className,

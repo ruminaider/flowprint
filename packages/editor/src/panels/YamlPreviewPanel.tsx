@@ -3,10 +3,13 @@ import type { ComponentType } from 'react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { serialize } from '@ruminaider/flowprint-schema'
 
+/**
+ * Props for {@link YamlPreviewPanel}.
+ */
 export interface YamlPreviewPanelProps {
-  /** The document to preview */
+  /** The document to preview as YAML. Serialized using `serialize()` from the schema package. */
   doc: FlowprintDocument
-  /** Whether the panel is visible */
+  /** Whether the panel is visible. When `false`, the component renders nothing. */
   visible: boolean
 }
 
@@ -35,6 +38,20 @@ const MonacoEditor = lazy(async () => {
   }
 })
 
+/**
+ * Panel that displays the current document as canonical `.flowprint.yaml`.
+ *
+ * Uses progressive enhancement: if `@monaco-editor/react` is installed, renders the
+ * YAML with syntax highlighting. Otherwise, falls back to a plain `<pre>` element.
+ *
+ * Serialization is performed by `serialize()` from `@ruminaider/flowprint-schema`,
+ * ensuring deterministic key ordering.
+ *
+ * @example
+ * ```tsx
+ * <YamlPreviewPanel doc={doc} visible={showPreview} />
+ * ```
+ */
 export function YamlPreviewPanel({ doc, visible }: YamlPreviewPanelProps) {
   const yaml = useMemo(() => serialize(doc), [doc])
   const [monacoAvailable, setMonacoAvailable] = useState<boolean | null>(null)

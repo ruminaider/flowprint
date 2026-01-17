@@ -20,14 +20,39 @@ import { ErrorHandlerEditor } from './fields/ErrorHandlerEditor'
 import { WaitEventEditor } from './fields/WaitEventEditor'
 import { TerminalOutcomeSelector } from './fields/TerminalOutcomeSelector'
 
+/**
+ * Props for {@link PropertiesPanel}.
+ */
 export interface PropertiesPanelProps {
+  /** ID of the currently selected node, or `null` if nothing is selected. */
   selectedNodeId: string | null
+  /** The current Flowprint document. */
   doc: FlowprintDocument
+  /** Callback to apply a partial update to a node. */
   onUpdateNode: (id: string, patch: Partial<Node>) => void
+  /** Map of lane IDs to lane definitions, used for the lane selector dropdown. */
   lanes: Record<string, Lane>
+  /** Optional symbol search provider for entry point lookup in action nodes. */
   symbolSearch?: SymbolSearchProvider
 }
 
+/**
+ * Side panel for editing the properties of a selected node.
+ *
+ * Displays common fields (label, lane, description) and type-specific editors
+ * (entry points for actions, cases for switches, etc.). Shows a placeholder
+ * message when no node is selected.
+ *
+ * @example
+ * ```tsx
+ * <PropertiesPanel
+ *   selectedNodeId={selectedId}
+ *   doc={doc}
+ *   onUpdateNode={state.updateNode}
+ *   lanes={doc.lanes}
+ * />
+ * ```
+ */
 export function PropertiesPanel({
   selectedNodeId,
   doc,

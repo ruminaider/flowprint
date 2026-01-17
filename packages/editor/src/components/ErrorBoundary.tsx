@@ -7,9 +7,15 @@ import {
   type ValidationError,
 } from '@ruminaider/flowprint-schema'
 
+/**
+ * Props for {@link ErrorBoundary}.
+ */
 export interface ErrorBoundaryProps {
+  /** The child component tree to wrap. */
   children: ReactNode
+  /** The current document, used to render a YAML dump in the error fallback. */
   doc: FlowprintDocument
+  /** Optional callback fired when the user clicks the Reset button. */
   onReset?: () => void
 }
 
@@ -18,6 +24,20 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
+/**
+ * React error boundary that catches rendering errors in the editor.
+ *
+ * When an error is caught, displays a fallback UI showing the error message,
+ * the current document serialized as YAML (via `serialize()`), and any
+ * validation errors. Provides a Reset button to recover.
+ *
+ * @example
+ * ```tsx
+ * <ErrorBoundary doc={doc}>
+ *   <FlowprintEditor value={doc} onChange={setDoc} />
+ * </ErrorBoundary>
+ * ```
+ */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)

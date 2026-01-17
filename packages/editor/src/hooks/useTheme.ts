@@ -1,8 +1,33 @@
 import { useEffect, useState } from 'react'
 
+/**
+ * User-specified theme preference.
+ *
+ * - `'light'` -- always use the light theme
+ * - `'dark'` -- always use the dark (Catppuccin Mocha) theme
+ * - `'system'` -- follow the OS `prefers-color-scheme` setting
+ */
 export type ThemeMode = 'light' | 'dark' | 'system'
+
+/**
+ * The concrete theme applied to the editor after resolving `'system'` mode.
+ */
 export type ResolvedTheme = 'light' | 'dark'
 
+/**
+ * React hook that resolves a {@link ThemeMode} to a concrete {@link ResolvedTheme}.
+ *
+ * When `mode` is `'system'`, listens to the `prefers-color-scheme` media query and
+ * updates automatically when the user's OS theme changes.
+ *
+ * @param mode - The desired theme mode.
+ * @returns The resolved theme (`'light'` or `'dark'`).
+ *
+ * @example
+ * ```ts
+ * const resolved = useTheme('system') // 'light' or 'dark' based on OS
+ * ```
+ */
 export function useTheme(mode: ThemeMode): ResolvedTheme {
   const [resolved, setResolved] = useState<ResolvedTheme>(() => {
     if (mode !== 'system') return mode

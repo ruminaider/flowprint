@@ -1,11 +1,19 @@
 import { useState } from 'react'
 import type { FlowprintDocument, Lane } from '@ruminaider/flowprint-schema'
 
+/**
+ * Props for {@link LanePanel}.
+ */
 export interface LanePanelProps {
+  /** The current Flowprint document. Used to read lanes and check for nodes. */
   doc: FlowprintDocument
+  /** Callback to add a new lane with the given ID and definition. */
   onAddLane: (id: string, lane: Lane) => void
+  /** Callback to apply a partial update to a lane. */
   onUpdateLane: (id: string, patch: Partial<Lane>) => void
+  /** Callback to remove a lane by ID. Warns if the lane has nodes. */
   onRemoveLane: (id: string) => void
+  /** Callback to reorder lanes by providing an ordered array of lane IDs. */
   onReorderLanes: (orderedIds: string[]) => void
 }
 
@@ -30,6 +38,23 @@ function getNextOrder(lanes: Record<string, Lane>): number {
   return orders.length > 0 ? Math.max(...orders) + 1 : 0
 }
 
+/**
+ * Panel for managing swim lanes (add, rename, reorder, toggle visibility, delete).
+ *
+ * Displays sorted lanes with inline editing controls. Deletion of lanes that
+ * still contain nodes requires a confirmation click.
+ *
+ * @example
+ * ```tsx
+ * <LanePanel
+ *   doc={doc}
+ *   onAddLane={state.addLane}
+ *   onUpdateLane={state.updateLane}
+ *   onRemoveLane={state.removeLane}
+ *   onReorderLanes={state.reorderLanes}
+ * />
+ * ```
+ */
 export function LanePanel({
   doc,
   onAddLane,

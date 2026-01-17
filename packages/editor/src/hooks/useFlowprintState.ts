@@ -17,6 +17,18 @@ import {
 // Public types
 // ---------------------------------------------------------------------------
 
+/**
+ * Discriminated union describing how to wire a connection between two nodes.
+ *
+ * Each variant corresponds to a specific edge type in the Flowprint schema:
+ * - `next` -- standard sequential flow
+ * - `switch_case` -- conditional branch with a `when` expression
+ * - `switch_default` -- default branch of a switch node
+ * - `parallel_branch` -- one branch of a parallel fork
+ * - `parallel_join` -- join target after parallel branches converge
+ * - `timeout_next` -- path taken when a wait node times out
+ * - `error_catch` -- error handler path on an action node
+ */
 export type ConnectionConfig =
   | { type: 'next' }
   | { type: 'switch_case'; when: string }
@@ -26,27 +38,54 @@ export type ConnectionConfig =
   | { type: 'timeout_next' }
   | { type: 'error_catch' }
 
+/**
+ * Options for the {@link useFlowprintState} hook.
+ */
 export interface UseFlowprintStateOptions {
+  /** The initial document to load into the editor state. Cloned internally. */
   initialDoc: FlowprintDocument
+  /** Optional callback fired after every document mutation. */
   onChange?: (doc: FlowprintDocument) => void
+  /** Maximum number of undo history entries to keep. Defaults to 50. */
   maxHistory?: number
 }
 
+/**
+ * Return value of the {@link useFlowprintState} hook.
+ *
+ * Provides the current document, mutation methods for nodes/lanes/connections,
+ * and undo/redo capabilities.
+ */
 export interface UseFlowprintStateReturn {
+  /** The current document state. */
   doc: FlowprintDocument
+  /** Add a new node to the document. */
   addNode(id: string, node: Node): void
+  /** Update properties of an existing node via a partial patch. */
   updateNode(id: string, patch: Partial<Node>): void
+  /** Remove a node and purge all references to it from other nodes. */
   removeNode(id: string): void
+  /** Create a connection between two nodes using the specified configuration. */
   connectNodes(source: string, target: string, config: ConnectionConfig): void
+  /** Remove a specific connection between two nodes. */
   disconnectNodes(source: string, target: string): void
+  /** Add a new lane to the document. */
   addLane(id: string, lane: Lane): void
+  /** Update properties of an existing lane via a partial patch. */
   updateLane(id: string, patch: Partial<Lane>): void
+  /** Remove a lane from the document. */
   removeLane(id: string): void
+  /** Reorder lanes by providing an ordered array of lane IDs. */
   reorderLanes(orderedIds: string[]): void
+  /** Undo the last document mutation. */
   undo(): void
+  /** Redo a previously undone mutation. */
   redo(): void
+  /** Whether there are mutations available to undo. */
   canUndo: boolean
+  /** Whether there are mutations available to redo. */
   canRedo: boolean
+  /** Replace the entire document (for external sync). Does not push to undo history. */
   setDoc(doc: FlowprintDocument): void
 }
 
@@ -191,6 +230,21 @@ function removeConnection(sourceNode: Node, target: string): void {
 // Hook
 // ---------------------------------------------------------------------------
 
+/**
+ * React hook that manages the mutable state of a Flowprint document.
+ *
+ * Provides immutable-update semantics with `structuredClone`, a full undo/redo
+ * history stack, and granular mutation methods for nodes, lanes, and connections.
+ *
+ * @param options - Initial document, change callback, and history size.
+ * @returns Mutation methods, undo/redo, and the current document.
+ *
+ * @example
+ * ```ts
+ * const state = useFlowprintState({ initialDoc: doc, onChange: setDoc })
+ * state.addNode('new_step', { type: 'action', lane: 'backend', label: 'Process' })
+ * ```
+ */
 export function useFlowprintState(
   options: UseFlowprintStateOptions,
 ): UseFlowprintStateReturn {

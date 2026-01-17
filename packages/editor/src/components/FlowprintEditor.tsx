@@ -31,20 +31,48 @@ import { useTheme } from '../hooks/useTheme'
 import type { SymbolSearchProvider } from '../symbols/types'
 import type { ThemeMode } from '../hooks/useTheme'
 
+/**
+ * Props for {@link FlowprintEditor}.
+ */
 export interface FlowprintEditorProps {
+  /** The Flowprint document to edit. The editor operates as a controlled component. */
   value: FlowprintDocument
+  /** Callback fired whenever the document is mutated (node add/remove/update, connections, lanes). */
   onChange: (doc: FlowprintDocument) => void
+  /** Additional CSS class name applied to the editor root `div`. */
   className?: string
+  /** Inline styles applied to the editor root `div`. */
   style?: React.CSSProperties
+  /** Show the navigation minimap overlay. Defaults to `true`. */
   showMinimap?: boolean
+  /** Show background grid dots. Defaults to `true`. */
   showGrid?: boolean
+  /** Disable all editing interactions (palette, panels, connections, drag). Defaults to `false`. */
   readOnly?: boolean
+  /** Color theme mode. Defaults to `'system'` (follows OS preference). */
   theme?: ThemeMode
+  /** Symbol search provider for entry point lookup in action nodes. */
   symbolSearch?: SymbolSearchProvider
+  /** Show the YAML preview panel. Defaults to `false`. */
   showYamlPreview?: boolean
+  /** Show the SVG export button. Hidden in read-only mode. Defaults to `false`. */
   showExportButton?: boolean
 }
 
+/**
+ * Embeddable Flowprint service blueprint editor.
+ *
+ * A controlled React component that renders a visual editor for `.flowprint.yaml`
+ * service blueprints. Supports theming, symbol search, YAML preview, and SVG export.
+ *
+ * The editor container fills 100% of its parent's width and height. Make sure the
+ * parent element has explicit dimensions.
+ *
+ * @example
+ * ```tsx
+ * <FlowprintEditor value={doc} onChange={setDoc} theme="dark" />
+ * ```
+ */
 export function FlowprintEditor({
   value,
   onChange,

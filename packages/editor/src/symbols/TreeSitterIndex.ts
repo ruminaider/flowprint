@@ -4,15 +4,23 @@ import type { SymbolResult, SymbolDetail, SymbolSearchProvider } from './types'
 // Public option types
 // ---------------------------------------------------------------------------
 
+/**
+ * Configuration options for {@link TreeSitterIndex}.
+ */
 export interface TreeSitterIndexOptions {
-  /** Base URL for loading WASM files (grammars + parser). Defaults to '/tree-sitter/' */
+  /** Base URL for loading WASM files (grammars + parser). Defaults to `'/tree-sitter/'`. */
   wasmPath?: string
-  /** Languages to support. Defaults to ['typescript', 'javascript', 'python'] */
+  /** Languages to support. Defaults to `['typescript', 'javascript', 'python']`. */
   languages?: string[]
 }
 
+/**
+ * A source file to be indexed by {@link TreeSitterIndex}.
+ */
 export interface FileInput {
+  /** Relative path of the file (e.g. `'src/api.ts'`) */
   path: string
+  /** Full text content of the file */
   content: string
 }
 
@@ -51,6 +59,20 @@ interface TreeSitterNode {
 /** Maximum number of search results returned by `search()`. */
 const SEARCH_LIMIT = 50
 
+/**
+ * Browser-side symbol search provider backed by tree-sitter WASM grammars.
+ *
+ * Parses source files in-browser and indexes all function, class, method, variable,
+ * type, and interface declarations. Requires `web-tree-sitter` as an optional peer
+ * dependency and WASM grammar files served from a configurable base URL.
+ *
+ * @example
+ * ```ts
+ * const index = new TreeSitterIndex({ wasmPath: '/tree-sitter/' })
+ * await index.init([{ path: 'src/api.ts', content: sourceCode }])
+ * const results = await index.search('handleRequest')
+ * ```
+ */
 export class TreeSitterIndex implements SymbolSearchProvider {
   readonly name = 'tree-sitter'
 
@@ -59,10 +81,16 @@ export class TreeSitterIndex implements SymbolSearchProvider {
   private readonly _wasmPath: string
   private readonly _languages: string[]
 
+  /** Whether the index has been initialized and is ready to accept queries. */
   get ready(): boolean {
     return this._initialized
   }
 
+  /**
+   * Create a new TreeSitterIndex.
+   *
+   * @param options - Configuration for WASM paths and language support.
+   */
   constructor(options: TreeSitterIndexOptions = {}) {
     this._wasmPath = options.wasmPath ?? '/tree-sitter/'
     this._languages = options.languages ?? ['typescript', 'javascript', 'python']
@@ -119,6 +147,14 @@ export class TreeSitterIndex implements SymbolSearchProvider {
     this._initialized = true
   }
 
+  /**
+   * Search indexed symbols by name substring match.
+   *
+   * Results are sorted by match position (prefix matches first) and limited
+   * to 50 results. Returns an empty array if the index has not been initialized.
+   *
+   * @param query - Search string to match against symbol names (case-insensitive).
+   */
   search(query: string): Promise<SymbolResult[]> {
     if (!this._initialized) return Promise.resolve([])
     const lower = query.toLowerCase()
@@ -142,6 +178,13 @@ export class TreeSitterIndex implements SymbolSearchProvider {
     )
   }
 
+  /**
+   * Resolve full details for a symbol by file path and name.
+   *
+   * @param file - File path to look up.
+   * @param symbol - Symbol name to find in that file.
+   * @returns Full symbol details including line range and signature, or `null` if not found.
+   */
   resolve(file: string, symbol: string): Promise<SymbolDetail | null> {
     const found = this._symbols.find((s) => s.file === file && s.symbol === symbol)
     if (!found) return Promise.resolve(null)

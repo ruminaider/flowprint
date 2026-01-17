@@ -7,25 +7,31 @@ import { TreeSitterIndex } from './TreeSitterIndex'
 // Public option / return types
 // ---------------------------------------------------------------------------
 
+/**
+ * Options for the {@link useSymbolSearch} hook.
+ */
 export interface UseSymbolSearchOptions {
-  /** URL to probe for code-search server (undefined = skip code-search) */
+  /** URL to probe for a code-search server. If `undefined`, code-search is skipped. */
   codeSearchUrl?: string
-  /** API key for code-search server */
+  /** API key for authenticating with the code-search server. */
   codeSearchApiKey?: string
-  /** Files to index with tree-sitter (undefined = skip tree-sitter) */
+  /** Source files to index locally with tree-sitter. If `undefined`, tree-sitter is skipped. */
   files?: { path: string; content: string }[]
-  /** Base URL for tree-sitter WASM files */
+  /** Base URL for tree-sitter WASM parser and grammar files. */
   wasmPath?: string
 }
 
+/**
+ * Return value of the {@link useSymbolSearch} hook.
+ */
 export interface UseSymbolSearchReturn {
-  /** The active provider, or null if none available */
+  /** The active provider, or `null` if no provider could be initialized. */
   provider: SymbolSearchProvider | null
-  /** Name of the active provider */
+  /** Display name of the active provider (e.g. `"code-search"`), or `null`. */
   providerName: string | null
-  /** Whether provider initialization is in progress */
+  /** Whether provider initialization is currently in progress. */
   loading: boolean
-  /** Re-probe code-search server */
+  /** Re-probe the code-search server and switch to it if healthy. */
   reconnect: () => Promise<void>
 }
 
@@ -33,6 +39,23 @@ export interface UseSymbolSearchReturn {
 // Hook
 // ---------------------------------------------------------------------------
 
+/**
+ * React hook that auto-detects and initializes the best available symbol search provider.
+ *
+ * Tries {@link CodeSearchProvider} first (higher priority, semantic search). If the
+ * code-search server is unreachable, falls back to {@link TreeSitterIndex} when source
+ * files are provided. Returns `null` if neither provider is available.
+ *
+ * @param options - Configuration for code-search URL, API key, and/or tree-sitter files.
+ * @returns The active provider, loading state, and a reconnect function.
+ *
+ * @example
+ * ```tsx
+ * const { provider, loading } = useSymbolSearch({
+ *   codeSearchUrl: 'http://localhost:8080',
+ * })
+ * ```
+ */
 export function useSymbolSearch(options: UseSymbolSearchOptions): UseSymbolSearchReturn {
   const [provider, setProvider] = useState<SymbolSearchProvider | null>(null)
   const [loading, setLoading] = useState(false)

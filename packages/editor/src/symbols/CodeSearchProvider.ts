@@ -1,12 +1,31 @@
 import type { SymbolResult, SymbolDetail, SymbolSearchProvider } from './types'
 
+/**
+ * Configuration options for {@link CodeSearchProvider}.
+ */
 export interface CodeSearchProviderOptions {
-  /** Base URL of code-search server (e.g., "http://localhost:8080") */
+  /** Base URL of the code-search server (e.g. `"http://localhost:8080"`). Trailing slashes are stripped. */
   url: string
-  /** Optional API key for authentication */
+  /** Optional API key sent as a `Bearer` token in the `Authorization` header. */
   apiKey?: string
 }
 
+/**
+ * Symbol search provider that delegates to a remote code-search REST API.
+ *
+ * Connects to a running [code-search](https://github.com/ruminaider/code-search) server
+ * and provides semantic symbol search. Call {@link checkHealth} after construction to
+ * verify the server is reachable before using search/resolve.
+ *
+ * @example
+ * ```ts
+ * const provider = new CodeSearchProvider({ url: 'http://localhost:8080' })
+ * await provider.checkHealth()
+ * if (provider.ready) {
+ *   const results = await provider.search('handleRequest')
+ * }
+ * ```
+ */
 export class CodeSearchProvider implements SymbolSearchProvider {
   readonly name = 'code-search'
 
@@ -14,10 +33,16 @@ export class CodeSearchProvider implements SymbolSearchProvider {
   private readonly _url: string
   private readonly _apiKey?: string
 
+  /** Whether the server health check passed and the provider is ready for queries. */
   get ready(): boolean {
     return this._healthy
   }
 
+  /**
+   * Create a new CodeSearchProvider.
+   *
+   * @param options - Server URL and optional authentication.
+   */
   constructor(options: CodeSearchProviderOptions) {
     this._url = options.url.replace(/\/$/, '') // strip trailing slash
     this._apiKey = options.apiKey
@@ -38,6 +63,13 @@ export class CodeSearchProvider implements SymbolSearchProvider {
     }
   }
 
+  /**
+   * Search for symbols matching a query via the `/api/search` endpoint.
+   *
+   * Returns an empty array if the server is not healthy or the request fails.
+   *
+   * @param query - Search string to send to the server.
+   */
   async search(query: string): Promise<SymbolResult[]> {
     if (!this._healthy) return []
     try {
@@ -58,6 +90,13 @@ export class CodeSearchProvider implements SymbolSearchProvider {
     }
   }
 
+  /**
+   * Resolve full symbol details via the `/api/resolve` endpoint.
+   *
+   * @param file - File path to look up.
+   * @param symbol - Symbol name to resolve.
+   * @returns Full symbol details, or `null` if not found or server is unhealthy.
+   */
   async resolve(file: string, symbol: string): Promise<SymbolDetail | null> {
     if (!this._healthy) return null
     try {

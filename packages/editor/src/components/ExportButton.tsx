@@ -2,10 +2,26 @@ import { useCallback } from 'react'
 import { useReactFlow, getNodesBounds } from '@xyflow/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 
+/**
+ * Props for {@link ExportButton}.
+ */
 export interface ExportButtonProps {
+  /** The document being edited. Used to derive the download filename (`{name}.svg`). */
   doc: FlowprintDocument
 }
 
+/**
+ * Button that exports the current editor viewport as an SVG file.
+ *
+ * Clones the React Flow viewport DOM, wraps it in an SVG element with computed
+ * bounds, and triggers a browser download. Must be rendered inside a
+ * `ReactFlowProvider` context.
+ *
+ * @example
+ * ```tsx
+ * <ExportButton doc={doc} />
+ * ```
+ */
 export function ExportButton({ doc }: ExportButtonProps) {
   const { getNodes } = useReactFlow()
 

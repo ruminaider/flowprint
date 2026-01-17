@@ -48,6 +48,13 @@ function PaletteItem({ type }: { type: PaletteNodeType }) {
 // NodePalette
 // ---------------------------------------------------------------------------
 
+/**
+ * Draggable palette of node types that can be dropped onto the editor canvas.
+ *
+ * Renders one draggable item per Flowprint node type (action, switch, parallel,
+ * wait, error, terminal). Uses the HTML Drag and Drop API with a custom MIME type
+ * to transfer the node type to the drop handler.
+ */
 export function NodePalette() {
   return (
     <div className="fp-palette">
