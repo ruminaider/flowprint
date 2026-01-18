@@ -1,10 +1,14 @@
 import type { ThemeMode } from '@ruminaider/flowprint-editor'
 
 export interface HeaderProps {
-  fileName: string
+  fileName: string | null
   dirty: boolean
   themeMode: ThemeMode
   onCycleTheme: () => void
+  onOpen: () => void
+  onSave: () => void
+  onSaveAs: () => void
+  onSettings: () => void
 }
 
 const THEME_LABELS: Record<ThemeMode, string> = {
@@ -13,7 +17,26 @@ const THEME_LABELS: Record<ThemeMode, string> = {
   dark: 'Dark',
 }
 
-export function Header({ fileName, dirty, themeMode, onCycleTheme }: HeaderProps) {
+const btnStyle: React.CSSProperties = {
+  padding: '4px 10px',
+  fontSize: 12,
+  border: '1px solid var(--fp-border, #e0e0e0)',
+  borderRadius: 4,
+  background: 'transparent',
+  color: 'inherit',
+  cursor: 'pointer',
+}
+
+export function Header({
+  fileName,
+  dirty,
+  themeMode,
+  onCycleTheme,
+  onOpen,
+  onSave,
+  onSaveAs,
+  onSettings,
+}: HeaderProps) {
   return (
     <header
       style={{
@@ -29,31 +52,35 @@ export function Header({ fileName, dirty, themeMode, onCycleTheme }: HeaderProps
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <strong style={{ fontSize: 14 }}>{fileName}</strong>
-        <span
-          style={{
-            fontSize: 12,
-            color: dirty ? 'var(--fp-warning, #f9e2af)' : 'var(--fp-muted, #999)',
-          }}
-        >
-          {dirty ? 'Unsaved changes' : 'Saved'}
-        </span>
+        <strong style={{ fontSize: 14 }}>{fileName ?? 'Flowprint'}</strong>
+        {fileName !== null && (
+          <span
+            style={{
+              fontSize: 12,
+              color: dirty ? 'var(--fp-warning, #f9e2af)' : 'var(--fp-muted, #999)',
+            }}
+          >
+            {dirty ? 'Unsaved changes' : 'Saved'}
+          </span>
+        )}
       </div>
-      <button
-        type="button"
-        onClick={onCycleTheme}
-        style={{
-          padding: '4px 12px',
-          fontSize: 12,
-          border: '1px solid var(--fp-border, #e0e0e0)',
-          borderRadius: 4,
-          background: 'transparent',
-          color: 'inherit',
-          cursor: 'pointer',
-        }}
-      >
-        Theme: {THEME_LABELS[themeMode]}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <button type="button" onClick={onOpen} style={btnStyle}>
+          Open
+        </button>
+        <button type="button" onClick={onSave} style={btnStyle}>
+          Save
+        </button>
+        <button type="button" onClick={onSaveAs} style={btnStyle}>
+          Save As
+        </button>
+        <button type="button" onClick={onSettings} style={btnStyle}>
+          Settings
+        </button>
+        <button type="button" onClick={onCycleTheme} style={btnStyle}>
+          Theme: {THEME_LABELS[themeMode]}
+        </button>
+      </div>
     </header>
   )
 }
