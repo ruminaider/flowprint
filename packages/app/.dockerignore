@@ -1,0 +1,9 @@
+node_modules
+dist
+.turbo
+*.md
+.git
+e2e
+**/*.test.*
+**/*.spec.*
+**/*.stories.*
