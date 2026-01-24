@@ -1,14 +1,11 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { render, screen, cleanup, act } from '@testing-library/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { YamlPreviewPanel } from './YamlPreviewPanel'
 
 vi.mock('@ruminaider/flowprint-schema', () => ({
   serialize: vi.fn((doc: FlowprintDocument) => `schema: ${doc.schema}\nname: ${doc.name}\n`),
 }))
-
-// Monaco is not available in test environment — the dynamic import will fail,
-// which triggers the fallback <pre> rendering. No need to mock it.
 
 const baseDoc: FlowprintDocument = {
   schema: 'flowprint/1.0',
@@ -28,8 +25,13 @@ const baseDoc: FlowprintDocument = {
 }
 
 describe('YamlPreviewPanel', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
   })
 
   it('returns null when not visible', () => {
@@ -44,21 +46,29 @@ describe('YamlPreviewPanel', () => {
     expect(screen.getByText('YAML Preview')).toBeTruthy()
   })
 
-  it('shows YAML content in fallback pre element', async () => {
+  it('shows YAML content in fallback pre element', () => {
     render(<YamlPreviewPanel doc={baseDoc} visible={true} />)
 
-    // Wait for Monaco probe to fail and fallback to render
-    const pre = await screen.findByText(/schema: flowprint\/1\.0/, {}, { timeout: 3000 })
+    // Advance past the 2s Monaco probe timeout so the component falls back to <pre>
+    act(() => {
+      vi.advanceTimersByTime(2500)
+    })
+
+    const pre = screen.getByText(/schema: flowprint\/1\.0/)
     expect(pre).toBeTruthy()
     expect(pre.tagName).toBe('PRE')
     expect(pre.className).toBe('fp-yaml-preview-fallback')
   })
 
-  it('updates when doc changes', async () => {
+  it('updates when doc changes', () => {
     const { rerender } = render(<YamlPreviewPanel doc={baseDoc} visible={true} />)
 
-    // Wait for fallback to appear
-    await screen.findByText(/schema: flowprint\/1\.0/, {}, { timeout: 3000 })
+    // Advance past Monaco probe timeout
+    act(() => {
+      vi.advanceTimersByTime(2500)
+    })
+
+    expect(screen.getByText(/schema: flowprint\/1\.0/)).toBeTruthy()
 
     const updatedDoc: FlowprintDocument = {
       ...baseDoc,
@@ -67,7 +77,7 @@ describe('YamlPreviewPanel', () => {
 
     rerender(<YamlPreviewPanel doc={updatedDoc} visible={true} />)
 
-    const pre = await screen.findByText(/name: updated-blueprint/, {}, { timeout: 3000 })
+    const pre = screen.getByText(/name: updated-blueprint/)
     expect(pre).toBeTruthy()
   })
 

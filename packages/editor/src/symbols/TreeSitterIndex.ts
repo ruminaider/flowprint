@@ -109,42 +109,51 @@ export class TreeSitterIndex implements SymbolSearchProvider {
     //
     // The module specifier is assigned to a variable so bundlers (Vite/Rollup)
     // do not try to resolve it at build time.
-    const moduleId = 'web-tree-sitter'
-    const TreeSitter = (await import(/* @vite-ignore */ moduleId)) as {
-      default: {
-        init(opts: { locateFile: (name: string) => string }): Promise<void>
-        Language: { load(path: string): Promise<unknown> }
-        new (): {
-          setLanguage(lang: unknown): void
-          parse(input: string): { rootNode: unknown }
+    //
+    // The outer try/catch ensures that WASM-related errors (e.g. missing
+    // tree-sitter.wasm) propagate as a proper rejection instead of becoming
+    // unhandled rejections from Emscripten's abort() internals.
+    try {
+      const moduleId = 'web-tree-sitter'
+      const TreeSitter = (await import(/* @vite-ignore */ moduleId)) as {
+        default: {
+          init(opts: { locateFile: (name: string) => string }): Promise<void>
+          Language: { load(path: string): Promise<unknown> }
+          new (): {
+            setLanguage(lang: unknown): void
+            parse(input: string): { rootNode: unknown }
+          }
         }
       }
-    }
-    await TreeSitter.default.init({
-      locateFile: (scriptName: string) => `${this._wasmPath}${scriptName}`,
-    })
+      await TreeSitter.default.init({
+        locateFile: (scriptName: string) => `${this._wasmPath}${scriptName}`,
+      })
 
-    const parser = new TreeSitter.default()
+      const parser = new TreeSitter.default()
 
-    for (const file of files) {
-      const lang = this._detectLanguage(file.path)
-      if (!lang || !this._languages.includes(lang)) continue
+      for (const file of files) {
+        const lang = this._detectLanguage(file.path)
+        if (!lang || !this._languages.includes(lang)) continue
 
-      try {
-        const grammar = await TreeSitter.default.Language.load(
-          `${this._wasmPath}tree-sitter-${lang}.wasm`,
-        )
-        parser.setLanguage(grammar)
-        const tree = parser.parse(file.content)
-        const symbols = this._extractSymbols(tree.rootNode, file.path, file.content)
-        this._symbols.push(...symbols)
-      } catch {
-        // Skip files whose grammar fails to load
-        continue
+        try {
+          const grammar = await TreeSitter.default.Language.load(
+            `${this._wasmPath}tree-sitter-${lang}.wasm`,
+          )
+          parser.setLanguage(grammar)
+          const tree = parser.parse(file.content)
+          const symbols = this._extractSymbols(tree.rootNode, file.path, file.content)
+          this._symbols.push(...symbols)
+        } catch {
+          // Skip files whose grammar fails to load
+          continue
+        }
       }
-    }
 
-    this._initialized = true
+      this._initialized = true
+    } catch (error) {
+      this._initialized = false
+      throw error
+    }
   }
 
   /**

@@ -57,13 +57,33 @@ export function YamlPreviewPanel({ doc, visible }: YamlPreviewPanelProps) {
   const [monacoAvailable, setMonacoAvailable] = useState<boolean | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+
+    // Timeout: if the dynamic import hasn't settled within 2s, assume Monaco
+    // is not available. This prevents indefinite "Loading..." in environments
+    // where the import hangs (e.g. jsdom, CI).
+    const timer = setTimeout(() => {
+      if (!cancelled) setMonacoAvailable(false)
+    }, 2000)
+
     import(/* @vite-ignore */ MONACO_MODULE)
       .then(() => {
-        setMonacoAvailable(true)
+        if (!cancelled) {
+          clearTimeout(timer)
+          setMonacoAvailable(true)
+        }
       })
       .catch(() => {
-        setMonacoAvailable(false)
+        if (!cancelled) {
+          clearTimeout(timer)
+          setMonacoAvailable(false)
+        }
       })
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [])
 
   if (!visible) return null

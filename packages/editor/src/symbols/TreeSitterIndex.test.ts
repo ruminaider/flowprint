@@ -1,6 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { TreeSitterIndex } from './TreeSitterIndex'
 import type { SymbolSearchProvider } from './types'
+
+// Mock web-tree-sitter so tests never trigger real WASM loading.
+// The real module's abort() creates unhandled rejections in test/CI environments
+// where the WASM binary is absent. All search/resolve tests bypass init() via
+// createPopulatedIndex, so this mock only affects the init-failure test.
+vi.mock('web-tree-sitter', () => {
+  throw new Error('web-tree-sitter not available in test environment')
+})
 
 // ---------------------------------------------------------------------------
 // Helpers
