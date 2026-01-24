@@ -97,13 +97,22 @@ function WizardForm({
       ]),
     )
 
+    const firstLaneId = lanes[0].id || 'lane-0'
+
     const doc: FlowprintDocument = {
       schema: schemaVersion,
       name: trimmedName,
       version: '0.1.0',
       description: description.trim() || undefined,
       lanes: lanesRecord,
-      nodes: {},
+      nodes: {
+        start: {
+          type: 'terminal',
+          lane: firstLaneId,
+          label: 'Start',
+          outcome: 'success',
+        },
+      },
     }
 
     onCreate(doc)

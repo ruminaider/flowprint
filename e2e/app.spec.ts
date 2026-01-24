@@ -23,7 +23,7 @@ test('new blueprint wizard opens and creates document', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click()
 
   // Should now show the editor (welcome screen gone, header shows file name)
-  await expect(page.getByText('test-service')).toBeVisible()
+  await expect(page.getByText('test-service', { exact: true })).toBeVisible()
 })
 
 test('settings dialog opens', async ({ page }) => {

@@ -1,6 +1,7 @@
 # Stage 1: Build the monorepo
 FROM node:22-alpine AS build
 
+RUN apk add --no-cache python3 make g++
 RUN corepack enable
 
 WORKDIR /app

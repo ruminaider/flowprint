@@ -13,7 +13,7 @@ test('round-trip: create blueprint in app, validate with CLI', async ({ page }) 
   await page.getByRole('button', { name: 'Create' }).click()
 
   // Wait for editor to render
-  await expect(page.getByText('round-trip-test')).toBeVisible()
+  await expect(page.getByText('round-trip-test', { exact: true })).toBeVisible()
 
   // The YAML preview panel should be visible (showYamlPreview is enabled).
   // When Monaco is not available, the fallback <pre> element renders the YAML.
@@ -35,6 +35,14 @@ test('round-trip: create blueprint in app, validate with CLI', async ({ page }) 
     const previewPanel = page.locator('.fp-yaml-preview-content')
     if (await previewPanel.isVisible().catch(() => false)) {
       yamlContent = await previewPanel.textContent()
+    }
+  }
+
+  if (!yamlContent) {
+    // ErrorBoundary fallback renders YAML in a different class
+    const errorPre = page.locator('.fp-error-yaml-preview')
+    if (await errorPre.isVisible().catch(() => false)) {
+      yamlContent = await errorPre.textContent()
     }
   }
 

@@ -102,7 +102,9 @@ describe('NewBlueprintWizard', () => {
     expect(doc.lanes).toEqual({
       customer: { label: 'Customer', visibility: 'external', order: 0 },
     })
-    expect(doc.nodes).toEqual({})
+    expect(doc.nodes).toEqual({
+      start: { type: 'terminal', lane: 'customer', label: 'Start', outcome: 'success' },
+    })
   })
 
   it('calls onClose on cancel', () => {
