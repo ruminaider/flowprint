@@ -33,7 +33,7 @@ export const diffCommand = new Command('diff')
     if (changes.length === 0) {
       console.log(chalk.green('No structural differences found.'))
     } else {
-      console.log(chalk.bold(`${changes.length} difference(s) found:\n`))
+      console.log(chalk.bold(`${String(changes.length)} difference(s) found:\n`))
       for (const change of changes) {
         switch (change.type) {
           case 'added':
@@ -66,8 +66,8 @@ export function computeDiff(doc1: FlowprintDocument, doc2: FlowprintDocument): D
   const changes: DiffChange[] = []
 
   // Compare lanes
-  const laneIds1 = new Set(Object.keys(doc1.lanes ?? {}))
-  const laneIds2 = new Set(Object.keys(doc2.lanes ?? {}))
+  const laneIds1 = new Set(Object.keys(doc1.lanes))
+  const laneIds2 = new Set(Object.keys(doc2.lanes))
 
   for (const id of laneIds2) {
     if (!laneIds1.has(id)) {
@@ -80,8 +80,10 @@ export function computeDiff(doc1: FlowprintDocument, doc2: FlowprintDocument): D
     }
   }
   for (const id of laneIds1) {
-    if (laneIds2.has(id)) {
-      const diff = compareLanes(doc1.lanes[id]!, doc2.lanes[id]!)
+    const lane1 = doc1.lanes[id]
+    const lane2 = doc2.lanes[id]
+    if (lane1 && lane2) {
+      const diff = compareLanes(lane1, lane2)
       if (diff) {
         changes.push({ type: 'modified', category: 'lane', id, detail: diff })
       }
@@ -89,18 +91,20 @@ export function computeDiff(doc1: FlowprintDocument, doc2: FlowprintDocument): D
   }
 
   // Compare nodes
-  const nodeIds1 = new Set(Object.keys(doc1.nodes ?? {}))
-  const nodeIds2 = new Set(Object.keys(doc2.nodes ?? {}))
+  const nodeIds1 = new Set(Object.keys(doc1.nodes))
+  const nodeIds2 = new Set(Object.keys(doc2.nodes))
 
   for (const id of nodeIds2) {
     if (!nodeIds1.has(id)) {
-      const node = doc2.nodes[id]!
-      changes.push({
-        type: 'added',
-        category: 'node',
-        id,
-        detail: `type=${node.type}, lane=${node.lane}`,
-      })
+      const node = doc2.nodes[id]
+      if (node) {
+        changes.push({
+          type: 'added',
+          category: 'node',
+          id,
+          detail: `type=${node.type}, lane=${node.lane}`,
+        })
+      }
     }
   }
   for (const id of nodeIds1) {
@@ -109,8 +113,10 @@ export function computeDiff(doc1: FlowprintDocument, doc2: FlowprintDocument): D
     }
   }
   for (const id of nodeIds1) {
-    if (nodeIds2.has(id)) {
-      const diff = compareNodes(doc1.nodes[id]!, doc2.nodes[id]!)
+    const node1 = doc1.nodes[id]
+    const node2 = doc2.nodes[id]
+    if (node1 && node2) {
+      const diff = compareNodes(node1, node2)
       if (diff) {
         changes.push({ type: 'modified', category: 'node', id, detail: diff })
       }
@@ -139,7 +145,7 @@ function compareLanes(a: Lane, b: Lane): string | undefined {
   const diffs: string[] = []
   if (a.label !== b.label) diffs.push(`label: "${a.label}" -> "${b.label}"`)
   if (a.visibility !== b.visibility) diffs.push(`visibility: ${a.visibility} -> ${b.visibility}`)
-  if (a.order !== b.order) diffs.push(`order: ${a.order} -> ${b.order}`)
+  if (a.order !== b.order) diffs.push(`order: ${String(a.order)} -> ${String(b.order)}`)
   return diffs.length > 0 ? diffs.join(', ') : undefined
 }
 
@@ -171,7 +177,6 @@ function sortKeys(obj: unknown): unknown {
 
 function extractEdgeSet(doc: FlowprintDocument): Set<string> {
   const edges = new Set<string>()
-  if (!doc.nodes) return edges
 
   for (const [nodeId, node] of Object.entries(doc.nodes)) {
     switch (node.type) {

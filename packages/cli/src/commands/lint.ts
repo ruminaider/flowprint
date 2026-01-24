@@ -59,15 +59,20 @@ export const lintCommand = new Command('lint')
 
       let doc: FlowprintDocument
       try {
-        doc = parse(content) as FlowprintDocument
+        const raw = parse(content) as unknown
+        if (
+          raw == null ||
+          typeof raw !== 'object' ||
+          !('nodes' in raw) ||
+          !('lanes' in raw)
+        ) {
+          console.error(chalk.red(`  Invalid flowprint document: ${file}`))
+          hasFileErrors = true
+          continue
+        }
+        doc = raw as FlowprintDocument
       } catch {
         console.error(chalk.red(`  Failed to parse YAML: ${file}`))
-        hasFileErrors = true
-        continue
-      }
-
-      if (!doc?.nodes || !doc?.lanes) {
-        console.error(chalk.red(`  Invalid flowprint document: ${file}`))
         hasFileErrors = true
         continue
       }

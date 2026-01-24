@@ -57,8 +57,8 @@ describe('node-naming rule', () => {
     })
     const results = nodeNaming.check(doc)
     expect(results.length).toBe(2)
-    expect(results[0]!.message).toContain('StartAction')
-    expect(results[1]!.message).toContain('endSuccess')
+    expect(results[0]?.message).toContain('StartAction')
+    expect(results[1]?.message).toContain('endSuccess')
   })
 })
 
@@ -77,7 +77,7 @@ describe('lane-ordering rule', () => {
     })
     const results = laneOrdering.check(doc)
     expect(results.length).toBe(1)
-    expect(results[0]!.message).toContain('frontstage')
+    expect(results[0]?.message).toContain('frontstage')
   })
 })
 
@@ -107,7 +107,7 @@ describe('require-description rule', () => {
     const doc = makeDoc()
     const results = requireDescription.check(doc)
     expect(results.length).toBe(1)
-    expect(results[0]!.message).toContain('start_action')
+    expect(results[0]?.message).toContain('start_action')
   })
 })
 
@@ -165,6 +165,6 @@ describe('no-empty-branches rule', () => {
     })
     const results = noEmptyBranches.check(doc)
     expect(results.length).toBe(1)
-    expect(results[0]!.message).toContain('fork')
+    expect(results[0]?.message).toContain('fork')
   })
 })

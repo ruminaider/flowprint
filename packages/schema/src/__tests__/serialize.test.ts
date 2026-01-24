@@ -59,9 +59,9 @@ describe('serialize', () => {
     // Check that indented lines use 2-space multiples
     for (const line of lines) {
       if (line.startsWith(' ')) {
-        const match = line.match(/^( +)/)
+        const match = /^( +)/.exec(line)
         if (match) {
-          const spaces = match[1]!.length
+          const spaces = match[1]?.length ?? 0
           expect(spaces % 2).toBe(0)
         }
       }
@@ -84,9 +84,9 @@ describe('serialize', () => {
       // Find indices of top-level keys
       const keyPositions = new Map<string, number>()
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i]!
+        const line = lines[i] ?? ''
         if (!line.startsWith(' ') && !line.startsWith('-') && line.includes(':')) {
-          const key = line.split(':')[0]!.trim()
+          const key = (line.split(':')[0] ?? '').trim()
           if (!keyPositions.has(key)) {
             keyPositions.set(key, i)
           }
@@ -134,13 +134,13 @@ describe('serialize', () => {
       // Collect keys at 4-space indentation under the node
       const nodeKeys: string[] = []
       for (let i = nodeStart + 1; i < lines.length; i++) {
-        const line = lines[i]!
+        const line = lines[i] ?? ''
         // Stop when we hit another node or top-level key
-        if (line.match(/^  \S/) || line.match(/^\S/)) break
+        if ((/^ {2}\S/.exec(line)) || (/^\S/.exec(line))) break
         // Match 4-space indented keys
-        const keyMatch = line.match(/^    (\w+):/)
+        const keyMatch = /^ {4}(\w+):/.exec(line)
         if (keyMatch) {
-          nodeKeys.push(keyMatch[1]!)
+          nodeKeys.push(keyMatch[1] ?? '')
         }
       }
 
@@ -419,10 +419,10 @@ describe('serialize', () => {
       })
       const yaml = serialize(doc)
       const parsed = parse(yaml) as FlowprintDocument
-      const node = parsed.nodes.a as { entry_points?: Array<{ file: string; symbol: string }> }
+      const node = parsed.nodes.a as { entry_points?: { file: string; symbol: string }[] }
       expect(node.entry_points).toHaveLength(2)
-      expect(node.entry_points![0]!.file).toBe('src/api/handler.ts')
-      expect(node.entry_points![0]!.symbol).toBe('handleRequest')
+      expect(node.entry_points?.[0]?.file).toBe('src/api/handler.ts')
+      expect(node.entry_points?.[0]?.symbol).toBe('handleRequest')
     })
   })
 

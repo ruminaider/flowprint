@@ -8,7 +8,7 @@ export const noEmptyBranches: LintRule = {
 
     for (const [nodeId, node] of Object.entries(doc.nodes)) {
       if (node.type === 'parallel') {
-        if (!node.branches || node.branches.length === 0) {
+        if ((node.branches as unknown as string[]).length === 0) {
           results.push({
             rule: 'no-empty-branches',
             path: `/nodes/${nodeId}/branches`,

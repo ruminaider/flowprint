@@ -12,11 +12,11 @@ export const laneOrdering: LintRule = {
     for (const [laneId, lane] of lanes) {
       if (lane.visibility === 'internal') {
         seenInternal = true
-      } else if (lane.visibility === 'external' && seenInternal) {
+      } else if (seenInternal) {
         results.push({
           rule: 'lane-ordering',
           path: `/lanes/${laneId}`,
-          message: `External lane "${laneId}" (order ${lane.order}) appears after internal lanes`,
+          message: `External lane "${laneId}" (order ${String(lane.order)}) appears after internal lanes`,
         })
       }
     }

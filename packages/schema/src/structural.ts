@@ -70,14 +70,14 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
       }
 
       case 'switch': {
-        const cases = node.cases as Array<Record<string, unknown>> | undefined
+        const cases = node.cases as Record<string, unknown>[] | undefined
         if (cases) {
           for (let i = 0; i < cases.length; i++) {
             const c = cases[i]
             if (c) {
               checkRef(
                 nodeId,
-                `cases/${i}/next`,
+                `cases/${String(i)}/next`,
                 c.next as string | undefined,
                 nodeIds,
                 errors,
@@ -105,7 +105,7 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
           for (let i = 0; i < branches.length; i++) {
             const branch = branches[i]
             if (branch) {
-              checkRef(nodeId, `branches/${i}`, branch, nodeIds, errors, hasOutgoing, hasIncoming)
+              checkRef(nodeId, `branches/${String(i)}`, branch, nodeIds, errors, hasOutgoing, hasIncoming)
             }
           }
         }

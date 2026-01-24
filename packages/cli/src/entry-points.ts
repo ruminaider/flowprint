@@ -70,7 +70,8 @@ async function loadLanguage(ext: string): Promise<import('web-tree-sitter').Lang
   if (!grammarInfo || !LanguageClass || !resolveRequire) return null
 
   const wasmKey = grammarInfo.wasm
-  if (languages[wasmKey]) return languages[wasmKey]!
+  const cached = languages[wasmKey]
+  if (cached) return cached
 
   try {
     const pkgDir = dirname(resolveRequire.resolve(`${grammarInfo.pkg}/package.json`))
@@ -190,9 +191,9 @@ function findTsJsSymbol(root: import('web-tree-sitter').Node, symbol: string): b
  */
 export async function checkEntryPoints(yamlContent: string, filePath: string): Promise<string[]> {
   const warnings: string[] = []
-  const doc = parse(yamlContent) as FlowprintDocument
-
-  if (!doc?.nodes) return warnings
+  const raw = parse(yamlContent) as unknown
+  if (raw == null || typeof raw !== 'object' || !('nodes' in raw)) return warnings
+  const doc = raw as FlowprintDocument
 
   // Find the project root by walking up from the file looking for package.json or .git
   const projectRoot = findProjectRoot(dirname(filePath))

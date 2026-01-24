@@ -36,7 +36,7 @@ describe('flowprint validate', () => {
   it('should exit 1 for invalid blueprint with dangling references', () => {
     const { stdout, exitCode } = run([
       'validate',
-      `${resolve(__dirname, 'fixtures/invalid.flowprint.yaml')}`,
+      resolve(__dirname, 'fixtures/invalid.flowprint.yaml'),
     ])
     expect(exitCode).toBe(1)
     expect(stdout).toContain('FAIL')

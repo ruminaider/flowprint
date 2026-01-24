@@ -66,7 +66,7 @@ export function serialize(doc: FlowprintDocument): string {
       rootMap.add(new Pair(key, serializeNodes(doc.nodes)))
     } else if (key === 'lanes') {
       rootMap.add(new Pair(key, serializeOrderedMap(doc.lanes)))
-    } else if (key === 'metadata' && typeof value === 'object' && value !== null) {
+    } else if (key === 'metadata' && typeof value === 'object') {
       rootMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else {
       rootMap.add(new Pair(key, createScalar(value)))
@@ -116,9 +116,9 @@ function serializeNode(node: Node): YAMLMap {
     if (value === undefined) continue
 
     if (key === 'entry_points' && Array.isArray(value)) {
-      nodeMap.add(new Pair(key, serializeEntryPoints(value as Array<Record<string, unknown>>)))
+      nodeMap.add(new Pair(key, serializeEntryPoints(value as Record<string, unknown>[])))
     } else if (key === 'cases' && Array.isArray(value)) {
-      nodeMap.add(new Pair(key, serializeCases(value as Array<Record<string, unknown>>)))
+      nodeMap.add(new Pair(key, serializeCases(value as Record<string, unknown>[])))
     } else if (key === 'branches' && Array.isArray(value)) {
       const seq = new YAMLSeq()
       for (const branch of value as string[]) {
@@ -127,7 +127,7 @@ function serializeNode(node: Node): YAMLMap {
       nodeMap.add(new Pair(key, seq))
     } else if (key === 'error' && typeof value === 'object' && value !== null) {
       nodeMap.add(new Pair(key, serializeErrorHandler(value as Record<string, unknown>)))
-    } else if (key === 'metadata' && typeof value === 'object' && value !== null) {
+    } else if (key === 'metadata' && typeof value === 'object') {
       nodeMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else {
       nodeMap.add(new Pair(key, createScalar(value)))
@@ -140,7 +140,7 @@ function serializeNode(node: Node): YAMLMap {
 /**
  * Serialize entry_points array with deterministic field order (file, symbol).
  */
-function serializeEntryPoints(entryPoints: Array<Record<string, unknown>>): YAMLSeq {
+function serializeEntryPoints(entryPoints: Record<string, unknown>[]): YAMLSeq {
   const seq = new YAMLSeq()
 
   for (const ep of entryPoints) {
@@ -156,7 +156,7 @@ function serializeEntryPoints(entryPoints: Array<Record<string, unknown>>): YAML
 /**
  * Serialize switch cases array with deterministic field order (when, next).
  */
-function serializeCases(cases: Array<Record<string, unknown>>): YAMLSeq {
+function serializeCases(cases: Record<string, unknown>[]): YAMLSeq {
   const seq = new YAMLSeq()
 
   for (const c of cases) {

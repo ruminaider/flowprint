@@ -50,7 +50,7 @@ describe('computeDiff', () => {
     const changes = computeDiff(doc1, doc2)
     const added = changes.filter((c) => c.type === 'added' && c.category === 'node')
     expect(added.length).toBe(1)
-    expect(added[0]!.id).toBe('new_node')
+    expect(added[0]?.id).toBe('new_node')
   })
 
   it('should detect removed nodes', () => {
@@ -68,7 +68,7 @@ describe('computeDiff', () => {
     const changes = computeDiff(doc1, doc2)
     const removed = changes.filter((c) => c.type === 'removed' && c.category === 'node')
     expect(removed.length).toBe(1)
-    expect(removed[0]!.id).toBe('start')
+    expect(removed[0]?.id).toBe('start')
   })
 
   it('should detect modified nodes', () => {
@@ -92,7 +92,7 @@ describe('computeDiff', () => {
     const changes = computeDiff(doc1, doc2)
     const modified = changes.filter((c) => c.type === 'modified' && c.category === 'node')
     expect(modified.length).toBe(1)
-    expect(modified[0]!.detail).toContain('label')
+    expect(modified[0]?.detail).toContain('label')
   })
 
   it('should detect added and removed lanes', () => {
@@ -106,9 +106,9 @@ describe('computeDiff', () => {
     const addedLanes = changes.filter((c) => c.type === 'added' && c.category === 'lane')
     const removedLanes = changes.filter((c) => c.type === 'removed' && c.category === 'lane')
     expect(addedLanes.length).toBe(1)
-    expect(addedLanes[0]!.id).toBe('backstage')
+    expect(addedLanes[0]?.id).toBe('backstage')
     expect(removedLanes.length).toBe(1)
-    expect(removedLanes[0]!.id).toBe('frontstage')
+    expect(removedLanes[0]?.id).toBe('frontstage')
   })
 
   it('should detect edge changes', () => {
@@ -132,6 +132,6 @@ describe('computeDiff', () => {
     const changes = computeDiff(doc1, doc2)
     const removedEdges = changes.filter((c) => c.type === 'removed' && c.category === 'edge')
     expect(removedEdges.length).toBe(1)
-    expect(removedEdges[0]!.id).toBe('start -> end')
+    expect(removedEdges[0]?.id).toBe('start -> end')
   })
 })

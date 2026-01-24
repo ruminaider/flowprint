@@ -118,15 +118,17 @@ describe('generated types compile correctly', () => {
   })
 
   it('Node union type works with discriminated union', () => {
-    const node: Node = {
+    // Use identity function to prevent TS from narrowing the literal to ActionNode
+    const makeNode = (n: Node): Node => n
+    const node = makeNode({
       type: 'action',
       lane: 'main',
       label: 'Test',
-    }
+    })
 
     // TypeScript narrows based on type discriminator
     if (node.type === 'action') {
-      // Can access action-specific fields
+      // Can access action-specific fields after narrowing
       const _next: string | undefined = node.next
       expect(_next).toBeUndefined()
     }

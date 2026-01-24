@@ -331,8 +331,9 @@ describe('detectCycles', () => {
     const cycles = detectCycles(doc)
     expect(cycles).not.toBeNull()
     expect(cycles).toHaveLength(1)
-    expect(cycles![0]).toContain('a')
-    expect(cycles![0]).toContain('b')
+    const cycle0 = cycles?.[0]
+    expect(cycle0).toContain('a')
+    expect(cycle0).toContain('b')
   })
 
   it('detects a self-loop', () => {
@@ -341,8 +342,8 @@ describe('detectCycles', () => {
     })
     const cycles = detectCycles(doc)
     expect(cycles).not.toBeNull()
-    expect(cycles!.length).toBeGreaterThanOrEqual(1)
-    expect(cycles![0]).toContain('a')
+    expect(cycles?.length).toBeGreaterThanOrEqual(1)
+    expect(cycles?.[0]).toContain('a')
   })
 
   it('detects a three-node cycle', () => {
@@ -353,8 +354,8 @@ describe('detectCycles', () => {
     })
     const cycles = detectCycles(doc)
     expect(cycles).not.toBeNull()
-    expect(cycles!.length).toBeGreaterThanOrEqual(1)
-    const cycle = cycles![0]!
+    expect(cycles?.length).toBeGreaterThanOrEqual(1)
+    const cycle = cycles?.[0]
     expect(cycle).toContain('a')
     expect(cycle).toContain('b')
     expect(cycle).toContain('c')
@@ -392,6 +393,6 @@ describe('detectCycles', () => {
     })
     const cycles = detectCycles(doc)
     expect(cycles).not.toBeNull()
-    expect(cycles!.length).toBeGreaterThanOrEqual(1)
+    expect(cycles?.length).toBeGreaterThanOrEqual(1)
   })
 })
