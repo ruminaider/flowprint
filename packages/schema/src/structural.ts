@@ -105,7 +105,15 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
           for (let i = 0; i < branches.length; i++) {
             const branch = branches[i]
             if (branch) {
-              checkRef(nodeId, `branches/${String(i)}`, branch, nodeIds, errors, hasOutgoing, hasIncoming)
+              checkRef(
+                nodeId,
+                `branches/${String(i)}`,
+                branch,
+                nodeIds,
+                errors,
+                hasOutgoing,
+                hasIncoming,
+              )
             }
           }
         }
@@ -159,6 +167,34 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
       case 'terminal': {
         // Terminal nodes have no outgoing edges by design
         break
+      }
+    }
+  }
+
+  // Version-conditional join_strategy validation
+  const schemaVersion = doc.schema as string | undefined
+  if (schemaVersion) {
+    for (const [nodeId, nodeDef] of Object.entries(nodes)) {
+      const node = nodeDef as Record<string, unknown>
+      if (node.type === 'parallel' && node.join_strategy) {
+        const strategy = node.join_strategy as string
+        if (schemaVersion === 'flowprint/2.0') {
+          if (strategy === 'all_reached' || strategy === 'await_all') {
+            errors.push({
+              path: `/nodes/${nodeId}/join_strategy`,
+              message: `join_strategy "${strategy}" is not valid for schema 2.0. Use "all" or "first" instead`,
+              severity: 'error',
+            })
+          }
+        } else if (schemaVersion === 'flowprint/1.0') {
+          if (strategy === 'all' || strategy === 'first') {
+            errors.push({
+              path: `/nodes/${nodeId}/join_strategy`,
+              message: `join_strategy "${strategy}" is not valid for schema 1.0. Use "all_reached" or "await_all" instead`,
+              severity: 'error',
+            })
+          }
+        }
       }
     }
   }

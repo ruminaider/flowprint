@@ -34,6 +34,27 @@ export interface FlowprintServiceBlueprint {
     [k: string]: string;
   };
   /**
+   * Workflow-level execution configuration
+   */
+  workflow?: {
+    /**
+     * Temporal task queue name
+     */
+    task_queue?: string;
+    /**
+     * Overall workflow execution timeout (e.g. 1h, 30m)
+     */
+    execution_timeout?: string;
+    /**
+     * TypeScript type name for workflow input
+     */
+    input_type?: string;
+    /**
+     * Module path to import input type from (default: ./types)
+     */
+    input_type_import?: string;
+  };
+  /**
    * Swimlane definitions keyed by lane ID
    */
   lanes: {
@@ -69,6 +90,14 @@ export interface ActionNode {
     [k: string]: string;
   };
   entry_points?: EntryPoint[];
+  /**
+   * Named input mapping: parameter name to expression
+   */
+  inputs?: {
+    [k: string]: string;
+  };
+  compensation?: EntryPoint1;
+  temporal?: TemporalConfig;
   next?: string;
   error?: ErrorHandler;
 }
@@ -81,6 +110,61 @@ export interface EntryPoint {
    * Function/method name in the file
    */
   symbol: string;
+}
+/**
+ * Compensation function for saga-style rollback
+ */
+export interface EntryPoint1 {
+  /**
+   * Relative file path from repo root
+   */
+  file: string;
+  /**
+   * Function/method name in the file
+   */
+  symbol: string;
+}
+/**
+ * Per-activity Temporal configuration
+ */
+export interface TemporalConfig {
+  /**
+   * Maximum time an activity can take from start to completion
+   */
+  start_to_close_timeout?: string;
+  /**
+   * Maximum time from scheduling to completion including retries
+   */
+  schedule_to_close_timeout?: string;
+  /**
+   * Maximum time between heartbeats
+   */
+  heartbeat_timeout?: string;
+  /**
+   * Retry policy configuration
+   */
+  retry?: {
+    /**
+     * Maximum number of retry attempts
+     */
+    max_attempts?: number;
+    /**
+     * Retry backoff multiplier
+     */
+    backoff_coefficient?: number;
+    /**
+     * Initial retry interval
+     */
+    initial_interval?: string;
+    /**
+     * Maximum retry interval
+     */
+    max_interval?: string;
+    /**
+     * Error types that should not be retried
+     */
+    non_retryable_errors?: string[];
+  };
 }
 export interface ErrorHandler {
   retry?: {
@@ -136,7 +220,7 @@ export interface ParallelNode {
    */
   branches: [string, ...string[]];
   join: string;
-  join_strategy?: "all_reached" | "await_all";
+  join_strategy?: "all_reached" | "await_all" | "all" | "first";
 }
 export interface WaitNode {
   type: "wait";
@@ -151,6 +235,14 @@ export interface WaitNode {
    * Event name to wait for
    */
   event: string;
+  /**
+   * TypeScript type name for signal payload
+   */
+  event_type?: string;
+  /**
+   * Module path to import event type from (default: ./types)
+   */
+  event_type_import?: string;
   /**
    * Duration string (e.g. 7d, 24h, 30m)
    */

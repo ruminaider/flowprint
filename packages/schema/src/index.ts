@@ -11,6 +11,7 @@ export type {
   TerminalNode,
   EntryPoint,
   ErrorHandler,
+  TemporalConfig,
   ValidationResult,
   ValidationError,
   OrderedNode,

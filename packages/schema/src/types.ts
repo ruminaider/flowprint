@@ -19,6 +19,7 @@ export type {
   TerminalNode,
   EntryPoint,
   ErrorHandler,
+  TemporalConfig,
 } from './types.generated.js'
 
 /**

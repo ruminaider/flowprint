@@ -10,7 +10,7 @@ const schemaValidator = ajv.compile(schema)
 /**
  * Supported schema versions. Documents with unsupported versions are rejected.
  */
-export const SUPPORTED_VERSIONS = ['flowprint/1.0'] as const
+export const SUPPORTED_VERSIONS = ['flowprint/1.0', 'flowprint/2.0'] as const
 
 /**
  * All valid node types.

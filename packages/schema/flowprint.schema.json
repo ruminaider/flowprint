@@ -33,6 +33,33 @@
       },
       "description": "Custom key-value metadata (e.g. owner, domain, tags)"
     },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_queue": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Temporal task queue name"
+        },
+        "execution_timeout": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Overall workflow execution timeout (e.g. 1h, 30m)"
+        },
+        "input_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "TypeScript type name for workflow input"
+        },
+        "input_type_import": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Module path to import input type from (default: ./types)"
+        }
+      },
+      "description": "Workflow-level execution configuration"
+    },
     "lanes": {
       "type": "object",
       "minProperties": 1,
@@ -160,6 +187,21 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Named input mapping: parameter name to expression"
+        },
+        "compensation": {
+          "$ref": "#/definitions/EntryPoint",
+          "description": "Compensation function for saga-style rollback"
+        },
+        "temporal": {
+          "$ref": "#/definitions/TemporalConfig",
+          "description": "Per-activity Temporal configuration"
+        },
         "next": {
           "type": "string",
           "minLength": 1
@@ -272,7 +314,7 @@
         },
         "join_strategy": {
           "type": "string",
-          "enum": ["all_reached", "await_all"]
+          "enum": ["all_reached", "await_all", "all", "first"]
         }
       }
     },
@@ -312,6 +354,16 @@
           "type": "string",
           "minLength": 1,
           "description": "Event name to wait for"
+        },
+        "event_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "TypeScript type name for signal payload"
+        },
+        "event_type_import": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Module path to import event type from (default: ./types)"
         },
         "timeout": {
           "type": "string",
@@ -396,6 +448,62 @@
           "description": "Whether this terminal represents a successful or failed outcome"
         }
       }
+    },
+    "TemporalConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start_to_close_timeout": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Maximum time an activity can take from start to completion"
+        },
+        "schedule_to_close_timeout": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Maximum time from scheduling to completion including retries"
+        },
+        "heartbeat_timeout": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Maximum time between heartbeats"
+        },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_attempts": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum number of retry attempts"
+            },
+            "backoff_coefficient": {
+              "type": "number",
+              "description": "Retry backoff multiplier"
+            },
+            "initial_interval": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Initial retry interval"
+            },
+            "max_interval": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Maximum retry interval"
+            },
+            "non_retryable_errors": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Error types that should not be retried"
+            }
+          },
+          "description": "Retry policy configuration"
+        }
+      },
+      "description": "Temporal Activity configuration"
     }
   }
 }
