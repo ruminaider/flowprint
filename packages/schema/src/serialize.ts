@@ -10,6 +10,7 @@ const TOP_LEVEL_KEY_ORDER = [
   'version',
   'description',
   'metadata',
+  'workflow',
   'lanes',
   'nodes',
 ] as const
@@ -31,10 +32,10 @@ const NODE_KEY_PREFIX = [
  * Order matters for deterministic output.
  */
 const NODE_TYPE_FIELDS: Record<string, readonly string[]> = {
-  action: ['next', 'error'],
+  action: ['inputs', 'compensation', 'temporal', 'next', 'error'],
   switch: ['cases', 'default'],
   parallel: ['branches', 'join', 'join_strategy'],
-  wait: ['event', 'timeout', 'next', 'timeout_next'],
+  wait: ['event', 'event_type', 'event_type_import', 'timeout', 'next', 'timeout_next'],
   error: ['next'],
   terminal: ['outcome'],
 }
@@ -68,6 +69,8 @@ export function serialize(doc: FlowprintDocument): string {
       rootMap.add(new Pair(key, serializeOrderedMap(doc.lanes)))
     } else if (key === 'metadata' && typeof value === 'object') {
       rootMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
+    } else if (key === 'workflow' && typeof value === 'object') {
+      rootMap.add(new Pair(key, serializeWorkflow(value as Record<string, unknown>)))
     } else {
       rootMap.add(new Pair(key, createScalar(value)))
     }
@@ -125,6 +128,16 @@ function serializeNode(node: Node): YAMLMap {
         seq.add(createScalar(branch))
       }
       nodeMap.add(new Pair(key, seq))
+    } else if (key === 'inputs' && typeof value === 'object' && value !== null) {
+      nodeMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
+    } else if (key === 'compensation' && typeof value === 'object' && value !== null) {
+      const compMap = new YAMLMap()
+      const comp = value as Record<string, unknown>
+      if (comp.file !== undefined) compMap.add(new Pair('file', createScalar(comp.file)))
+      if (comp.symbol !== undefined) compMap.add(new Pair('symbol', createScalar(comp.symbol)))
+      nodeMap.add(new Pair(key, compMap))
+    } else if (key === 'temporal' && typeof value === 'object' && value !== null) {
+      nodeMap.add(new Pair(key, serializeTemporalConfig(value as Record<string, unknown>)))
     } else if (key === 'error' && typeof value === 'object' && value !== null) {
       nodeMap.add(new Pair(key, serializeErrorHandler(value as Record<string, unknown>)))
     } else if (key === 'metadata' && typeof value === 'object') {
@@ -188,6 +201,72 @@ function serializeErrorHandler(error: Record<string, unknown>): YAMLMap {
   }
 
   return errorMap
+}
+
+/**
+ * Serialize workflow-level configuration with deterministic key order.
+ */
+function serializeWorkflow(workflow: Record<string, unknown>): YAMLMap {
+  const map = new YAMLMap()
+  const keyOrder = ['task_queue', 'execution_timeout', 'input_type', 'input_type_import']
+  for (const key of keyOrder) {
+    const value = workflow[key]
+    if (value !== undefined) {
+      map.add(new Pair(key, createScalar(value)))
+    }
+  }
+  return map
+}
+
+/**
+ * Serialize Temporal activity configuration with deterministic key order.
+ */
+function serializeTemporalConfig(temporal: Record<string, unknown>): YAMLMap {
+  const map = new YAMLMap()
+  const keyOrder = [
+    'start_to_close_timeout',
+    'schedule_to_close_timeout',
+    'heartbeat_timeout',
+    'retry',
+  ]
+  for (const key of keyOrder) {
+    const value = temporal[key]
+    if (value === undefined) continue
+    if (key === 'retry' && typeof value === 'object' && value !== null) {
+      map.add(new Pair(key, serializeTemporalRetry(value as Record<string, unknown>)))
+    } else {
+      map.add(new Pair(key, createScalar(value)))
+    }
+  }
+  return map
+}
+
+/**
+ * Serialize Temporal retry policy with deterministic key order.
+ */
+function serializeTemporalRetry(retry: Record<string, unknown>): YAMLMap {
+  const map = new YAMLMap()
+  const keyOrder = [
+    'max_attempts',
+    'backoff_coefficient',
+    'initial_interval',
+    'max_interval',
+    'non_retryable_errors',
+  ]
+  for (const key of keyOrder) {
+    const value = retry[key]
+    if (value === undefined) continue
+    if (key === 'non_retryable_errors' && Array.isArray(value)) {
+      const seq = new YAMLSeq()
+      for (const item of value as string[]) {
+        seq.add(createScalar(item))
+      }
+      map.add(new Pair(key, seq))
+    } else {
+      map.add(new Pair(key, createScalar(value)))
+    }
+  }
+  return map
 }
 
 /**
