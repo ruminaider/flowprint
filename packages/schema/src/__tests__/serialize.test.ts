@@ -136,7 +136,7 @@ describe('serialize', () => {
       for (let i = nodeStart + 1; i < lines.length; i++) {
         const line = lines[i] ?? ''
         // Stop when we hit another node or top-level key
-        if ((/^ {2}\S/.exec(line)) || (/^\S/.exec(line))) break
+        if (/^ {2}\S/.exec(line) || /^\S/.exec(line)) break
         // Match 4-space indented keys
         const keyMatch = /^ {4}(\w+):/.exec(line)
         if (keyMatch) {
@@ -152,6 +152,142 @@ describe('serialize', () => {
         'entry_points',
         'next',
         'error',
+      ]
+      expect(nodeKeys).toEqual(expectedOrder)
+    })
+
+    it('outputs top-level keys in canonical order with workflow', () => {
+      const doc = makeDoc({
+        description: 'A test',
+        metadata: { owner: 'team-a' },
+        workflow: { task_queue: 'my-queue', execution_timeout: '1h' },
+      })
+      const yaml = serialize(doc)
+      const lines = yaml.split('\n')
+
+      const keyPositions = new Map<string, number>()
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i] ?? ''
+        if (!line.startsWith(' ') && !line.startsWith('-') && line.includes(':')) {
+          const key = (line.split(':')[0] ?? '').trim()
+          if (!keyPositions.has(key)) {
+            keyPositions.set(key, i)
+          }
+        }
+      }
+
+      const expectedOrder = [
+        'schema',
+        'name',
+        'version',
+        'description',
+        'metadata',
+        'workflow',
+        'lanes',
+        'nodes',
+      ]
+      const actualKeys = [...keyPositions.keys()]
+      const filteredActual = actualKeys.filter((k) => expectedOrder.includes(k))
+      expect(filteredActual).toEqual(expectedOrder)
+    })
+
+    it('outputs action node keys in canonical order with 2.0 fields', () => {
+      const doc = makeDoc({
+        nodes: {
+          my_node: {
+            type: 'action',
+            lane: 'main',
+            label: 'My Node',
+            description: 'Does things',
+            metadata: { sla: '5m' },
+            entry_points: [{ file: 'src/app.ts', symbol: 'handler' }],
+            inputs: { patient_id: 'input.patient_id' },
+            compensation: { file: 'src/rollback.ts', symbol: 'undo' },
+            temporal: { start_to_close_timeout: '30s' },
+            next: 'done',
+            error: { catch: 'err' },
+          },
+          err: { type: 'error', lane: 'main', label: 'Error', next: 'fail' },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+          fail: { type: 'terminal', lane: 'main', label: 'Fail', outcome: 'failure' },
+        },
+      })
+      const yaml = serialize(doc)
+
+      const lines = yaml.split('\n')
+      const nodeStart = lines.findIndex((l) => l.trimStart().startsWith('my_node:'))
+      expect(nodeStart).toBeGreaterThan(-1)
+
+      const nodeKeys: string[] = []
+      for (let i = nodeStart + 1; i < lines.length; i++) {
+        const line = lines[i] ?? ''
+        if (/^ {2}\S/.exec(line) || /^\S/.exec(line)) break
+        const keyMatch = /^ {4}(\w+):/.exec(line)
+        if (keyMatch) {
+          nodeKeys.push(keyMatch[1] ?? '')
+        }
+      }
+
+      const expectedOrder = [
+        'type',
+        'lane',
+        'label',
+        'description',
+        'metadata',
+        'entry_points',
+        'inputs',
+        'compensation',
+        'temporal',
+        'next',
+        'error',
+      ]
+      expect(nodeKeys).toEqual(expectedOrder)
+    })
+
+    it('outputs wait node keys in canonical order with 2.0 fields', () => {
+      const doc = makeDoc({
+        nodes: {
+          w: {
+            type: 'wait',
+            lane: 'main',
+            label: 'Wait',
+            event: 'payment.received',
+            event_type: 'PaymentSignal',
+            event_type_import: './signals',
+            timeout: '24h',
+            next: 'done',
+            timeout_next: 'fail',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+          fail: { type: 'terminal', lane: 'main', label: 'Fail', outcome: 'failure' },
+        },
+      })
+      const yaml = serialize(doc)
+
+      const lines = yaml.split('\n')
+      const nodeStart = lines.findIndex((l) => l.trimStart().startsWith('w:'))
+      expect(nodeStart).toBeGreaterThan(-1)
+
+      const nodeKeys: string[] = []
+      for (let i = nodeStart + 1; i < lines.length; i++) {
+        const line = lines[i] ?? ''
+        if (/^ {2}\S/.exec(line) || /^\S/.exec(line)) break
+        const keyMatch = /^ {4}(\w+):/.exec(line)
+        if (keyMatch) {
+          nodeKeys.push(keyMatch[1] ?? '')
+        }
+      }
+
+      const expectedOrder = [
+        'type',
+        'lane',
+        'label',
+        'event',
+        'event_type',
+        'event_type_import',
+        'timeout',
+        'next',
+        'timeout_next',
       ]
       expect(nodeKeys).toEqual(expectedOrder)
     })
@@ -423,6 +559,176 @@ describe('serialize', () => {
       expect(node.entry_points).toHaveLength(2)
       expect(node.entry_points?.[0]?.file).toBe('src/api/handler.ts')
       expect(node.entry_points?.[0]?.symbol).toBe('handleRequest')
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // Schema 2.0 fields
+  // -------------------------------------------------------------------------
+
+  describe('schema 2.0 fields', () => {
+    it('round-trips workflow configuration', () => {
+      const doc = makeDoc({
+        workflow: {
+          task_queue: 'my-queue',
+          execution_timeout: '1h',
+          input_type: 'ConsultationInput',
+          input_type_import: './types',
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.workflow).toEqual(doc.workflow)
+    })
+
+    it('round-trips action node with inputs', () => {
+      const doc = makeDoc({
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'A',
+            inputs: { patient_id: 'input.patient_id', name: 'input.name' },
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.a).toEqual(doc.nodes.a)
+    })
+
+    it('round-trips action node with compensation', () => {
+      const doc = makeDoc({
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'A',
+            compensation: { file: 'src/rollback.ts', symbol: 'undoAction' },
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.a).toEqual(doc.nodes.a)
+    })
+
+    it('round-trips action node with temporal config', () => {
+      const doc = makeDoc({
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'A',
+            temporal: {
+              start_to_close_timeout: '30s',
+              schedule_to_close_timeout: '2m',
+              heartbeat_timeout: '10s',
+              retry: {
+                max_attempts: 5,
+                backoff_coefficient: 1.5,
+                initial_interval: '2s',
+                max_interval: '30s',
+                non_retryable_errors: ['FatalError', 'NotFound'],
+              },
+            },
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.a).toEqual(doc.nodes.a)
+    })
+
+    it('round-trips temporal config with partial retry', () => {
+      const doc = makeDoc({
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'A',
+            temporal: {
+              start_to_close_timeout: '1m',
+              retry: { max_attempts: 3 },
+            },
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.a).toEqual(doc.nodes.a)
+    })
+
+    it('round-trips wait node with event_type and event_type_import', () => {
+      const doc = makeDoc({
+        nodes: {
+          w: {
+            type: 'wait',
+            lane: 'main',
+            label: 'Wait',
+            event: 'payment.received',
+            event_type: 'PaymentSignal',
+            event_type_import: './signals',
+            timeout: '24h',
+            next: 'done',
+            timeout_next: 'fail',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+          fail: { type: 'terminal', lane: 'main', label: 'Fail', outcome: 'failure' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.w).toEqual(doc.nodes.w)
+    })
+
+    it('omits workflow when absent', () => {
+      const doc = makeDoc()
+      const yaml = serialize(doc)
+      expect(yaml).not.toContain('workflow:')
+    })
+
+    it('round-trips a full 2.0 action node with all new fields', () => {
+      const doc = makeDoc({
+        schema: 'flowprint/2.0',
+        workflow: { task_queue: 'q', execution_timeout: '1h' },
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'Full Action',
+            entry_points: [{ file: 'src/handler.ts', symbol: 'handle' }],
+            inputs: { id: 'input.id' },
+            compensation: { file: 'src/rollback.ts', symbol: 'undo' },
+            temporal: {
+              start_to_close_timeout: '30s',
+              retry: {
+                max_attempts: 3,
+                backoff_coefficient: 2,
+                initial_interval: '1s',
+                max_interval: '10s',
+                non_retryable_errors: ['Fatal'],
+              },
+            },
+            next: 'done',
+            error: { retry: { limit: 3 }, catch: 'err' },
+          },
+          err: { type: 'error', lane: 'main', label: 'Error', next: 'fail' },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+          fail: { type: 'terminal', lane: 'main', label: 'Fail', outcome: 'failure' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed).toEqual(doc)
     })
   })
 

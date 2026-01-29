@@ -36,6 +36,7 @@ const EXAMPLES = [
   'prescription-fulfillment.flowprint.yaml',
   'subscription-renewal.flowprint.yaml',
   'consultation-flow.flowprint.yaml',
+  'consultation-flow-v2.flowprint.yaml',
 ] as const
 
 function readExample(name: string): string {
@@ -367,15 +368,104 @@ describe('integration: type guards on example nodes', () => {
       }
     })
   })
+
+  describe('consultation-flow-v2', () => {
+    const doc = loadExample('consultation-flow-v2.flowprint.yaml')
+
+    it('uses schema version 2.0', () => {
+      expect(doc.schema).toBe('flowprint/2.0')
+    })
+
+    it('has workflow configuration', () => {
+      expect(doc.workflow).toBeDefined()
+      expect(doc.workflow?.task_queue).toBe('consultation-tasks')
+      expect(doc.workflow?.execution_timeout).toBe('4h')
+      expect(doc.workflow?.input_type).toBe('ConsultationInput')
+      expect(doc.workflow?.input_type_import).toBe('./types')
+    })
+
+    it('has action node with inputs', () => {
+      const node = getNode(doc, 'initiate_consultation')
+      expect(isActionNode(node)).toBe(true)
+      if (isActionNode(node)) {
+        expect(node.inputs).toBeDefined()
+        expect(node.inputs?.patient_id).toBe('input.patient_id')
+        expect(node.inputs?.symptoms).toBe('input.symptoms')
+      }
+    })
+
+    it('has action node with compensation', () => {
+      const node = getNode(doc, 'escalate_emergency')
+      expect(isActionNode(node)).toBe(true)
+      if (isActionNode(node)) {
+        expect(node.compensation).toBeDefined()
+        expect(node.compensation?.file).toBe('backend/consults/emergency.py')
+        expect(node.compensation?.symbol).toBe('cancel_escalation')
+      }
+    })
+
+    it('has action node with temporal config', () => {
+      const node = getNode(doc, 'urgent_consult')
+      expect(isActionNode(node)).toBe(true)
+      if (isActionNode(node)) {
+        expect(node.temporal).toBeDefined()
+        expect(node.temporal?.start_to_close_timeout).toBe('30s')
+        expect(node.temporal?.schedule_to_close_timeout).toBe('2m')
+        expect(node.temporal?.heartbeat_timeout).toBe('10s')
+        expect(node.temporal?.retry).toBeDefined()
+        expect(node.temporal?.retry?.max_attempts).toBe(5)
+        expect(node.temporal?.retry?.backoff_coefficient).toBe(1.5)
+        expect(node.temporal?.retry?.initial_interval).toBe('2s')
+        expect(node.temporal?.retry?.max_interval).toBe('30s')
+        expect(node.temporal?.retry?.non_retryable_errors).toEqual([
+          'ProviderNotLicensed',
+          'PatientNotEligible',
+        ])
+      }
+    })
+
+    it('has wait node with event_type', () => {
+      const node = getNode(doc, 'await_provider_availability')
+      expect(isWaitNode(node)).toBe(true)
+      if (isWaitNode(node)) {
+        expect(node.event_type).toBe('ProviderAvailableSignal')
+        expect(node.event_type_import).toBe('./signals')
+      }
+    })
+
+    it('has parallel node with join_strategy "all"', () => {
+      const node = getNode(doc, 'route_specialist_consults')
+      expect(isParallelNode(node)).toBe(true)
+      if (isParallelNode(node)) {
+        expect(node.join_strategy).toBe('all')
+      }
+    })
+
+    it('every node passes exactly one type guard', () => {
+      const guards = [
+        isActionNode,
+        isSwitchNode,
+        isParallelNode,
+        isWaitNode,
+        isErrorNode,
+        isTerminalNode,
+      ] as const
+
+      for (const [, node] of Object.entries(doc.nodes)) {
+        const matches = guards.filter((g) => g(node))
+        expect(matches.length).toBe(1)
+      }
+    })
+  })
 })
 
 // ── Cross-example structural checks ─────────────────────────────
 
 describe('integration: cross-example checks', () => {
-  it('all examples use schema version flowprint/1.0', () => {
+  it('all examples use a supported schema version', () => {
     for (const example of EXAMPLES) {
       const doc = loadExample(example)
-      expect(doc.schema).toBe('flowprint/1.0')
+      expect(['flowprint/1.0', 'flowprint/2.0']).toContain(doc.schema)
     }
   })
 

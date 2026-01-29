@@ -417,7 +417,7 @@ describe('orphan nodes', () => {
 describe('invalid schema version', () => {
   it('detects unsupported schema version', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/3.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -664,5 +664,217 @@ describe('error handler', () => {
       },
     })
     expect(result.valid).toBe(false)
+  })
+})
+
+// ── Schema 2.0 validation ───────────────────────────────────────
+
+describe('schema 2.0 validation', () => {
+  it('accepts a valid 2.0 document', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: { type: 'action', lane: 'main', label: 'Start', next: 'end' },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with workflow config', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      workflow: {
+        task_queue: 'my-queue',
+        execution_timeout: '1h',
+        input_type: 'MyInput',
+        input_type_import: './types',
+      },
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: { type: 'action', lane: 'main', label: 'Start', next: 'end' },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with inputs', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: {
+          type: 'action',
+          lane: 'main',
+          label: 'Start',
+          inputs: { id: 'input.id', name: 'input.name' },
+          next: 'end',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with compensation', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: {
+          type: 'action',
+          lane: 'main',
+          label: 'Start',
+          compensation: { file: 'src/rollback.ts', symbol: 'undo' },
+          next: 'end',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with temporal config', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: {
+          type: 'action',
+          lane: 'main',
+          label: 'Start',
+          temporal: {
+            start_to_close_timeout: '30s',
+            retry: {
+              max_attempts: 3,
+              backoff_coefficient: 2,
+              initial_interval: '1s',
+            },
+          },
+          next: 'end',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with join_strategy "all"', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        step_a: { type: 'action', lane: 'main', label: 'A', next: 'end' },
+        fork: {
+          type: 'parallel',
+          lane: 'main',
+          label: 'Fork',
+          branches: ['step_a'],
+          join: 'end',
+          join_strategy: 'all',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts 2.0 document with join_strategy "first"', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        step_a: { type: 'action', lane: 'main', label: 'A', next: 'end' },
+        fork: {
+          type: 'parallel',
+          lane: 'main',
+          label: 'Fork',
+          branches: ['step_a'],
+          join: 'end',
+          join_strategy: 'first',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('rejects 2.0 document with join_strategy "all_reached"', () => {
+    const result = validate({
+      schema: 'flowprint/2.0',
+      name: 'test-v2',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        step_a: { type: 'action', lane: 'main', label: 'A', next: 'end' },
+        fork: {
+          type: 'parallel',
+          lane: 'main',
+          label: 'Fork',
+          branches: ['step_a'],
+          join: 'end',
+          join_strategy: 'all_reached',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(false)
+    expect(
+      result.errors.some(
+        (e) =>
+          e.path === '/nodes/fork/join_strategy' && e.message.includes('not valid for schema 2.0'),
+      ),
+    ).toBe(true)
+  })
+
+  it('rejects 1.0 document with join_strategy "all"', () => {
+    const result = validate({
+      schema: 'flowprint/1.0',
+      name: 'test',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        step_a: { type: 'action', lane: 'main', label: 'A', next: 'end' },
+        fork: {
+          type: 'parallel',
+          lane: 'main',
+          label: 'Fork',
+          branches: ['step_a'],
+          join: 'end',
+          join_strategy: 'all',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(false)
+    expect(
+      result.errors.some(
+        (e) =>
+          e.path === '/nodes/fork/join_strategy' && e.message.includes('not valid for schema 1.0'),
+      ),
+    ).toBe(true)
   })
 })
