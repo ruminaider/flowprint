@@ -47,12 +47,12 @@ nodes:
 
 ## Packages
 
-| Package | Description | npm |
-|---------|-------------|-----|
-| [`@ruminaider/flowprint-schema`](packages/schema) | JSON Schema, TypeScript types, validation, graph utilities, and canonical serializer | `npm install @ruminaider/flowprint-schema` |
+| Package                                           | Description                                                                            | npm                                        |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| [`@ruminaider/flowprint-schema`](packages/schema) | JSON Schema, TypeScript types, validation, graph utilities, and canonical serializer   | `npm install @ruminaider/flowprint-schema` |
 | [`@ruminaider/flowprint-editor`](packages/editor) | Embeddable React component for visual blueprint editing with theming and symbol search | `npm install @ruminaider/flowprint-editor` |
-| [`flowprint`](packages/cli) | CLI for validating, linting, diffing, migrating, and scaffolding blueprints | `npm install -g flowprint` |
-| [`flowprint-app`](packages/app) | Standalone web application with file I/O, settings persistence, and deployment support | (private) |
+| [`flowprint`](packages/cli)                       | CLI for validating, linting, diffing, migrating, and scaffolding blueprints            | `npm install -g flowprint`                 |
+| [`flowprint-app`](packages/app)                   | Standalone web application with file I/O, settings persistence, and deployment support | (private)                                  |
 
 ## Quick start
 
@@ -111,24 +111,26 @@ Open http://localhost:5173.
 
 ## Node types
 
-| Type | Purpose |
-|------|---------|
-| `action` | Performs work and transitions to the next node |
-| `switch` | Routes based on conditions (like a switch statement) |
+| Type       | Purpose                                               |
+| ---------- | ----------------------------------------------------- |
+| `action`   | Performs work and transitions to the next node        |
+| `switch`   | Routes based on conditions (like a switch statement)  |
 | `parallel` | Fans out to multiple branches, joins at a single node |
-| `wait` | Pauses until an event occurs or a timeout expires |
-| `error` | Handles errors from upstream action nodes |
-| `terminal` | End state of the flow (`success` or `failure`) |
+| `wait`     | Pauses until an event occurs or a timeout expires     |
+| `error`    | Handles errors from upstream action nodes             |
+| `terminal` | End state of the flow (`success` or `failure`)        |
 
 ## Features
 
 **Schema package**
+
 - JSON Schema validation with structural analysis (dangling refs, cycles, orphan nodes)
 - Canonical YAML serializer with deterministic key ordering
 - Graph utilities: topological sort, cycle detection, edge extraction, root finding
 - Type guards for all node types
 
 **Editor**
+
 - Drag-and-drop node placement with automatic layout
 - Swimlane management with reordering
 - Properties panel for editing node metadata and entry points
@@ -140,6 +142,7 @@ Open http://localhost:5173.
 - Keyboard shortcuts (delete, undo, redo, select all)
 
 **CLI**
+
 - `validate` — schema + structural validation with colored output
 - `lint` — best practice checks (naming, lane ordering, empty branches)
 - `diff` — structured diff between blueprint versions
@@ -147,6 +150,7 @@ Open http://localhost:5173.
 - `init` — scaffold new blueprints interactively
 
 **Standalone app**
+
 - File System Access API (Chrome/Edge) with `<input type="file">` fallback (Firefox/Safari)
 - Recent files list persisted in IndexedDB
 - Settings persistence (theme, code-search URL, repo root)
