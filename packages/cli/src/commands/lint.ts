@@ -60,12 +60,7 @@ export const lintCommand = new Command('lint')
       let doc: FlowprintDocument
       try {
         const raw = parse(content) as unknown
-        if (
-          raw == null ||
-          typeof raw !== 'object' ||
-          !('nodes' in raw) ||
-          !('lanes' in raw)
-        ) {
+        if (raw == null || typeof raw !== 'object' || !('nodes' in raw) || !('lanes' in raw)) {
           console.error(chalk.red(`  Invalid flowprint document: ${file}`))
           hasFileErrors = true
           continue

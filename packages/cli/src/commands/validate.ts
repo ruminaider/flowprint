@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import chalk from 'chalk'
 import { glob } from 'glob'
+import { parse } from 'yaml'
 import { validateYaml } from '@ruminaider/flowprint-schema'
-import type { ValidationError } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, ValidationError } from '@ruminaider/flowprint-schema'
 import { checkEntryPoints } from '../entry-points.js'
 
 export const validateCommand = new Command('validate')
@@ -14,11 +15,12 @@ export const validateCommand = new Command('validate')
     '--check-entry-points',
     'Verify referenced files exist and entry point symbols are defined',
   )
+  .option('--executable', 'Validate expression syntax and data flow for execution')
   .addHelpText(
     'after',
     '\nExit codes:\n  0  All files valid\n  1  Validation errors found\n  2  File not found or parse error',
   )
-  .action(async (pattern: string, opts: { checkEntryPoints?: boolean }) => {
+  .action(async (pattern: string, opts: { checkEntryPoints?: boolean; executable?: boolean }) => {
     const files = await glob(pattern)
 
     if (files.length === 0) {
@@ -62,6 +64,19 @@ export const validateCommand = new Command('validate')
         if (epWarnings.length > 0) {
           for (const warning of epWarnings) {
             console.log(chalk.yellow(`    ⚠ ${warning}`))
+          }
+        }
+      }
+
+      if (opts.executable && result.valid) {
+        const { validateExpressions } = await import('@ruminaider/flowprint-engine')
+        const doc = parse(content) as FlowprintDocument
+        const exprResult = validateExpressions(doc)
+        if (!exprResult.valid) {
+          hasErrors = true
+          console.log(chalk.red(`  EXEC  ${file}`))
+          for (const err of exprResult.errors) {
+            console.log(chalk.red(`    ${err.path}: ${err.message}`))
           }
         }
       }

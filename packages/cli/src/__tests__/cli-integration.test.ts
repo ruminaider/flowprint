@@ -116,10 +116,43 @@ describe('CLI integration', () => {
   })
 
   describe('flowprint migrate', () => {
-    it('should report already at latest version', () => {
-      const { stdout, exitCode } = run(['migrate'])
+    it('should skip files already at 2.0', () => {
+      const { stdout, exitCode } = run([
+        'migrate',
+        `${EXAMPLES}/consultation-flow-v2.flowprint.yaml`,
+        '--dry-run',
+      ])
       expect(exitCode).toBe(0)
-      expect(stdout).toContain('Already at latest version (flowprint/1.0)')
+      expect(stdout).toContain('SKIP')
+      expect(stdout).toContain('already at flowprint/2.0')
+    })
+
+    it('should show diff for 1.0 files in dry-run mode', () => {
+      const { stdout, exitCode } = run([
+        'migrate',
+        `${EXAMPLES}/consultation-flow.flowprint.yaml`,
+        '--dry-run',
+      ])
+      expect(exitCode).toBe(0)
+      expect(stdout).toContain('DIFF')
+      expect(stdout).toContain('flowprint/2.0')
+      expect(stdout).toContain('Summary:')
+      expect(stdout).toContain('1 migrated')
+    })
+
+    it('should exit 2 for no matching files', () => {
+      const { exitCode } = run(['migrate', 'no-match-*.yaml'])
+      expect(exitCode).toBe(2)
+    })
+
+    it('should warn about non-expression switch when values', () => {
+      const { stdout } = run([
+        'migrate',
+        `${EXAMPLES}/consultation-flow.flowprint.yaml`,
+        '--dry-run',
+      ])
+      expect(stdout).toContain('WARN')
+      expect(stdout).toContain('looks like a label')
     })
   })
 
