@@ -4,6 +4,8 @@ import { lintCommand } from './commands/lint.js'
 import { diffCommand } from './commands/diff.js'
 import { migrateCommand } from './commands/migrate.js'
 import { initCommand } from './commands/init.js'
+import { generateCommand } from './commands/generate.js'
+import { runCommand } from './commands/run.js'
 
 const program = new Command()
 
@@ -21,5 +23,7 @@ program.addCommand(lintCommand)
 program.addCommand(diffCommand)
 program.addCommand(migrateCommand)
 program.addCommand(initCommand)
+program.addCommand(generateCommand)
+program.addCommand(runCommand)
 
 program.parse()
