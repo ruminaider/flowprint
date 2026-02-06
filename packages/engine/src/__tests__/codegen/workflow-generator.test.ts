@@ -421,6 +421,146 @@ describe('generateWorkflow', () => {
     expect(result.content).toContain("throw new Error('Terminal failure: Process Failed')")
   })
 
+  it('wait with timeout_next generates conditional routing', () => {
+    const doc = makeDoc({
+      nodes: {
+        wait_approval: {
+          type: 'wait',
+          lane: 'default',
+          label: 'Wait for Approval',
+          event: 'approval.received',
+          timeout: '2h',
+          timeout_next: 'timed_out',
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+        timed_out: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Timed Out',
+          outcome: 'failure',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('Met = await condition')
+    expect(result.content).toContain('if (!')
+    expect(result.content).toContain("flowprint_current_node: ['timed_out']")
+  })
+
+  it('wait without timeout_next is unchanged', () => {
+    const doc = makeDoc({
+      nodes: {
+        wait_signal: {
+          type: 'wait',
+          lane: 'default',
+          label: 'Wait',
+          event: 'signal.ready',
+          timeout: '1h',
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('await condition(')
+    expect(result.content).not.toContain('Met = await condition')
+  })
+
+  it('action with error.catch generates try/catch', () => {
+    const doc = makeDoc({
+      nodes: {
+        risky_step: {
+          type: 'action',
+          lane: 'default',
+          label: 'Risky Step',
+          entry_points: [{ file: 'src/risky.ts', symbol: 'riskyStep' }],
+          error: { catch: 'handle_error' },
+          next: 'done',
+        },
+        handle_error: {
+          type: 'error',
+          lane: 'default',
+          label: 'Handle Error',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('try {')
+    expect(result.content).toContain('} catch (err) {')
+    expect(result.content).toContain("flowprint_current_node: ['handle_error']")
+  })
+
+  it('action without error.catch has no try/catch', () => {
+    const doc = makeDoc({
+      nodes: {
+        safe_step: {
+          type: 'action',
+          lane: 'default',
+          label: 'Safe Step',
+          entry_points: [{ file: 'src/safe.ts', symbol: 'safeStep' }],
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).not.toContain('// -> handle_error')
+    expect(result.content).not.toContain('} catch (err) {')
+  })
+
+  it('action with both error.catch and compensation', () => {
+    const doc = makeDoc({
+      nodes: {
+        critical_step: {
+          type: 'action',
+          lane: 'default',
+          label: 'Critical Step',
+          entry_points: [{ file: 'src/critical.ts', symbol: 'criticalStep' }],
+          compensation: { file: 'src/undo.ts', symbol: 'undo' },
+          error: { catch: 'handle_error' },
+          next: 'done',
+        },
+        handle_error: {
+          type: 'error',
+          lane: 'default',
+          label: 'Handle Error',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('try {')
+    expect(result.content).toContain('compensationStack.push')
+    expect(result.content).toContain('// -> handle_error (error path)')
+  })
+
   it('generates correct workflow function name from doc name', () => {
     const doc = makeDoc({
       name: 'consultation-flow',

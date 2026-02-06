@@ -92,7 +92,7 @@ export async function runGraph(
       } else if (isWaitNode(node)) {
         currentNodeId = executeWait(currentNodeId, node, context, options, steps)
       } else if (isErrorNode(node)) {
-        currentNodeId = executeErrorHandler(currentNodeId, node, context, options, steps)
+        currentNodeId = await executeErrorHandler(currentNodeId, node, context, options, steps)
       } else if (isTerminalNode(node)) {
         executeTerminal(currentNodeId, node, steps)
         currentNodeId = undefined
@@ -369,7 +369,21 @@ function executeWait(
     return node.next
   }
 
-  // No fixture — skip with warning
+  // No fixture — if timeout_next is defined, route there as a timeout
+  if (node.timeout_next) {
+    steps.push({
+      node_id: nodeId,
+      type: 'wait',
+      status: 'timeout',
+      duration_ms: Math.round(performance.now() - stepStart),
+      next: node.timeout_next,
+      error: `No fixture data for wait node "${nodeId}" (event: ${node.event}). Routing to timeout_next.`,
+    })
+    context.results.set(nodeId, undefined)
+    return node.timeout_next
+  }
+
+  // No fixture, no timeout_next — skip with warning
   steps.push({
     node_id: nodeId,
     type: 'wait',
@@ -382,17 +396,21 @@ function executeWait(
   return node.next
 }
 
-function executeErrorHandler(
+async function executeErrorHandler(
   nodeId: string,
   node: ErrorNode,
-  _context: ExecutionContext,
-  _options: RunOptions,
+  context: ExecutionContext,
+  options: RunOptions,
   steps: StepResult[],
-): string | undefined {
+): Promise<string | undefined> {
   const stepStart = performance.now()
 
-  // Error handler nodes can have entry_points for custom error handling logic
-  // For the dev runner, we just record the step and continue to next
+  if (node.entry_points?.[0]) {
+    const fn = await loadEntryPoint(node.entry_points[0], options.projectRoot)
+    const result = await fn(context.input)
+    context.results.set(nodeId, result)
+  }
+
   steps.push({
     node_id: nodeId,
     type: 'error',

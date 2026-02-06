@@ -344,6 +344,85 @@ describe('runGraph', () => {
     })
   })
 
+  describe('wait with timeout_next', () => {
+    it('routes to timeout_next when no fixture is provided', async () => {
+      const doc = makeDoc({
+        wait_signal: {
+          type: 'wait',
+          lane: 'default',
+          label: 'Wait for Signal',
+          event: 'signal',
+          next: 'done',
+          timeout_next: 'timed_out',
+          timeout: '1h',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+        timed_out: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Timed Out',
+          outcome: 'failure',
+        },
+      })
+
+      const trace = await runGraph(doc, makeOptions())
+
+      const waitStep = trace.steps.find((s) => s.node_id === 'wait_signal')
+      expect(waitStep?.status).toBe('timeout')
+      expect(waitStep?.next).toBe('timed_out')
+
+      const timedOutStep = trace.steps.find((s) => s.node_id === 'timed_out')
+      expect(timedOutStep?.outcome).toBe('failure')
+      expect(trace.status).toBe('failure')
+    })
+
+    it('uses fixture data and routes to next (not timeout_next) when fixture is provided', async () => {
+      const doc = makeDoc({
+        wait_signal: {
+          type: 'wait',
+          lane: 'default',
+          label: 'Wait for Signal',
+          event: 'signal',
+          next: 'done',
+          timeout_next: 'timed_out',
+          timeout: '1h',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+        timed_out: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Timed Out',
+          outcome: 'failure',
+        },
+      })
+
+      const trace = await runGraph(
+        doc,
+        makeOptions({
+          fixtures: { wait_signal: { received: true } },
+        }),
+      )
+
+      const waitStep = trace.steps.find((s) => s.node_id === 'wait_signal')
+      expect(waitStep?.status).toBe('fixture')
+      expect(waitStep?.next).toBe('done')
+
+      const doneStep = trace.steps.find((s) => s.node_id === 'done')
+      expect(doneStep?.outcome).toBe('success')
+      expect(trace.status).toBe('success')
+    })
+  })
+
   describe('error handling', () => {
     it('routes to error node when action fails', async () => {
       const doc = makeDoc({
@@ -418,6 +497,100 @@ describe('runGraph', () => {
 
       expect(trace.status).toBe('error')
       expect(trace.error).toContain('Unhandled failure')
+    })
+
+    it('executes error node entry_points when defined', async () => {
+      const doc = makeDoc({
+        risky: {
+          type: 'action',
+          lane: 'default',
+          label: 'Risky Action',
+          entry_points: [{ file: 'a.ts', symbol: 'risky' }],
+          next: 'done',
+          error: { catch: 'handle_error' },
+        },
+        handle_error: {
+          type: 'error',
+          lane: 'default',
+          label: 'Handle Error',
+          entry_points: [{ file: 'e.ts', symbol: 'handleError' }],
+          next: 'failed',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+        failed: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Failed',
+          outcome: 'failure',
+        },
+      })
+
+      // First call: action entry_point — throws
+      mockedLoadEntryPoint.mockResolvedValueOnce(() => {
+        throw new Error('Something broke')
+      })
+      // Second call: error handler entry_point — returns result
+      mockedLoadEntryPoint.mockResolvedValueOnce(() => ({ alerted: true }))
+
+      const trace = await runGraph(doc, makeOptions())
+
+      expect(mockedLoadEntryPoint).toHaveBeenCalledTimes(2)
+      expect(mockedLoadEntryPoint).toHaveBeenNthCalledWith(
+        2,
+        { file: 'e.ts', symbol: 'handleError' },
+        '/tmp/test',
+      )
+
+      const errorStep = trace.steps.find((s) => s.node_id === 'handle_error')
+      expect(errorStep?.status).toBe('handled')
+
+      expect(trace.status).toBe('failure')
+    })
+
+    it('runs compensation on unhandled error', async () => {
+      const doc = makeDoc({
+        action1: {
+          type: 'action',
+          lane: 'default',
+          label: 'Action 1',
+          entry_points: [{ file: 'a.ts', symbol: 'action1' }],
+          compensation: { file: 'comp.ts', symbol: 'undo' },
+          next: 'action2',
+        },
+        action2: {
+          type: 'action',
+          lane: 'default',
+          label: 'Action 2',
+          entry_points: [{ file: 'b.ts', symbol: 'action2' }],
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      })
+
+      // Call order: action1 entry_point, action2 entry_point (throws), compensation
+      mockedLoadEntryPoint.mockResolvedValueOnce(() => ({ created: true }))
+      mockedLoadEntryPoint.mockResolvedValueOnce(() => {
+        throw new Error('action2 failed')
+      })
+      mockedLoadEntryPoint.mockResolvedValueOnce(() => ({ undone: true }))
+
+      const trace = await runGraph(doc, makeOptions())
+
+      expect(trace.status).toBe('error')
+      const compStep = trace.steps.find((s) => s.node_id === 'action1:compensate')
+      expect(compStep).toBeDefined()
+      expect(compStep?.type).toBe('compensation')
+      expect(compStep?.status).toBe('completed')
     })
   })
 

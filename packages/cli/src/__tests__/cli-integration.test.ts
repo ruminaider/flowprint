@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { existsSync, unlinkSync } from 'node:fs'
+import { existsSync, unlinkSync, rmSync } from 'node:fs'
 
 const CLI = resolve(__dirname, '../../dist/index.js')
 const ROOT = resolve(__dirname, '../../../..')
@@ -184,6 +184,74 @@ describe('CLI integration', () => {
       // Try again
       const { exitCode } = run(['init', 'test-init-output', '--non-interactive', '-o', testOutput])
       expect(exitCode).toBe(2)
+    })
+  })
+
+  describe('flowprint run', () => {
+    it('should run stubs example with fixtures and output JSON trace', () => {
+      const fixturesPath = resolve(EXAMPLES, 'stubs/consultation/fixtures.json')
+      const { stdout, exitCode } = run([
+        'run',
+        `${EXAMPLES}/consultation-flow-v2-stubs.flowprint.yaml`,
+        '--input',
+        '{"patient_id":"P001","symptoms":["headache"]}',
+        '--fixtures',
+        fixturesPath,
+        '--json',
+      ])
+
+      expect(exitCode).toBe(0)
+
+      const trace = JSON.parse(stdout) as { status: string; steps: { node_id: string }[] }
+      expect(trace.status).toBe('success')
+
+      const nodeIds = trace.steps.map((s) => s.node_id)
+      expect(nodeIds).toContain('initiate_consultation')
+      expect(nodeIds).toContain('consultation_complete')
+    })
+
+    it('should exit 1 on execution failure (timeout path)', () => {
+      const { stdout, exitCode } = run([
+        'run',
+        `${EXAMPLES}/consultation-flow-v2-stubs.flowprint.yaml`,
+        '--input',
+        '{"patient_id":"P001","symptoms":["headache"],"urgency":"urgent"}',
+        '--json',
+      ])
+
+      expect(exitCode).toBe(1)
+
+      const trace = JSON.parse(stdout) as { status: string; steps: { node_id: string }[] }
+      expect(trace.status).toBe('failure')
+
+      const nodeIds = trace.steps.map((s) => s.node_id)
+      expect(nodeIds).toContain('consultation_incomplete')
+    })
+  })
+
+  describe('flowprint generate', () => {
+    const testGenDir = resolve(ROOT, 'test-gen-output')
+
+    afterEach(() => {
+      if (existsSync(testGenDir)) {
+        rmSync(testGenDir, { recursive: true })
+      }
+    })
+
+    it('should generate Temporal TypeScript from v2 example', () => {
+      const { stdout, exitCode } = run([
+        'generate',
+        `${EXAMPLES}/consultation-flow-v2.flowprint.yaml`,
+        '--output',
+        testGenDir,
+      ])
+
+      expect(exitCode).toBe(0)
+      expect(stdout).toContain('Generated')
+      expect(existsSync(resolve(testGenDir, 'workflow.ts'))).toBe(true)
+      expect(existsSync(resolve(testGenDir, 'activities.ts'))).toBe(true)
+      expect(existsSync(resolve(testGenDir, 'worker.ts'))).toBe(true)
+      expect(existsSync(resolve(testGenDir, 'types.ts'))).toBe(true)
     })
   })
 })

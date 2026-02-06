@@ -285,21 +285,37 @@ function generateActionCode(id: string, node: ActionNode): string[] {
   }
 
   const proxy = getActivityProxy(id, node)
+  const errorCatchNode = node.error?.catch
+
+  if (errorCatchNode) {
+    lines.push(`try {`)
+  }
+
+  const prefix = errorCatchNode ? '  ' : ''
 
   // Build activity call with inputs
   if (node.inputs && Object.keys(node.inputs).length > 0) {
     const args = Object.entries(node.inputs)
       .map(([key, value]) => `${key}: ${value}`)
       .join(', ')
-    lines.push(`const ${varName} = await ${proxy}.${varName}({ ${args} })`)
+    lines.push(`${prefix}const ${varName} = await ${proxy}.${varName}({ ${args} })`)
   } else {
-    lines.push(`const ${varName} = await ${proxy}.${varName}()`)
+    lines.push(`${prefix}const ${varName} = await ${proxy}.${varName}()`)
   }
 
   // Compensation
   if (node.compensation) {
     const compensateName = varName + 'Compensate'
-    lines.push(`compensationStack.push(async () => { await ${proxy}.${compensateName}() })`)
+    lines.push(
+      `${prefix}compensationStack.push(async () => { await ${proxy}.${compensateName}() })`,
+    )
+  }
+
+  if (errorCatchNode) {
+    lines.push(`} catch (err) {`)
+    lines.push(`  upsertSearchAttributes({ flowprint_current_node: ['${errorCatchNode}'] })`)
+    lines.push(`  // -> ${errorCatchNode} (error path)`)
+    lines.push(`}`)
   }
 
   return lines
@@ -393,7 +409,15 @@ function generateWaitCode(id: string, node: WaitNode): string[] {
   lines.push(`  ${dataVar} = data`)
   lines.push(`})`)
 
-  if (node.timeout) {
+  if (node.timeout && node.timeout_next) {
+    lines.push(
+      `const ${varName}Met = await condition(() => ${dataVar} !== undefined, '${node.timeout}')`,
+    )
+    lines.push(`if (!${varName}Met) {`)
+    lines.push(`  upsertSearchAttributes({ flowprint_current_node: ['${node.timeout_next}'] })`)
+    lines.push(`  // -> ${node.timeout_next} (timeout path)`)
+    lines.push(`}`)
+  } else if (node.timeout) {
     lines.push(`await condition(() => ${dataVar} !== undefined, '${node.timeout}')`)
   } else {
     lines.push(`await condition(() => ${dataVar} !== undefined)`)
