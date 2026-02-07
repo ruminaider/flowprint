@@ -24,6 +24,9 @@ const actionNode: ActionNode = {
   description: 'Customer submits a request',
   entry_points: [{ file: 'src/api.ts', symbol: 'submitRequest' }],
   error: { catch: 'handle_error', retry: { limit: 3, backoff: 'exponential' } },
+  inputs: { orderId: 'ctx.orderId' },
+  temporal: { start_to_close_timeout: '30s' },
+  compensation: { file: 'src/comp.ts', symbol: 'rollback' },
 }
 
 const switchNode: SwitchNode = {
@@ -51,6 +54,7 @@ const waitNode: WaitNode = {
   label: 'Wait for Payment',
   event: 'payment_received',
   timeout: '7d',
+  timeout_next: 'handle_timeout',
 }
 
 const terminalNode: TerminalNode = {
@@ -295,6 +299,52 @@ describe('PropertiesPanel', () => {
     expect(onUpdateNode).toHaveBeenCalledWith('await_payment', {
       event: 'order_shipped',
     })
+  })
+
+  it('renders InputsEditor for action node with inputs', () => {
+    const doc = makeDoc({ start: actionNode })
+    render(
+      <PropertiesPanel selectedNodeId="start" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
+    )
+
+    expect(screen.getByText('Inputs')).toBeTruthy()
+    expect(screen.getByDisplayValue('orderId')).toBeTruthy()
+  })
+
+  it('renders TemporalConfigEditor for action node with temporal', () => {
+    const doc = makeDoc({ start: actionNode })
+    render(
+      <PropertiesPanel selectedNodeId="start" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
+    )
+
+    expect(screen.getByText('Temporal Config')).toBeTruthy()
+    expect(screen.getByDisplayValue('30s')).toBeTruthy()
+  })
+
+  it('renders CompensationEditor for action node with compensation', () => {
+    const doc = makeDoc({ start: actionNode })
+    render(
+      <PropertiesPanel selectedNodeId="start" doc={doc} onUpdateNode={vi.fn()} lanes={lanes} />,
+    )
+
+    expect(screen.getByText('Compensation')).toBeTruthy()
+    expect(screen.getByDisplayValue('src/comp.ts')).toBeTruthy()
+    expect(screen.getByDisplayValue('rollback')).toBeTruthy()
+  })
+
+  it('renders timeout_next field for wait node', () => {
+    const doc = makeDoc({ await_payment: waitNode })
+    render(
+      <PropertiesPanel
+        selectedNodeId="await_payment"
+        doc={doc}
+        onUpdateNode={vi.fn()}
+        lanes={lanes}
+      />,
+    )
+
+    expect(screen.getByLabelText('Timeout Next')).toBeTruthy()
+    expect(screen.getByDisplayValue('handle_timeout')).toBeTruthy()
   })
 })
 

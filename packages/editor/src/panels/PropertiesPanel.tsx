@@ -15,6 +15,9 @@ import { SwitchCaseEditor } from './fields/SwitchCaseEditor'
 import { ErrorHandlerEditor } from './fields/ErrorHandlerEditor'
 import { WaitEventEditor } from './fields/WaitEventEditor'
 import { TerminalOutcomeSelector } from './fields/TerminalOutcomeSelector'
+import { InputsEditor } from './fields/InputsEditor'
+import { TemporalConfigEditor } from './fields/TemporalConfigEditor'
+import { CompensationEditor } from './fields/CompensationEditor'
 
 /**
  * Props for {@link PropertiesPanel}.
@@ -123,6 +126,24 @@ export function PropertiesPanel({
               handlePatch({ error } as Partial<Node>)
             }}
           />
+          <InputsEditor
+            inputs={node.inputs}
+            onChange={(inputs) => {
+              handlePatch({ inputs } as Partial<Node>)
+            }}
+          />
+          <TemporalConfigEditor
+            config={node.temporal}
+            onChange={(temporal) => {
+              handlePatch({ temporal } as Partial<Node>)
+            }}
+          />
+          <CompensationEditor
+            compensation={node.compensation}
+            onChange={(compensation) => {
+              handlePatch({ compensation } as Partial<Node>)
+            }}
+          />
         </div>
       )}
 
@@ -151,11 +172,13 @@ export function PropertiesPanel({
               value={node.join_strategy ?? 'all_reached'}
               onChange={(e) => {
                 handlePatch({
-                  join_strategy: e.target.value as 'all_reached' | 'await_all',
+                  join_strategy: e.target.value as 'all_reached' | 'await_all' | 'all' | 'first',
                 } as Partial<Node>)
               }}
               aria-label="Join Strategy"
             >
+              <option value="all">All</option>
+              <option value="first">First</option>
               <option value="all_reached">All Reached</option>
               <option value="await_all">Await All</option>
             </select>
@@ -168,6 +191,9 @@ export function PropertiesPanel({
           <WaitEventEditor
             event={node.event}
             timeout={node.timeout}
+            event_type={node.event_type}
+            event_type_import={node.event_type_import}
+            timeout_next={node.timeout_next}
             onChange={(patch) => {
               handlePatch(patch as Partial<Node>)
             }}
