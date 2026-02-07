@@ -41,3 +41,6 @@ blob-report/
 
 # Git worktrees
 .worktrees/
+
+# Internal design plans (kept locally for context)
+docs/plans/
