@@ -1,0 +1,22 @@
+schema: flowprint/2.0
+name: bad-expression-test
+version: '1.0.0'
+lanes:
+  default:
+    label: Default
+    visibility: internal
+    order: 0
+nodes:
+  check:
+    type: switch
+    lane: default
+    label: Check
+    cases:
+      - when: 'this is not valid javascript !!!'
+        next: done
+    default: done
+  done:
+    type: terminal
+    lane: default
+    label: Done
+    outcome: success

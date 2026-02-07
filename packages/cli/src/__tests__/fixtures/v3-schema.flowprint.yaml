@@ -1,0 +1,14 @@
+schema: flowprint/3.0
+name: future-version
+version: '1.0.0'
+lanes:
+  default:
+    label: Default
+    visibility: internal
+    order: 0
+nodes:
+  done:
+    type: terminal
+    lane: default
+    label: Done
+    outcome: success
