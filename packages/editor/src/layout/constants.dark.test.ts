@@ -4,12 +4,13 @@ import {
   LANE_BORDER_COLORS,
   DARK_LANE_COLORS,
   DARK_LANE_BORDER_COLORS,
+  LANE_COLOR_COUNT,
 } from './constants'
 
 describe('DARK_LANE_COLORS', () => {
-  it('defines all 6 dark lane colors', () => {
-    expect(Object.keys(DARK_LANE_COLORS)).toHaveLength(6)
-    for (let i = 0; i < 6; i++) {
+  it(`defines all ${LANE_COLOR_COUNT} dark lane colors`, () => {
+    expect(Object.keys(DARK_LANE_COLORS)).toHaveLength(LANE_COLOR_COUNT)
+    for (let i = 0; i < LANE_COLOR_COUNT; i++) {
       expect(DARK_LANE_COLORS[i]).toBeDefined()
       expect(DARK_LANE_COLORS[i]).toMatch(/^#[0-9a-f]{6}$/i)
     }
@@ -24,9 +25,9 @@ describe('DARK_LANE_COLORS', () => {
 })
 
 describe('DARK_LANE_BORDER_COLORS', () => {
-  it('defines all 6 dark lane border colors', () => {
-    expect(Object.keys(DARK_LANE_BORDER_COLORS)).toHaveLength(6)
-    for (let i = 0; i < 6; i++) {
+  it(`defines all ${LANE_COLOR_COUNT} dark lane border colors`, () => {
+    expect(Object.keys(DARK_LANE_BORDER_COLORS)).toHaveLength(LANE_COLOR_COUNT)
+    for (let i = 0; i < LANE_COLOR_COUNT; i++) {
       expect(DARK_LANE_BORDER_COLORS[i]).toBeDefined()
       expect(DARK_LANE_BORDER_COLORS[i]).toMatch(/^#[0-9a-f]{6}$/i)
     }

@@ -21,7 +21,7 @@ const NODE_TYPE_MIME = 'application/flowprint-node-type'
 // PaletteItem
 // ---------------------------------------------------------------------------
 
-function PaletteItem({ type }: { type: PaletteNodeType }) {
+function PaletteItem({ type, dock }: { type: PaletteNodeType; dock?: boolean }) {
   const { icon, label } = TYPE_INDICATORS[type]
 
   const onDragStart = useCallback(
@@ -33,7 +33,12 @@ function PaletteItem({ type }: { type: PaletteNodeType }) {
   )
 
   return (
-    <div className={`fp-palette-item fp-palette-item-${type}`} draggable onDragStart={onDragStart}>
+    <div
+      className={`fp-palette-item fp-palette-item-${type}`}
+      draggable
+      onDragStart={onDragStart}
+      title={dock ? label : undefined}
+    >
       <span className="fp-palette-icon">{icon}</span>
       <span className="fp-palette-label">{label}</span>
     </div>
@@ -45,17 +50,29 @@ function PaletteItem({ type }: { type: PaletteNodeType }) {
 // ---------------------------------------------------------------------------
 
 /**
+ * Props for {@link NodePalette}.
+ */
+export interface NodePaletteProps {
+  /**
+   * Display variant. `'panel'` renders the full palette with labels (default).
+   * `'dock'` renders a compact icon-only bar with tooltip titles.
+   */
+  variant?: 'panel' | 'dock'
+}
+
+/**
  * Draggable palette of node types that can be dropped onto the editor canvas.
  *
  * Renders one draggable item per Flowprint node type (action, switch, parallel,
  * wait, error, terminal). Uses the HTML Drag and Drop API with a custom MIME type
  * to transfer the node type to the drop handler.
  */
-export function NodePalette() {
+export function NodePalette({ variant = 'panel' }: NodePaletteProps) {
+  const dock = variant === 'dock'
   return (
-    <div className="fp-palette">
+    <div className={`fp-palette${dock ? ' fp-palette--dock' : ''}`}>
       {PALETTE_NODE_TYPES.map((type) => (
-        <PaletteItem key={type} type={type} />
+        <PaletteItem key={type} type={type} dock={dock} />
       ))}
     </div>
   )

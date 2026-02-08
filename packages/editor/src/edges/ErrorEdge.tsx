@@ -22,7 +22,7 @@ function ErrorEdge(props: EdgeProps) {
         markerEnd={markerEnd}
         interactionWidth={20}
         style={{
-          stroke: '#ef4444',
+          stroke: 'var(--fp-edge-error)',
           strokeWidth: 1.5,
           strokeDasharray: '6 3',
         }}

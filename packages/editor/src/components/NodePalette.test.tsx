@@ -137,6 +137,46 @@ describe('NodePalette', () => {
 })
 
 // ---------------------------------------------------------------------------
+// NodePalette dock variant tests
+// ---------------------------------------------------------------------------
+
+describe('NodePalette dock variant', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders with fp-palette--dock class', () => {
+    const { container } = render(<NodePalette variant="dock" />)
+
+    expect(container.querySelector('.fp-palette--dock')).toBeTruthy()
+  })
+
+  it('does not have fp-palette--dock class in panel variant', () => {
+    const { container } = render(<NodePalette variant="panel" />)
+
+    expect(container.querySelector('.fp-palette--dock')).toBeNull()
+  })
+
+  it('sets title attributes on items in dock variant', () => {
+    const { container } = render(<NodePalette variant="dock" />)
+
+    const items = container.querySelectorAll('.fp-palette-item')
+    for (const item of items) {
+      expect(item.getAttribute('title')).toBeTruthy()
+    }
+  })
+
+  it('does not set title attributes in panel variant', () => {
+    const { container } = render(<NodePalette />)
+
+    const items = container.querySelectorAll('.fp-palette-item')
+    for (const item of items) {
+      expect(item.getAttribute('title')).toBeNull()
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // useAddNode hook tests
 // ---------------------------------------------------------------------------
 
@@ -209,20 +249,20 @@ describe('useAddNode', () => {
       label: 'New Action',
     })
 
-    // switch
+    // switch (empty cases — filled in by user via Properties panel)
     expect(addNode.mock.calls[1]![1]).toEqual({
       type: 'switch',
       lane: '',
       label: 'New Switch',
-      cases: [{ when: 'condition', next: '' }],
+      cases: [],
     })
 
-    // parallel
+    // parallel (empty branches — filled in by user via edge connections)
     expect(addNode.mock.calls[2]![1]).toEqual({
       type: 'parallel',
       lane: '',
       label: 'New Parallel',
-      branches: [''],
+      branches: [],
       join: '',
     })
 

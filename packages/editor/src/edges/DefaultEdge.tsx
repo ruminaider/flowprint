@@ -22,7 +22,7 @@ function DefaultEdge(props: EdgeProps) {
         markerEnd={markerEnd}
         interactionWidth={20}
         style={{
-          stroke: '#6b7280',
+          stroke: 'var(--fp-edge-default)',
           strokeWidth: 3,
         }}
       />

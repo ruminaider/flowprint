@@ -21,7 +21,7 @@ function NormalEdge(props: EdgeProps) {
         path={edgePath}
         markerEnd={markerEnd}
         interactionWidth={20}
-        style={{ stroke: '#6b7280', strokeWidth: 1.5 }}
+        style={{ stroke: 'var(--fp-edge-normal)', strokeWidth: 1.5 }}
       />
       {label && (
         <EdgeLabelRenderer>

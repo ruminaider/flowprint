@@ -29,7 +29,7 @@ function LineOfVisibility({ y, totalWidth }: LineOfVisibilityProps) {
           left: 0,
           width: '100%',
           height: 0,
-          borderTop: '3px dashed #dc2626',
+          borderTop: '3px dashed var(--fp-lov-color)',
           opacity: 0.6,
         }}
       />
@@ -41,7 +41,7 @@ function LineOfVisibility({ y, totalWidth }: LineOfVisibilityProps) {
           left: 8,
           fontSize: 11,
           fontWeight: 600,
-          color: '#dc2626',
+          color: 'var(--fp-lov-color)',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           userSelect: 'none',
