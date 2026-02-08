@@ -41,7 +41,9 @@ export function getEdges(doc: FlowprintDocument): Edge[] {
         for (const branch of node.branches) {
           edges.push({ source: nodeId, target: branch, type: 'normal' })
         }
-        edges.push({ source: nodeId, target: node.join, type: 'normal' })
+        if (node.join) {
+          edges.push({ source: nodeId, target: node.join, type: 'normal' })
+        }
         break
       }
 

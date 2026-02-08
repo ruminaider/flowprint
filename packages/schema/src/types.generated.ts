@@ -5,7 +5,7 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type Node = ActionNode | SwitchNode | ParallelNode | WaitNode | ErrorNode | TerminalNode
+export type Node = ActionNode | SwitchNode | ParallelNode | WaitNode | ErrorNode | TerminalNode;
 
 /**
  * A service blueprint definition mapping business processes to code entry points
@@ -14,25 +14,25 @@ export interface FlowprintServiceBlueprint {
   /**
    * Schema version identifier (e.g. flowprint/1.0)
    */
-  schema: string
+  schema: string;
   /**
    * Machine-readable blueprint name
    */
-  name: string
+  name: string;
   /**
    * Semantic version of this blueprint
    */
-  version: string
+  version: string;
   /**
    * Human-readable description of the blueprint
    */
-  description?: string
+  description?: string;
   /**
    * Custom key-value metadata (e.g. owner, domain, tags)
    */
   metadata?: {
-    [k: string]: string
-  }
+    [k: string]: string;
+  };
   /**
    * Workflow-level execution configuration
    */
@@ -40,76 +40,85 @@ export interface FlowprintServiceBlueprint {
     /**
      * Temporal task queue name
      */
-    task_queue?: string
+    task_queue?: string;
     /**
      * Overall workflow execution timeout (e.g. 1h, 30m)
      */
-    execution_timeout?: string
+    execution_timeout?: string;
     /**
      * TypeScript type name for workflow input
      */
-    input_type?: string
+    input_type?: string;
     /**
      * Module path to import input type from (default: ./types)
      */
-    input_type_import?: string
-  }
+    input_type_import?: string;
+  };
   /**
    * Swimlane definitions keyed by lane ID
    */
   lanes: {
-    [k: string]: Lane
-  }
+    [k: string]: Lane;
+  };
   /**
    * Node definitions keyed by node ID
    */
   nodes: {
-    [k: string]: Node
-  }
+    [k: string]: Node;
+  };
 }
 export interface Lane {
   /**
    * Human-readable lane display name
    */
-  label: string
+  label: string;
   /**
    * Whether this lane is customer-facing (external) or internal
    */
-  visibility: 'external' | 'internal'
+  visibility: "external" | "internal";
   /**
    * Display order (0 = topmost lane)
    */
-  order: number
+  order: number;
+  /**
+   * Optional custom lane height in pixels (minimum 140)
+   */
+  height?: number;
 }
 export interface ActionNode {
-  type: 'action'
-  lane: string
-  label: string
-  description?: string
+  type: "action";
+  lane: string;
+  label: string;
+  description?: string;
   metadata?: {
-    [k: string]: string
-  }
-  entry_points?: EntryPoint[]
+    [k: string]: string;
+  };
+  entry_points?: EntryPoint[];
+  position?: Position;
   /**
    * Named input mapping: parameter name to expression
    */
   inputs?: {
-    [k: string]: string
-  }
-  compensation?: EntryPoint1
-  temporal?: TemporalConfig
-  next?: string
-  error?: ErrorHandler
+    [k: string]: string;
+  };
+  compensation?: EntryPoint1;
+  temporal?: TemporalConfig;
+  next?: string;
+  error?: ErrorHandler;
 }
 export interface EntryPoint {
   /**
    * Relative file path from repo root
    */
-  file: string
+  file: string;
   /**
    * Function/method name in the file
    */
-  symbol: string
+  symbol: string;
+}
+export interface Position {
+  x: number;
+  y: number;
 }
 /**
  * Compensation function for saga-style rollback
@@ -118,11 +127,11 @@ export interface EntryPoint1 {
   /**
    * Relative file path from repo root
    */
-  file: string
+  file: string;
   /**
    * Function/method name in the file
    */
-  symbol: string
+  symbol: string;
 }
 /**
  * Per-activity Temporal configuration
@@ -131,15 +140,15 @@ export interface TemporalConfig {
   /**
    * Maximum time an activity can take from start to completion
    */
-  start_to_close_timeout?: string
+  start_to_close_timeout?: string;
   /**
    * Maximum time from scheduling to completion including retries
    */
-  schedule_to_close_timeout?: string
+  schedule_to_close_timeout?: string;
   /**
    * Maximum time between heartbeats
    */
-  heartbeat_timeout?: string
+  heartbeat_timeout?: string;
   /**
    * Retry policy configuration
    */
@@ -147,132 +156,125 @@ export interface TemporalConfig {
     /**
      * Maximum number of retry attempts
      */
-    max_attempts?: number
+    max_attempts?: number;
     /**
      * Retry backoff multiplier
      */
-    backoff_coefficient?: number
+    backoff_coefficient?: number;
     /**
      * Initial retry interval
      */
-    initial_interval?: string
+    initial_interval?: string;
     /**
      * Maximum retry interval
      */
-    max_interval?: string
+    max_interval?: string;
     /**
      * Error types that should not be retried
      */
-    non_retryable_errors?: string[]
-  }
+    non_retryable_errors?: string[];
+  };
 }
 export interface ErrorHandler {
   retry?: {
     /**
      * Maximum number of retry attempts
      */
-    limit: number
+    limit: number;
     /**
      * Backoff strategy for retries
      */
-    backoff?: 'linear' | 'exponential'
-  }
+    backoff?: "linear" | "exponential";
+  };
   /**
    * Node ID to handle the error
    */
-  catch?: string
+  catch?: string;
 }
 export interface SwitchNode {
-  type: 'switch'
-  lane: string
-  label: string
-  description?: string
+  type: "switch";
+  lane: string;
+  label: string;
+  description?: string;
   metadata?: {
-    [k: string]: string
-  }
-  entry_points?: EntryPoint[]
-  /**
-   * @minItems 1
-   */
-  cases: [
-    {
-      when: string
-      next: string
-    },
-    ...{
-      when: string
-      next: string
-    }[],
-  ]
-  default?: string
+    [k: string]: string;
+  };
+  entry_points?: EntryPoint[];
+  position?: Position;
+  cases: {
+    when: string;
+    next: string;
+  }[];
+  default?: string;
 }
 export interface ParallelNode {
-  type: 'parallel'
-  lane: string
-  label: string
-  description?: string
+  type: "parallel";
+  lane: string;
+  label: string;
+  description?: string;
   metadata?: {
-    [k: string]: string
-  }
-  entry_points?: EntryPoint[]
-  /**
-   * @minItems 1
-   */
-  branches: [string, ...string[]]
-  join: string
-  join_strategy?: 'all_reached' | 'await_all' | 'all' | 'first'
+    [k: string]: string;
+  };
+  entry_points?: EntryPoint[];
+  position?: Position;
+  branches: string[];
+  join: string;
+  join_strategy?: "all_reached" | "await_all" | "all" | "first";
 }
 export interface WaitNode {
-  type: 'wait'
-  lane: string
-  label: string
-  description?: string
+  type: "wait";
+  lane: string;
+  label: string;
+  description?: string;
   metadata?: {
-    [k: string]: string
-  }
-  entry_points?: EntryPoint[]
+    [k: string]: string;
+  };
+  entry_points?: EntryPoint[];
+  position?: Position;
   /**
    * Event name to wait for
    */
-  event: string
+  event: string;
   /**
    * TypeScript type name for signal payload
    */
-  event_type?: string
+  event_type?: string;
   /**
    * Module path to import event type from (default: ./types)
    */
-  event_type_import?: string
+  event_type_import?: string;
   /**
    * Duration string (e.g. 7d, 24h, 30m)
    */
-  timeout?: string
-  next?: string
+  timeout?: string;
+  next?: string;
   /**
    * Node to route to when timeout expires
    */
-  timeout_next?: string
+  timeout_next?: string;
 }
 export interface ErrorNode {
-  type: 'error'
-  lane: string
-  label: string
-  description?: string
+  type: "error";
+  lane: string;
+  label: string;
+  description?: string;
   metadata?: {
-    [k: string]: string
-  }
-  entry_points?: EntryPoint[]
-  next?: string
+    [k: string]: string;
+  };
+  entry_points?: EntryPoint[];
+  position?: Position;
+  next?: string;
 }
 export interface TerminalNode {
-  type: 'terminal'
-  lane: string
-  label: string
+  type: "terminal";
+  lane: string;
+  label: string;
   metadata?: {
-    [k: string]: string
-  }
+    [k: string]: string;
+  };
+  position?: Position;
   /**
    * Whether this terminal represents a successful or failed outcome
    */
-  outcome: 'success' | 'failure'
+  outcome: "success" | "failure";
 }

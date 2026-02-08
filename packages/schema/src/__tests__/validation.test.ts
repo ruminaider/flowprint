@@ -878,3 +878,64 @@ describe('schema 2.0 validation', () => {
     ).toBe(true)
   })
 })
+
+// ── Node position ───────────────────────────────────────────────
+
+describe('node position', () => {
+  it('accepts a node with position', () => {
+    const result = validate({
+      schema: 'flowprint/1.0',
+      name: 'test',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: {
+          type: 'action',
+          lane: 'main',
+          label: 'Start',
+          position: { x: 100, y: 200 },
+          next: 'end',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('accepts a document without position fields (backward compat)', () => {
+    const result = validate({
+      schema: 'flowprint/1.0',
+      name: 'test',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: { type: 'action', lane: 'main', label: 'Start', next: 'end' },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(true)
+    expect(result.errors).toEqual([])
+  })
+
+  it('rejects position with non-number x', () => {
+    const result = validate({
+      schema: 'flowprint/1.0',
+      name: 'test',
+      version: '1.0.0',
+      lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
+      nodes: {
+        start: {
+          type: 'action',
+          lane: 'main',
+          label: 'Start',
+          position: { x: 'bad', y: 200 },
+          next: 'end',
+        },
+        end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+      },
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors.length).toBeGreaterThan(0)
+  })
+})

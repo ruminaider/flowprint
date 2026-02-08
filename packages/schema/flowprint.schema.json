@@ -97,6 +97,11 @@
           "type": "integer",
           "minimum": 0,
           "description": "Display order (0 = topmost lane)"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 140,
+          "description": "Optional custom lane height in pixels (minimum 140)"
         }
       }
     },
@@ -187,6 +192,9 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
         "inputs": {
           "type": "object",
           "additionalProperties": {
@@ -243,9 +251,11 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
         "cases": {
           "type": "array",
-          "minItems": 1,
           "items": {
             "type": "object",
             "required": ["when", "next"],
@@ -300,17 +310,18 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
         "branches": {
           "type": "array",
-          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1
           }
         },
         "join": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "join_strategy": {
           "type": "string",
@@ -349,6 +360,9 @@
           "items": {
             "$ref": "#/definitions/EntryPoint"
           }
+        },
+        "position": {
+          "$ref": "#/definitions/Position"
         },
         "event": {
           "type": "string",
@@ -413,6 +427,9 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
         "next": {
           "type": "string",
           "minLength": 1
@@ -442,11 +459,23 @@
             "type": "string"
           }
         },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
         "outcome": {
           "type": "string",
           "enum": ["success", "failure"],
           "description": "Whether this terminal represents a successful or failed outcome"
         }
+      }
+    },
+    "Position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
       }
     },
     "TemporalConfig": {

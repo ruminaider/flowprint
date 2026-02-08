@@ -12,6 +12,7 @@ export type {
   EntryPoint,
   ErrorHandler,
   TemporalConfig,
+  Position,
   ValidationResult,
   ValidationError,
   OrderedNode,

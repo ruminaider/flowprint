@@ -24,6 +24,7 @@ const NODE_KEY_PREFIX = [
   'label',
   'description',
   'metadata',
+  'position',
   'entry_points',
 ] as const
 
@@ -140,6 +141,12 @@ function serializeNode(node: Node): YAMLMap {
       nodeMap.add(new Pair(key, serializeTemporalConfig(value as Record<string, unknown>)))
     } else if (key === 'error' && typeof value === 'object' && value !== null) {
       nodeMap.add(new Pair(key, serializeErrorHandler(value as Record<string, unknown>)))
+    } else if (key === 'position' && typeof value === 'object' && value !== null) {
+      const pos = value as Record<string, unknown>
+      const posMap = new YAMLMap()
+      if (pos.x !== undefined) posMap.add(new Pair('x', createScalar(pos.x)))
+      if (pos.y !== undefined) posMap.add(new Pair('y', createScalar(pos.y)))
+      nodeMap.add(new Pair(key, posMap))
     } else if (key === 'metadata' && typeof value === 'object') {
       nodeMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else {

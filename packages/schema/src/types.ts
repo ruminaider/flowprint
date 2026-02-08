@@ -20,6 +20,7 @@ export type {
   EntryPoint,
   ErrorHandler,
   TemporalConfig,
+  Position,
 } from './types.generated.js'
 
 /**

@@ -733,6 +733,73 @@ describe('serialize', () => {
   })
 
   // -------------------------------------------------------------------------
+  // Position
+  // -------------------------------------------------------------------------
+
+  describe('position', () => {
+    it('round-trips node with position', () => {
+      const doc = makeDoc({
+        nodes: {
+          a: {
+            type: 'action',
+            lane: 'main',
+            label: 'A',
+            position: { x: 100, y: 200 },
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+      const parsed = parse(yaml) as FlowprintDocument
+      expect(parsed.nodes.a).toEqual(doc.nodes.a)
+    })
+
+    it('omits position when absent', () => {
+      const doc = makeDoc()
+      const yaml = serialize(doc)
+      expect(yaml).not.toContain('position:')
+    })
+
+    it('outputs position before entry_points in key order', () => {
+      const doc = makeDoc({
+        nodes: {
+          my_node: {
+            type: 'action',
+            lane: 'main',
+            label: 'My Node',
+            position: { x: 50, y: 75 },
+            entry_points: [{ file: 'src/app.ts', symbol: 'handler' }],
+            next: 'done',
+          },
+          done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+        },
+      })
+      const yaml = serialize(doc)
+
+      const lines = yaml.split('\n')
+      const nodeStart = lines.findIndex((l) => l.trimStart().startsWith('my_node:'))
+      expect(nodeStart).toBeGreaterThan(-1)
+
+      const nodeKeys: string[] = []
+      for (let i = nodeStart + 1; i < lines.length; i++) {
+        const line = lines[i] ?? ''
+        if (/^ {2}\S/.exec(line) || /^\S/.exec(line)) break
+        const keyMatch = /^ {4}(\w+):/.exec(line)
+        if (keyMatch) {
+          nodeKeys.push(keyMatch[1] ?? '')
+        }
+      }
+
+      const posIdx = nodeKeys.indexOf('position')
+      const epIdx = nodeKeys.indexOf('entry_points')
+      expect(posIdx).toBeGreaterThan(-1)
+      expect(epIdx).toBeGreaterThan(-1)
+      expect(posIdx).toBeLessThan(epIdx)
+    })
+  })
+
+  // -------------------------------------------------------------------------
   // Deterministic output
   // -------------------------------------------------------------------------
 
