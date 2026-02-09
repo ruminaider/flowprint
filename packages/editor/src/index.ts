@@ -16,6 +16,7 @@ export type {
 export { ErrorBoundary } from './components/ErrorBoundary'
 export type { ErrorBoundaryProps } from './components/ErrorBoundary'
 export { NodePalette } from './components/NodePalette'
+export type { NodePaletteProps } from './components/NodePalette'
 export { PropertiesPanel } from './panels/PropertiesPanel'
 export type { PropertiesPanelProps } from './panels/PropertiesPanel'
 export { LanePanel } from './panels/LanePanel'
@@ -37,6 +38,8 @@ export type { ThemeMode, ResolvedTheme } from './hooks/useTheme'
 // Panels
 export { YamlPreviewPanel } from './panels/YamlPreviewPanel'
 export type { YamlPreviewPanelProps } from './panels/YamlPreviewPanel'
+export { PanelSidebar } from './panels/PanelSidebar'
+export type { PanelSidebarProps, SidebarTab } from './panels/PanelSidebar'
 
 // Components
 export { ExportButton } from './components/ExportButton'

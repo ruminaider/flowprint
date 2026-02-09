@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   BackgroundVariant,
   MiniMap,
@@ -55,16 +56,17 @@ export function FlowprintViewer({
   const proOptions: ReactFlowProps['proOptions'] = useMemo(() => ({ hideAttribution: true }), [])
 
   return (
-    <div
-      className={`fp-viewer ${className ?? ''}`}
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        ...style,
-      }}
-    >
-      <ReactFlow
+    <ReactFlowProvider>
+      <div
+        className={`fp-viewer ${className ?? ''}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'relative',
+          ...style,
+        }}
+      >
+        <ReactFlow
         nodes={layout.nodes}
         edges={layout.edges}
         nodeTypes={nodeTypes}
@@ -86,9 +88,17 @@ export function FlowprintViewer({
         {layout.lineOfVisibilityY !== null && (
           <LineOfVisibility y={layout.lineOfVisibilityY} totalWidth={layout.width} />
         )}
-        {showGrid && <Background variant={BackgroundVariant.Dots} gap={20} size={1} />}
+        {showGrid && (
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1}
+            color="var(--fp-bg-grid-dot)"
+          />
+        )}
         {showMinimap && <MiniMap pannable zoomable />}
-      </ReactFlow>
-    </div>
+        </ReactFlow>
+      </div>
+    </ReactFlowProvider>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import type { FlowprintDocument, Node, Lane } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, Node, Lane, Position } from '@ruminaider/flowprint-schema'
 import {
   isActionNode,
   isSwitchNode,
@@ -59,6 +59,10 @@ export interface UseFlowprintStateReturn {
   addNode(id: string, node: Node): void
   /** Update properties of an existing node via a partial patch. */
   updateNode(id: string, patch: Partial<Node>): void
+  /** Update the stored position of a node in the document. */
+  updateNodePosition(id: string, position: Position): void
+  /** Update positions of multiple nodes in a single commit (for auto-layout / tidy). */
+  batchUpdatePositions(positions: Map<string, { x: number; y: number }>): void
   /** Remove a node and purge all references to it from other nodes. */
   removeNode(id: string): void
   /** Create a connection between two nodes using the specified configuration. */
@@ -298,6 +302,29 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
     [commit],
   )
 
+  const updateNodePosition = useCallback(
+    (id: string, position: Position) => {
+      commit((draft) => {
+        const node = draft.nodes[id]
+        if (!node) return
+        node.position = position
+      })
+    },
+    [commit],
+  )
+
+  const batchUpdatePositions = useCallback(
+    (positions: Map<string, { x: number; y: number }>) => {
+      commit((draft) => {
+        for (const [id, pos] of positions) {
+          const node = draft.nodes[id]
+          if (node) node.position = pos
+        }
+      })
+    },
+    [commit],
+  )
+
   const removeNode = useCallback(
     (id: string) => {
       commit((draft) => {
@@ -428,6 +455,8 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
     doc,
     addNode,
     updateNode,
+    updateNodePosition,
+    batchUpdatePositions,
     removeNode,
     connectNodes,
     disconnectNodes,

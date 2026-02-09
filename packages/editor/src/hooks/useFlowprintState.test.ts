@@ -148,6 +148,47 @@ describe('updateNode', () => {
 })
 
 // ---------------------------------------------------------------------------
+// updateNodePosition
+// ---------------------------------------------------------------------------
+
+describe('updateNodePosition', () => {
+  it('sets position on a node', () => {
+    const doc = makeDoc({ nodes: { a: actionNode() } })
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
+
+    act(() => {
+      result.current.updateNodePosition('a', { x: 100, y: 200 })
+    })
+
+    expect(result.current.doc.nodes.a!.position).toEqual({ x: 100, y: 200 })
+  })
+
+  it('is a no-op for non-existent node', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    // Should not throw, just silently skip
+    act(() => {
+      result.current.updateNodePosition('missing', { x: 0, y: 0 })
+    })
+  })
+
+  it('can be undone', () => {
+    const doc = makeDoc({ nodes: { a: actionNode() } })
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
+
+    act(() => {
+      result.current.updateNodePosition('a', { x: 100, y: 200 })
+    })
+    expect(result.current.doc.nodes.a!.position).toEqual({ x: 100, y: 200 })
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.doc.nodes.a!.position).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
 // removeNode (with reference cleanup)
 // ---------------------------------------------------------------------------
 

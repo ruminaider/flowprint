@@ -1,8 +1,11 @@
 import { useCallback } from 'react'
+import type { RefObject } from 'react'
 import type { Node } from '@ruminaider/flowprint-schema'
+import type { ReactFlowInstance } from '@xyflow/react'
 import type { UseFlowprintStateReturn } from './useFlowprintState'
 import { snapToLane } from './useLaneSnap'
 import type { LaneBand } from '../layout/types'
+import { NODE_WIDTH, NODE_HEIGHT } from '../layout/constants'
 
 // ---------------------------------------------------------------------------
 // Node type constant
@@ -46,20 +49,9 @@ function defaultNode(type: PaletteNodeType, lane: string): Node {
     case 'action':
       return { type: 'action', lane, label: 'New Action' }
     case 'switch':
-      return {
-        type: 'switch',
-        lane,
-        label: 'New Switch',
-        cases: [{ when: 'condition', next: '' }],
-      } as Node
+      return { type: 'switch', lane, label: 'New Switch', cases: [] } as Node
     case 'parallel':
-      return {
-        type: 'parallel',
-        lane,
-        label: 'New Parallel',
-        branches: [''],
-        join: '',
-      } as Node
+      return { type: 'parallel', lane, label: 'New Parallel', branches: [], join: '' } as Node
     case 'wait':
       return { type: 'wait', lane, label: 'New Wait', event: 'event_name' }
     case 'error':
@@ -76,6 +68,8 @@ function defaultNode(type: PaletteNodeType, lane: string): Node {
 export function useAddNode(
   state: UseFlowprintStateReturn,
   lanes: LaneBand[],
+  rfInstanceRef?: RefObject<ReactFlowInstance | null>,
+  onAfterAdd?: () => void,
 ): {
   onDrop: (event: React.DragEvent) => void
   onDragOver: (event: React.DragEvent) => void
@@ -100,9 +94,21 @@ export function useAddNode(
       const id = nextId(type)
       const node = defaultNode(type, lane)
 
+      if (rfInstanceRef?.current) {
+        const pos = rfInstanceRef.current.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        })
+        ;(node as { position?: { x: number; y: number } }).position = {
+          x: pos.x - NODE_WIDTH / 2,
+          y: pos.y - NODE_HEIGHT / 2,
+        }
+      }
+
       state.addNode(id, node)
+      onAfterAdd?.()
     },
-    [state, lanes],
+    [state, lanes, rfInstanceRef, onAfterAdd],
   )
 
   return { onDrop, onDragOver }
