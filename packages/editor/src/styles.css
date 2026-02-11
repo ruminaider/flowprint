@@ -365,6 +365,24 @@
   border-right: 2px solid var(--fp-lane-accent);
 }
 
+/* ---- Lane resize handle ---- */
+
+.fp-lane-resize-handle {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.fp-lane-resize-handle:hover,
+.fp-lane-resize-handle--active {
+  opacity: 1;
+  background: linear-gradient(
+    to bottom,
+    transparent 25%,
+    var(--fp-lane-accent) 25%,
+    var(--fp-lane-accent) 75%,
+    transparent 75%
+  );
+}
 
 /* ---- Line of Visibility (4A.3) ---- */
 
