@@ -3,7 +3,7 @@ import './styles.css'
 
 export { FlowprintViewer } from './components/FlowprintViewer'
 export type { FlowprintViewerProps } from './components/FlowprintViewer'
-export { computeLayout } from './layout'
+export { computeLayout, computeEdges, computeLaneBands, autoLayout } from './layout'
 export type { LaneBand, LayoutResult } from './layout'
 export { FlowprintEditor } from './components/FlowprintEditor'
 export type { FlowprintEditorProps } from './components/FlowprintEditor'

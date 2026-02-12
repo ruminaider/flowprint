@@ -1,10 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ReactFlow, Background, BackgroundVariant, MiniMap } from '@xyflow/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  BackgroundVariant,
+  MiniMap,
+  useNodesState,
+  useViewport,
+} from '@xyflow/react'
+import type { Node as RFNode, ReactFlowInstance } from '@xyflow/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
-import { validate } from '@ruminaider/flowprint-schema'
+import { topoSort, validate } from '@ruminaider/flowprint-schema'
 import { nodeTypes } from '../nodes'
 import { edgeTypes } from '../edges'
-import { computeLayout } from '../layout'
+import { computeEdges, computeLaneBands, autoLayout } from '../layout'
+import {
+  LANE_LABEL_WIDTH,
+  LANE_PADDING_LEFT,
+  NODE_WIDTH,
+  NODE_HEIGHT,
+  NODE_HORIZONTAL_GAP,
+} from '../layout/constants'
 import LaneBackground from './LaneBackground'
 import LineOfVisibility from './LineOfVisibility'
 import { ValidationBanner } from './ValidationBanner'
@@ -12,7 +28,8 @@ import { useFlowprintState } from '../hooks/useFlowprintState'
 import { useConnectionHandler } from '../hooks/useConnectionHandler'
 import { useDeleteHandler } from '../hooks/useDeleteHandler'
 import { useAddNode } from '../hooks/useAddNode'
-import { useLaneSnap } from '../hooks/useLaneSnap'
+import { useLaneDrag } from '../hooks/useLaneDrag'
+import { useLaneResize } from '../hooks/useLaneResize'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { NodePalette } from './NodePalette'
 import { SwitchConditionPopover } from './SwitchConditionPopover'
@@ -22,6 +39,8 @@ import { ExportButton } from './ExportButton'
 import { PropertiesPanel } from '../panels/PropertiesPanel'
 import { LanePanel } from '../panels/LanePanel'
 import { YamlPreviewPanel } from '../panels/YamlPreviewPanel'
+import { PanelSidebar } from '../panels/PanelSidebar'
+import type { SidebarTab } from '../panels/PanelSidebar'
 import { useTheme } from '../hooks/useTheme'
 import type { SymbolSearchProvider } from '../symbols/types'
 import type { ThemeMode } from '../hooks/useTheme'
@@ -52,6 +71,58 @@ export interface FlowprintEditorProps {
   showYamlPreview?: boolean
   /** Show the SVG export button. Hidden in read-only mode. Defaults to `false`. */
   showExportButton?: boolean
+}
+
+/**
+ * Check whether any node in the document has a stored position.
+ */
+function hasStoredPositions(doc: FlowprintDocument): boolean {
+  return Object.values(doc.nodes).some((node) => node.position != null)
+}
+
+/**
+ * Convert document nodes to React Flow nodes using stored or auto-computed positions.
+ */
+function docToRFNodes(
+  doc: FlowprintDocument,
+  bands: import('../layout/types').LaneBand[],
+): RFNode[] {
+  const orderedNodes = topoSort(doc)
+  const positions = hasStoredPositions(doc)
+    ? null // use stored positions
+    : autoLayout(doc, bands)
+
+  const bandMap = new Map(bands.map((b) => [b.laneId, b]))
+
+  return orderedNodes.map((on) => {
+    const band = bandMap.get(on.node.lane)
+    const storedPos = on.node.position
+    const computedPos = positions?.get(on.id)
+    const pos = storedPos ?? computedPos ?? { x: 0, y: 0 }
+
+    return {
+      id: on.id,
+      type: on.node.type,
+      position: pos,
+      data: {
+        label: on.node.label,
+        nodeData: on.node,
+        laneColor: band?.borderColor ?? '#94a3b8',
+      },
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
+    }
+  })
+}
+
+/**
+ * Writes the current viewport zoom into a ref so that pointer event handlers
+ * outside the ReactFlow provider can convert screen deltas to flow deltas.
+ */
+function ZoomTracker({ zoomRef }: { zoomRef: React.MutableRefObject<number> }) {
+  const { zoom } = useViewport()
+  zoomRef.current = zoom
+  return null
 }
 
 /**
@@ -94,14 +165,71 @@ export function FlowprintEditor({
     }
   }, [value, state])
 
-  // --- Layout ---
-  const layout = useMemo(() => computeLayout(state.doc), [state.doc])
+  // --- Layout computation (split functions) ---
+  const { bands, lineOfVisibilityY } = useMemo(
+    () => computeLaneBands(state.doc),
+    [state.doc],
+  )
+  const edges = useMemo(() => computeEdges(state.doc), [state.doc])
+
+  // --- Auto-layout on first render if no positions stored ---
+  const hasAutoLayouted = useRef(false)
+  useEffect(() => {
+    if (!hasAutoLayouted.current && !hasStoredPositions(state.doc)) {
+      hasAutoLayouted.current = true
+      // Defer to avoid setState-during-render warning — the commit() inside
+      // batchUpdatePositions fires onChange which updates the parent component.
+      queueMicrotask(() => {
+        const positions = autoLayout(state.doc, bands)
+        state.batchUpdatePositions(positions)
+      })
+    }
+  }, [state, bands])
+
+  // --- React Flow nodes state ---
+  const initialRFNodes = useMemo(
+    () => docToRFNodes(state.doc, bands),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.doc],
+  )
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialRFNodes)
+
+  // Sync RF nodes when doc changes externally
+  const prevDocRef = useRef(state.doc)
+  useEffect(() => {
+    if (state.doc !== prevDocRef.current) {
+      prevDocRef.current = state.doc
+      setNodes(docToRFNodes(state.doc, bands))
+    }
+  }, [state.doc, bands, setNodes])
+
+  // --- Canvas dimensions ---
+  const canvasDims = useMemo(() => {
+    const orderedNodes = topoSort(state.doc)
+    const maxOrder = Math.max(...orderedNodes.map((n) => n.order), 0)
+    const columnCount = maxOrder + 1
+    const width = LANE_LABEL_WIDTH + LANE_PADDING_LEFT + columnCount * (NODE_WIDTH + NODE_HORIZONTAL_GAP)
+    const height = bands.reduce((sum, b) => sum + b.height, 0)
+    return { width, height }
+  }, [state.doc, bands])
+
+  // --- ReactFlow instance ref (for screen-to-flow coordinate conversion) ---
+  const rfInstanceRef = useRef<ReactFlowInstance | null>(null)
+
+  // --- Auto-dismiss validation after node drop ---
+  const justDroppedRef = useRef(false)
+
+  const handleAfterAdd = useCallback(() => {
+    justDroppedRef.current = true
+  }, [])
 
   // --- Hooks ---
   const connectionHandler = useConnectionHandler(state, state.doc)
   const deleteHandler = useDeleteHandler(state, state.doc)
-  const addNode = useAddNode(state, layout.lanes)
-  const laneSnap = useLaneSnap(layout.lanes)
+  const addNode = useAddNode(state, bands, rfInstanceRef, handleAfterAdd)
+  const laneDrag = useLaneDrag(state, bands)
+  const zoomRef = useRef(1)
+  const laneResize = useLaneResize(state, bands, zoomRef, readOnly)
 
   // --- Selection ---
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
@@ -131,33 +259,58 @@ export function FlowprintEditor({
     disabled: readOnly,
   })
 
+  // --- Tidy Layout ---
+  const handleTidyLayout = useCallback(() => {
+    const positions = autoLayout(state.doc, bands)
+    state.batchUpdatePositions(positions)
+  }, [state, bands])
+
   // --- Validation ---
   const validation = useMemo(() => validate(state.doc), [state.doc])
   const [dismissedForDoc, setDismissedForDoc] = useState<FlowprintDocument | null>(null)
 
   const validationErrors = validation.errors.filter((e) => e.severity === 'error')
+
+  // Auto-dismiss validation banner after a node drop
+  useEffect(() => {
+    if (justDroppedRef.current) {
+      justDroppedRef.current = false
+      setDismissedForDoc(state.doc)
+    }
+  }, [state.doc])
+
   const showBanner = dismissedForDoc !== state.doc && validationErrors.length > 0
 
   // --- Pro options (stable reference) ---
   const proOptions = useMemo(() => ({ hideAttribution: true }), [])
 
+  // --- Sidebar tab state ---
+  const [activeTab, setActiveTab] = useState<SidebarTab | null>('properties')
+
   return (
     <ErrorBoundary doc={state.doc}>
-      <div
-        className={`fp-editor ${className ?? ''}`}
-        data-fp-theme={resolvedTheme}
-        style={{
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          ...style,
-        }}
-      >
+      <ReactFlowProvider>
+        <div
+          className={`fp-editor ${className ?? ''}`}
+          data-fp-theme={resolvedTheme}
+          style={{
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            ...style,
+          }}
+        >
+        <div className="fp-editor-layout">
+        <div className="fp-canvas-area">
         <ReactFlow
-          nodes={layout.nodes}
-          edges={layout.edges}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          onInit={(instance) => {
+            rfInstanceRef.current = instance
+          }}
           nodesDraggable={!readOnly}
           nodesConnectable={!readOnly}
           elementsSelectable={!readOnly}
@@ -167,12 +320,13 @@ export function FlowprintEditor({
           onEdgesDelete={readOnly ? undefined : deleteHandler.onEdgesDelete}
           onDrop={readOnly ? undefined : addNode.onDrop}
           onDragOver={readOnly ? undefined : addNode.onDragOver}
-          onNodeDragStop={readOnly ? undefined : laneSnap.onNodeDragStop}
+          onNodeDrag={readOnly ? undefined : laneDrag.onNodeDrag}
+          onNodeDragStop={readOnly ? undefined : laneDrag.onNodeDragStop}
           onSelectionChange={
             readOnly
               ? undefined
-              : ({ nodes }) => {
-                  setSelectedNodeId(nodes.length === 1 ? (nodes[0]?.id ?? null) : null)
+              : ({ nodes: selNodes }) => {
+                  setSelectedNodeId(selNodes.length === 1 ? (selNodes[0]?.id ?? null) : null)
                 }
           }
           onNodeClick={
@@ -191,11 +345,27 @@ export function FlowprintEditor({
           snapGrid={[20, 20]}
           proOptions={proOptions}
         >
-          <LaneBackground lanes={layout.lanes} totalWidth={layout.width} />
-          {layout.lineOfVisibilityY !== null && (
-            <LineOfVisibility y={layout.lineOfVisibilityY} totalWidth={layout.width} />
+          <ZoomTracker zoomRef={zoomRef} />
+          <LaneBackground
+            lanes={bands}
+            totalWidth={canvasDims.width}
+            highlightedLaneId={laneDrag.highlightedLaneId}
+            readOnly={readOnly}
+            resizeOverride={laneResize.resizeOverride}
+            onResizeHandlePointerDown={laneResize.handlePointerDown}
+            isResizing={laneResize.isResizing}
+          />
+          {lineOfVisibilityY !== null && (
+            <LineOfVisibility y={lineOfVisibilityY} totalWidth={canvasDims.width} />
           )}
-          {showGrid && <Background variant={BackgroundVariant.Dots} gap={20} size={1} />}
+          {showGrid && (
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={20}
+              size={1}
+              color="var(--fp-bg-grid-dot)"
+            />
+          )}
           {showMinimap && <MiniMap pannable zoomable />}
         </ReactFlow>
         {showBanner && (
@@ -206,34 +376,26 @@ export function FlowprintEditor({
             }}
           />
         )}
-        {!readOnly && <NodePalette />}
+        {!readOnly && <NodePalette variant="dock" />}
         {!readOnly && (
-          <PropertiesPanel
-            selectedNodeId={selectedNodeId}
-            doc={state.doc}
-            onUpdateNode={(id, patch) => {
-              state.updateNode(id, patch)
+          <button
+            type="button"
+            className="fp-tidy-layout-btn"
+            onClick={handleTidyLayout}
+            title="Tidy layout"
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 6,
+              padding: '6px 12px',
+              fontSize: 13,
+              cursor: 'pointer',
             }}
-            lanes={state.doc.lanes}
-            symbolSearch={symbolSearch}
-          />
-        )}
-        {!readOnly && (
-          <LanePanel
-            doc={state.doc}
-            onAddLane={(id, lane) => {
-              state.addLane(id, lane)
-            }}
-            onUpdateLane={(id, patch) => {
-              state.updateLane(id, patch)
-            }}
-            onRemoveLane={(id) => {
-              state.removeLane(id)
-            }}
-            onReorderLanes={(ids) => {
-              state.reorderLanes(ids)
-            }}
-          />
+          >
+            Tidy Layout
+          </button>
         )}
         {connectionHandler.pendingSwitchConnection && (
           <SwitchConditionPopover
@@ -250,9 +412,50 @@ export function FlowprintEditor({
             onCancel={deleteHandler.cancelDeletion}
           />
         )}
-        {showYamlPreview && <YamlPreviewPanel doc={state.doc} visible />}
         {showExportButton && !readOnly && <ExportButton doc={state.doc} />}
-      </div>
+        </div>
+        {!readOnly && (
+          <PanelSidebar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            showYamlTab={showYamlPreview}
+          >
+            {{
+              properties: (
+                <PropertiesPanel
+                  selectedNodeId={selectedNodeId}
+                  doc={state.doc}
+                  onUpdateNode={(id, patch) => {
+                    state.updateNode(id, patch)
+                  }}
+                  lanes={state.doc.lanes}
+                  symbolSearch={symbolSearch}
+                />
+              ),
+              lanes: (
+                <LanePanel
+                  doc={state.doc}
+                  onAddLane={(id, lane) => {
+                    state.addLane(id, lane)
+                  }}
+                  onUpdateLane={(id, patch) => {
+                    state.updateLane(id, patch)
+                  }}
+                  onRemoveLane={(id) => {
+                    state.removeLane(id)
+                  }}
+                  onReorderLanes={(ids) => {
+                    state.reorderLanes(ids)
+                  }}
+                />
+              ),
+              yaml: showYamlPreview ? <YamlPreviewPanel doc={state.doc} visible /> : null,
+            }}
+          </PanelSidebar>
+        )}
+        </div>
+        </div>
+      </ReactFlowProvider>
     </ErrorBoundary>
   )
 }
