@@ -42,11 +42,15 @@ vi.mock('@xyflow/react', () => ({
       props.children as React.ReactNode,
     )
   }),
+  ReactFlowProvider: ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'react-flow-provider' }, children),
   Background: () => React.createElement('div', { 'data-testid': 'background' }),
   BackgroundVariant: { Dots: 'dots' },
   MiniMap: () => React.createElement('div', { 'data-testid': 'minimap' }),
   Panel: ({ children, ...props }: { children: React.ReactNode }) =>
     React.createElement('div', props, children),
+  useNodesState: (initial: unknown[]) => [initial, vi.fn(), vi.fn()],
+  useViewport: () => ({ x: 0, y: 0, zoom: 1 }),
 }))
 
 vi.mock('../layout', () => ({
@@ -58,13 +62,16 @@ vi.mock('../layout', () => ({
     width: 800,
     height: 600,
   })),
+  computeEdges: vi.fn(() => []),
+  computeLaneBands: vi.fn(() => ({ bands: [], lineOfVisibilityY: null })),
+  autoLayout: vi.fn(() => new Map()),
 }))
 
 vi.mock('./LaneBackground', () => ({ default: () => null }))
 vi.mock('./LineOfVisibility', () => ({ default: () => null }))
 
 // ---------------------------------------------------------------------------
-// Track validate calls — start with valid
+// Track validate calls -- start with valid
 // ---------------------------------------------------------------------------
 
 const mockValidate = vi.fn<() => ValidationResult>(() => ({ valid: true, errors: [] }))
@@ -239,6 +246,63 @@ describe('FlowprintEditor', () => {
 
     const el = container.querySelector('.fp-editor')
     expect(el?.className).toContain('my-custom')
+  })
+
+  it('shows Tidy Layout button when not readOnly', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    render(<FlowprintEditor value={doc} onChange={onChange} />)
+
+    expect(screen.getByText('Tidy Layout')).toBeTruthy()
+  })
+
+  it('hides Tidy Layout button in readOnly mode', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
+
+    expect(screen.queryByText('Tidy Layout')).toBeNull()
+  })
+
+  it('hides NodePalette in readOnly mode', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
+
+    // readOnly hides interactive elements
+    expect(screen.queryByText('Tidy Layout')).toBeNull()
+  })
+
+  it('renders sidebar with Properties tab active by default', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
+
+    expect(container.querySelector('.fp-sidebar')).toBeTruthy()
+    const tabs = container.querySelectorAll('[role="tab"]')
+    expect(tabs.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('hides sidebar in readOnly mode', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    const { container } = render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
+
+    expect(container.querySelector('.fp-sidebar')).toBeNull()
+  })
+
+  it('renders NodePalette with dock variant class', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
+
+    expect(container.querySelector('.fp-palette--dock')).toBeTruthy()
   })
 })
 
