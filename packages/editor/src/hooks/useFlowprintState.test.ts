@@ -700,6 +700,53 @@ describe('lane mutations', () => {
     }).toThrow("Lane 'missing' not found")
   })
 
+  it('resizeLane shifts nodes in lower lanes by the height delta', () => {
+    const doc = makeDoc({
+      lanes: {
+        user: { label: 'User', visibility: 'external', order: 0 },
+        system: { label: 'System', visibility: 'internal', order: 1 },
+        backend: { label: 'Backend', visibility: 'internal', order: 2 },
+      },
+      nodes: {
+        a: actionNode({ lane: 'user', position: { x: 100, y: 50 } }),
+        b: actionNode({ lane: 'system', label: 'Sys task', position: { x: 100, y: 250 } }),
+        c: actionNode({ lane: 'backend', label: 'Back task', position: { x: 100, y: 500 } }),
+      },
+    })
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
+
+    act(() => {
+      result.current.resizeLane('user', 300, 200)
+    })
+
+    // Lane height updated
+    expect(result.current.doc.lanes.user!.height).toBe(300)
+    // Node in resized lane: unchanged
+    expect(result.current.doc.nodes.a!.position).toEqual({ x: 100, y: 50 })
+    // Nodes in lower lanes: shifted by delta (+100)
+    expect(result.current.doc.nodes.b!.position).toEqual({ x: 100, y: 350 })
+    expect(result.current.doc.nodes.c!.position).toEqual({ x: 100, y: 600 })
+  })
+
+  it('resizeLane does not shift nodes without stored positions', () => {
+    const doc = makeDoc({
+      nodes: {
+        a: actionNode({ lane: 'user' }),
+        b: actionNode({ lane: 'system', label: 'Sys task' }),
+      },
+    })
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
+
+    act(() => {
+      result.current.resizeLane('user', 300, 200)
+    })
+
+    expect(result.current.doc.lanes.user!.height).toBe(300)
+    // No stored positions — nothing to shift
+    expect(result.current.doc.nodes.a!.position).toBeUndefined()
+    expect(result.current.doc.nodes.b!.position).toBeUndefined()
+  })
+
   it('removeLane removes a lane', () => {
     const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
 

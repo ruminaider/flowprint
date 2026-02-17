@@ -28,12 +28,12 @@ function makeBands(heights: number[]): LaneBand[] {
 }
 
 describe('useLaneResize', () => {
-  const updateLane = vi.fn()
-  const state = { updateLane }
+  const resizeLane = vi.fn()
+  const state = { resizeLane }
   let zoomRef: { current: number }
 
   beforeEach(() => {
-    updateLane.mockClear()
+    resizeLane.mockClear()
     zoomRef = { current: 1 }
   })
 
@@ -61,7 +61,7 @@ describe('useLaneResize', () => {
     })
 
     expect(result.current.isResizing).toBe(false)
-    expect(updateLane).not.toHaveBeenCalled()
+    expect(resizeLane).not.toHaveBeenCalled()
   })
 
   it('sets isResizing on pointerdown', () => {
@@ -158,7 +158,7 @@ describe('useLaneResize', () => {
       window.dispatchEvent(new PointerEvent('pointerup', { clientY: 280 }))
     })
 
-    expect(updateLane).toHaveBeenCalledWith('lane-0', { height: 280 })
+    expect(resizeLane).toHaveBeenCalledWith('lane-0', 280, 200)
     expect(result.current.resizeOverride).toBeNull()
     expect(result.current.isResizing).toBe(false)
   })

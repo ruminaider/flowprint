@@ -73,6 +73,8 @@ export interface UseFlowprintStateReturn {
   addLane(id: string, lane: Lane): void
   /** Update properties of an existing lane via a partial patch. */
   updateLane(id: string, patch: Partial<Lane>): void
+  /** Resize a lane and shift nodes in lower lanes to keep them in their bands. */
+  resizeLane(id: string, newHeight: number, oldEffectiveHeight: number): void
   /** Remove a lane from the document. */
   removeLane(id: string): void
   /** Reorder lanes by providing an ordered array of lane IDs. */
@@ -385,6 +387,32 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
     [commit],
   )
 
+  const resizeLane = useCallback(
+    (id: string, newHeight: number, oldEffectiveHeight: number) => {
+      commit((draft) => {
+        const lane = draft.lanes[id]
+        if (!lane) throw new Error(`Lane '${id}' not found`)
+        draft.lanes[id] = { ...lane, height: newHeight }
+
+        // Shift nodes in lanes below so they stay in their bands
+        const delta = newHeight - oldEffectiveHeight
+        if (delta === 0) return
+        const resizedOrder = lane.order
+        const lowerLaneIds = new Set(
+          Object.entries(draft.lanes)
+            .filter(([, l]) => l.order > resizedOrder)
+            .map(([lid]) => lid),
+        )
+        for (const [, node] of Object.entries(draft.nodes)) {
+          if (lowerLaneIds.has(node.lane) && node.position) {
+            node.position = { x: node.position.x, y: node.position.y + delta }
+          }
+        }
+      })
+    },
+    [commit],
+  )
+
   const removeLane = useCallback(
     (id: string) => {
       commit((draft) => {
@@ -462,6 +490,7 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
     disconnectNodes,
     addLane,
     updateLane,
+    resizeLane,
     removeLane,
     reorderLanes,
     undo,

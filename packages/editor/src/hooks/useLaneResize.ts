@@ -16,7 +16,7 @@ interface DragState {
 }
 
 interface UseFlowprintStateLike {
-  updateLane: (id: string, patch: { height: number }) => void
+  resizeLane: (id: string, newHeight: number, oldEffectiveHeight: number) => void
 }
 
 export function useLaneResize(
@@ -67,7 +67,7 @@ export function useLaneResize(
           const deltaScreen = e.clientY - d.startY
           const deltaFlow = deltaScreen / zoom
           const finalHeight = Math.max(MIN_LANE_HEIGHT, d.startHeight + deltaFlow)
-          state.updateLane(d.laneId, { height: finalHeight })
+          state.resizeLane(d.laneId, finalHeight, d.startHeight)
         }
 
         dragRef.current = null
