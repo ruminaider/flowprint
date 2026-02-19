@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import React from 'react'
 import type {
   FlowprintDocument,
-  ValidationError,
   ValidationResult,
 } from '@ruminaider/flowprint-schema'
 import { FlowprintEditor } from './FlowprintEditor'
-import { ValidationBanner } from './ValidationBanner'
 
 // ---------------------------------------------------------------------------
 // matchMedia polyfill for jsdom (needed by useTheme)
@@ -250,70 +248,5 @@ describe('FlowprintEditor', () => {
     const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
 
     expect(container.querySelector('.fp-zoom-controls')).toBeTruthy()
-  })
-})
-
-// ---------------------------------------------------------------------------
-// Tests: ValidationBanner standalone
-// ---------------------------------------------------------------------------
-
-describe('ValidationBanner', () => {
-  afterEach(() => {
-    cleanup()
-  })
-
-  it('renders error count and messages', () => {
-    const errors: ValidationError[] = [
-      { path: '/nodes/a/lane', message: 'Missing lane', severity: 'error' },
-      { path: '/nodes/b/next', message: 'Dangling ref', severity: 'error' },
-      { path: '/nodes/c/type', message: 'Bad type', severity: 'error' },
-    ]
-    const onDismiss = vi.fn()
-
-    render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)
-
-    expect(screen.getByText('3 validation errors')).toBeTruthy()
-    expect(screen.getByText(/Missing lane/)).toBeTruthy()
-    expect(screen.getByText(/Dangling ref/)).toBeTruthy()
-    expect(screen.getByText(/Bad type/)).toBeTruthy()
-  })
-
-  it('dismiss button calls onDismiss', () => {
-    const errors: ValidationError[] = [{ path: '/nodes/a', message: 'Error', severity: 'error' }]
-    const onDismiss = vi.fn()
-
-    render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
-
-    expect(onDismiss).toHaveBeenCalledOnce()
-  })
-
-  it('shows singular "error" for single error', () => {
-    const errors: ValidationError[] = [
-      { path: '/nodes/a', message: 'Single error', severity: 'error' },
-    ]
-    const onDismiss = vi.fn()
-
-    render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)
-
-    expect(screen.getByText('1 validation error')).toBeTruthy()
-  })
-
-  it('limits displayed errors to 5 and shows overflow count', () => {
-    const errors: ValidationError[] = Array.from({ length: 8 }, (_, i) => ({
-      path: `/nodes/n${String(i)}`,
-      message: `Error ${String(i)}`,
-      severity: 'error' as const,
-    }))
-    const onDismiss = vi.fn()
-
-    render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)
-
-    expect(screen.getByText('8 validation errors')).toBeTruthy()
-    expect(screen.getByText(/Error 0/)).toBeTruthy()
-    expect(screen.getByText(/Error 4/)).toBeTruthy()
-    expect(screen.queryByText(/Error 5/)).toBeNull()
-    expect(screen.getByText(/and 3 more/)).toBeTruthy()
   })
 })

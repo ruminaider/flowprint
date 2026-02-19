@@ -8,11 +8,11 @@ import {
   type ReactFlowProps,
 } from '@xyflow/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
-import { nodeTypes } from '../nodes'
-import { edgeTypes } from '../edges'
+import { nodeTypes } from '../nodes-v2/specs'
+import { edgeTypes } from '../edges-v2'
 import { computeLayout } from '../layout'
-import LaneBackground from './LaneBackground'
-import LineOfVisibility from './LineOfVisibility'
+import { LaneBackground } from '../components-v2/LaneBackground'
+import type { LaneBackgroundLane } from '../components-v2/LaneBackground'
 
 /**
  * Props for {@link FlowprintViewer}.
@@ -51,6 +51,26 @@ export function FlowprintViewer({
 }: FlowprintViewerProps) {
   const layout = useMemo(() => computeLayout(doc), [doc])
 
+  const v2Lanes: LaneBackgroundLane[] = useMemo(() => {
+    const laneList = layout.lanes
+    return laneList.map((lane, idx) => ({
+      id: lane.laneId,
+      label: lane.label,
+      color: lane.color,
+      y: lane.y,
+      height: lane.height,
+      collapsed: false,
+      lineOfVisibilityBelow:
+        layout.lineOfVisibilityY !== null &&
+        idx < laneList.length - 1 &&
+        lane.y + lane.height <= layout.lineOfVisibilityY &&
+        (laneList[idx + 1]?.y ?? 0) >= layout.lineOfVisibilityY,
+    }))
+  }, [layout])
+
+  const emptySet = useMemo(() => new Set<string>(), [])
+  const noop = useMemo(() => () => {}, [])
+
   const defaultViewport = useMemo(() => ({ x: 0, y: 0, zoom: 1 }), [])
 
   const proOptions: ReactFlowProps['proOptions'] = useMemo(() => ({ hideAttribution: true }), [])
@@ -84,10 +104,13 @@ export function FlowprintViewer({
         snapGrid={[20, 20]}
         proOptions={proOptions}
       >
-        <LaneBackground lanes={layout.lanes} totalWidth={layout.width} />
-        {layout.lineOfVisibilityY !== null && (
-          <LineOfVisibility y={layout.lineOfVisibilityY} totalWidth={layout.width} />
-        )}
+        <LaneBackground
+          lanes={v2Lanes}
+          totalWidth={layout.width}
+          collapsedLaneIds={emptySet}
+          onToggleCollapse={noop}
+          onRename={noop}
+        />
         {showGrid && (
           <Background
             variant={BackgroundVariant.Dots}
