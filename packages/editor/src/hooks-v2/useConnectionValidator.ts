@@ -2,7 +2,7 @@ import type { Node, Edge, Connection } from '@xyflow/react'
 
 export function isValidConnection(
   connection: Connection,
-  nodes: Node[],
+  _nodes: Node[],
   edges: Edge[],
 ): boolean {
   const { source, target } = connection

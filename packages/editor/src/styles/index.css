@@ -1,4 +1,12 @@
 @import './tokens.css';
+@import './editor.css';
 @import './nodes.css';
 @import './edges.css';
-/* Additional module imports will be added by each workstream */
+@import './island.css';
+@import './toolbar.css';
+@import './tabs.css';
+@import './popover.css';
+@import './command-palette.css';
+@import './lanes.css';
+@import './zoom.css';
+@import './bottom-panel.css';

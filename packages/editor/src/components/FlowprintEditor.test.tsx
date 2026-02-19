@@ -51,6 +51,17 @@ vi.mock('@xyflow/react', () => ({
     React.createElement('div', props, children),
   useNodesState: (initial: unknown[]) => [initial, vi.fn(), vi.fn()],
   useViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+  useReactFlow: () => ({
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+    fitView: vi.fn(),
+    getZoom: () => 1,
+    setViewport: vi.fn(),
+    getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+    flowToScreenPosition: (pos: { x: number; y: number }) => pos,
+    screenToFlowPosition: (pos: { x: number; y: number }) => pos,
+  }),
+  useOnViewportChange: vi.fn(),
 }))
 
 vi.mock('../layout', () => ({
@@ -67,8 +78,26 @@ vi.mock('../layout', () => ({
   autoLayout: vi.fn(() => new Map()),
 }))
 
-vi.mock('./LaneBackground', () => ({ default: () => null }))
-vi.mock('./LineOfVisibility', () => ({ default: () => null }))
+vi.mock('../nodes-v2/specs', () => ({
+  nodeTypes: {},
+}))
+
+vi.mock('../nodes-v2/registry', () => ({
+  registerNodeSpec: vi.fn(),
+  getNodeSpec: () => null,
+  getAllNodeSpecs: () => [],
+  getNodeSpecOrThrow: () => {
+    throw new Error('not found')
+  },
+}))
+
+vi.mock('../edges-v2', () => ({
+  edgeTypes: {},
+}))
+
+vi.mock('../components-v2/LaneBackground', () => ({
+  LaneBackground: () => null,
+}))
 
 // ---------------------------------------------------------------------------
 // Track validate calls -- start with valid
@@ -83,6 +112,7 @@ vi.mock('@ruminaider/flowprint-schema', async () => {
   return {
     ...actual,
     validate: () => mockValidate(),
+    serialize: () => 'schema: flowprint/1.0\nname: test',
   }
 })
 
@@ -131,7 +161,6 @@ describe('FlowprintEditor', () => {
 
     render(<FlowprintEditor value={doc} onChange={onChange} />)
 
-    // Since ReactFlow is a forwardRef mock, we verify the component rendered
     expect(screen.getByTestId('react-flow')).toBeTruthy()
   })
 
@@ -145,74 +174,12 @@ describe('FlowprintEditor', () => {
     expect(screen.getByTestId('react-flow')).toBeTruthy()
   })
 
-  it('shows validation banner when document has validation errors', () => {
-    mockValidate.mockReturnValue({
-      valid: false,
-      errors: [
-        {
-          path: '/nodes/start/lane',
-          message: 'Lane "nonexistent" does not exist',
-          severity: 'error',
-        },
-      ],
-    })
-
-    const doc = makeDoc({
-      nodes: {
-        start: {
-          type: 'action',
-          lane: 'nonexistent',
-          label: 'Start',
-        },
-      },
-    })
-    const onChange = vi.fn()
-
-    render(<FlowprintEditor value={doc} onChange={onChange} />)
-
-    expect(screen.getByText('1 validation error')).toBeTruthy()
-    expect(screen.getByText(/Lane "nonexistent" does not exist/)).toBeTruthy()
-  })
-
-  it('validation banner can be dismissed', () => {
-    mockValidate.mockReturnValue({
-      valid: false,
-      errors: [
-        {
-          path: '/nodes/start/lane',
-          message: 'Lane ref invalid',
-          severity: 'error',
-        },
-      ],
-    })
-
-    const doc = makeDoc({
-      nodes: {
-        start: {
-          type: 'action',
-          lane: 'nonexistent',
-          label: 'Start',
-        },
-      },
-    })
-    const onChange = vi.fn()
-
-    render(<FlowprintEditor value={doc} onChange={onChange} />)
-
-    expect(screen.getByText('1 validation error')).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
-
-    expect(screen.queryByText('1 validation error')).toBeNull()
-  })
-
   it('calls onChange when provided and accepts the callback', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
     const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
 
-    // Verify the component mounted successfully with onChange wired up
     expect(container.querySelector('.fp-editor')).toBeTruthy()
   })
 
@@ -248,61 +215,41 @@ describe('FlowprintEditor', () => {
     expect(el?.className).toContain('my-custom')
   })
 
-  it('shows Tidy Layout button when not readOnly', () => {
-    const doc = makeDoc()
-    const onChange = vi.fn()
-
-    render(<FlowprintEditor value={doc} onChange={onChange} />)
-
-    expect(screen.getByText('Tidy Layout')).toBeTruthy()
-  })
-
-  it('hides Tidy Layout button in readOnly mode', () => {
-    const doc = makeDoc()
-    const onChange = vi.fn()
-
-    render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
-
-    expect(screen.queryByText('Tidy Layout')).toBeNull()
-  })
-
-  it('hides NodePalette in readOnly mode', () => {
-    const doc = makeDoc()
-    const onChange = vi.fn()
-
-    render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
-
-    // readOnly hides interactive elements
-    expect(screen.queryByText('Tidy Layout')).toBeNull()
-  })
-
-  it('renders sidebar with Properties tab active by default', () => {
+  it('renders TabBar with Graph tab', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
     const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
 
-    expect(container.querySelector('.fp-sidebar')).toBeTruthy()
-    const tabs = container.querySelectorAll('[role="tab"]')
-    expect(tabs.length).toBeGreaterThanOrEqual(2)
+    expect(container.querySelector('.fp-tab-bar')).toBeTruthy()
+    expect(screen.getByText('Graph')).toBeTruthy()
   })
 
-  it('hides sidebar in readOnly mode', () => {
+  it('renders Toolbar when not readOnly', () => {
+    const doc = makeDoc()
+    const onChange = vi.fn()
+
+    const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
+
+    expect(container.querySelector('.fp-toolbar')).toBeTruthy()
+  })
+
+  it('hides Toolbar in readOnly mode', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
     const { container } = render(<FlowprintEditor value={doc} onChange={onChange} readOnly />)
 
-    expect(container.querySelector('.fp-sidebar')).toBeNull()
+    expect(container.querySelector('.fp-toolbar')).toBeNull()
   })
 
-  it('renders NodePalette with dock variant class', () => {
+  it('renders ZoomControls', () => {
     const doc = makeDoc()
     const onChange = vi.fn()
 
     const { container } = render(<FlowprintEditor value={doc} onChange={onChange} />)
 
-    expect(container.querySelector('.fp-palette--dock')).toBeTruthy()
+    expect(container.querySelector('.fp-zoom-controls')).toBeTruthy()
   })
 })
 
@@ -364,12 +311,9 @@ describe('ValidationBanner', () => {
     render(<ValidationBanner errors={errors} onDismiss={onDismiss} />)
 
     expect(screen.getByText('8 validation errors')).toBeTruthy()
-    // First 5 shown
     expect(screen.getByText(/Error 0/)).toBeTruthy()
     expect(screen.getByText(/Error 4/)).toBeTruthy()
-    // 6th not shown
     expect(screen.queryByText(/Error 5/)).toBeNull()
-    // Overflow indicator
     expect(screen.getByText(/and 3 more/)).toBeTruthy()
   })
 })

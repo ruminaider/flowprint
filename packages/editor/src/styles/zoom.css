@@ -1,0 +1,61 @@
+/* ── Zoom Controls ────────────────────────── */
+
+.fp-zoom-controls {
+  position: absolute;
+  bottom: var(--fp-space-4);
+  right: var(--fp-space-4);
+  z-index: var(--fp-z-toolbar);
+  display: flex;
+  align-items: center;
+  gap: var(--fp-space-1);
+  padding: var(--fp-space-1);
+}
+
+.fp-zoom-controls__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--fp-radius-md);
+  background: transparent;
+  color: var(--fp-text-secondary);
+  cursor: pointer;
+  transition: background var(--fp-transition-fast), color var(--fp-transition-fast);
+}
+
+.fp-zoom-controls__button:hover {
+  background: var(--fp-color-primary-subtle);
+  color: var(--fp-text-primary);
+}
+
+.fp-zoom-controls__percentage {
+  min-width: 40px;
+  text-align: center;
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-mono);
+  color: var(--fp-text-secondary);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: var(--fp-space-1);
+  border-radius: var(--fp-radius-sm);
+}
+
+.fp-zoom-controls__percentage:hover {
+  background: var(--fp-color-primary-subtle);
+}
+
+.fp-zoom-controls__percentage-input {
+  width: 48px;
+  text-align: center;
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-mono);
+  color: var(--fp-text-primary);
+  border: 1px solid var(--fp-border-focus);
+  border-radius: var(--fp-radius-sm);
+  background: transparent;
+  padding: var(--fp-space-1);
+  outline: none;
+}

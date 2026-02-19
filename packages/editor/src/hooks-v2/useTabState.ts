@@ -56,10 +56,12 @@ export function useTabState(): UseTabStateReturn {
 
     // Compute neighbor before updating state
     let neighborId = 'graph'
-    if (idx > 0 && idx - 1 < filtered.length) {
-      neighborId = filtered[idx - 1].id
-    } else if (idx < filtered.length) {
-      neighborId = filtered[idx].id
+    const prevTab = filtered[idx - 1]
+    const nextTab = filtered[idx]
+    if (idx > 0 && prevTab) {
+      neighborId = prevTab.id
+    } else if (nextTab) {
+      neighborId = nextTab.id
     }
 
     setTabs(filtered)

@@ -1,0 +1,104 @@
+.fp-bottom-panel {
+  background: var(--fp-bg-bottom-panel);
+  border-top: 1px solid var(--fp-border-default);
+  z-index: var(--fp-z-bottom-panel);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--fp-font-sans);
+  overflow: hidden;
+}
+
+.fp-bottom-panel__resize {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background var(--fp-transition-fast);
+  flex-shrink: 0;
+}
+
+.fp-bottom-panel__resize:hover {
+  background: var(--fp-color-primary);
+}
+
+.fp-bottom-panel__header {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--fp-space-2);
+  border-bottom: 1px solid var(--fp-border-default);
+  flex-shrink: 0;
+}
+
+.fp-bottom-panel__tab {
+  padding: var(--fp-space-1) var(--fp-space-3);
+  border: none;
+  background: transparent;
+  color: var(--fp-text-secondary);
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-sans);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.fp-bottom-panel__tab:hover {
+  color: var(--fp-text-primary);
+}
+
+.fp-bottom-panel__tab--active {
+  color: var(--fp-text-primary);
+  border-bottom-color: var(--fp-color-primary);
+}
+
+.fp-bottom-panel__close {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--fp-radius-sm);
+  background: transparent;
+  color: var(--fp-text-tertiary);
+  cursor: pointer;
+}
+
+.fp-bottom-panel__close:hover {
+  background: var(--fp-color-error);
+  color: var(--fp-text-on-accent);
+}
+
+.fp-bottom-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--fp-space-3);
+}
+
+.fp-bottom-panel__yaml {
+  font-family: var(--fp-font-mono);
+  font-size: var(--fp-text-sm);
+  color: var(--fp-text-primary);
+  white-space: pre;
+  margin: 0;
+  line-height: var(--fp-line-height);
+}
+
+.fp-bottom-panel__error-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fp-bottom-panel__error-item {
+  padding: var(--fp-space-2);
+  border-bottom: 1px solid var(--fp-border-default);
+  color: var(--fp-color-error);
+  font-size: var(--fp-text-sm);
+}
+
+.fp-bottom-panel__error-path {
+  color: var(--fp-text-secondary);
+  font-family: var(--fp-font-mono);
+  font-size: var(--fp-text-xs);
+  margin-top: var(--fp-space-1);
+}

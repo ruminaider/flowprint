@@ -1,0 +1,54 @@
+/* Editor layout — top-level shell */
+
+.fp-editor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--fp-bg-canvas);
+  color: var(--fp-text-primary);
+  font-family: var(--fp-font-sans);
+}
+
+.fp-editor__main {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.fp-editor__canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Tab content — shown when a non-graph tab is active */
+
+.fp-editor__tab-content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: var(--fp-space-4);
+  background: var(--fp-bg-canvas);
+}
+
+.fp-editor__node-editor {
+  max-width: 600px;
+  margin: var(--fp-space-4) auto;
+  padding: var(--fp-space-4);
+  background: var(--fp-bg-node);
+  border-radius: var(--fp-radius-lg);
+  border: 1px solid var(--fp-border-default);
+}
+
+.fp-editor__tab-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--fp-text-muted);
+  font-size: var(--fp-font-md);
+}
