@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { SEL, EDITOR_URL } from './selectors'
+import { SEL, EDITOR_URL, clickNode } from './selectors'
 
 test.describe('Nodes and selection', () => {
   test.beforeEach(async ({ page }) => {
@@ -28,17 +28,17 @@ test.describe('Nodes and selection', () => {
   })
 
   test('clicking a node selects it', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(1)
     await expect(page.locator(SEL.nodeById('start_action'))).toHaveClass(/fp-node--selected/)
   })
 
   test('clicking canvas background deselects all nodes', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(1)
 
     // Click on the React Flow pane (canvas background)
-    await page.locator('.react-flow__pane').click()
+    await page.locator('.react-flow__pane').dispatchEvent('click')
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(0)
   })
 
@@ -48,10 +48,10 @@ test.describe('Nodes and selection', () => {
   })
 
   test('clicking a different node deselects the previous one', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.nodeById('start_action'))).toHaveClass(/fp-node--selected/)
 
-    await page.locator(SEL.nodeById('check_status')).click()
+    await clickNode(page, 'check_status')
     await expect(page.locator(SEL.nodeById('check_status'))).toHaveClass(/fp-node--selected/)
     await expect(page.locator(SEL.nodeById('start_action'))).not.toHaveClass(/fp-node--selected/)
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(1)

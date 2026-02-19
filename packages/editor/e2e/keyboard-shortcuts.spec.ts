@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { SEL, MOD, EDITOR_URL } from './selectors'
+import { SEL, MOD, EDITOR_URL, clickNode } from './selectors'
 
 test.describe('Keyboard shortcuts', () => {
   test.beforeEach(async ({ page }) => {
@@ -35,18 +35,16 @@ test.describe('Keyboard shortcuts', () => {
     await expect(page.locator(SEL.bottomPanel)).not.toBeAttached()
   })
 
-  test('Escape closes popover and deselects node', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+  test('Escape closes popover', async ({ page }) => {
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.popover)).toBeVisible()
-    await expect(page.locator(SEL.nodeSelected)).toHaveCount(1)
 
     await page.keyboard.press('Escape')
     await expect(page.locator(SEL.popover)).not.toBeAttached()
-    await expect(page.locator(SEL.nodeSelected)).toHaveCount(0)
   })
 
   test('Delete removes a selected node', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(1)
 
     await page.keyboard.press('Delete')

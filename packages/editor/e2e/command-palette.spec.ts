@@ -31,7 +31,8 @@ test.describe('Command Palette', () => {
     await page.keyboard.press(`${MOD}+k`)
     await expect(page.locator(SEL.cmdPalette)).toBeVisible()
 
-    await page.locator(SEL.cmdPaletteBackdrop).click({ force: true })
+    // Backdrop is full-screen overlay — dispatch click directly
+    await page.locator(SEL.cmdPaletteBackdrop).dispatchEvent('click')
     await expect(page.locator(SEL.cmdPalette)).not.toBeAttached()
   })
 

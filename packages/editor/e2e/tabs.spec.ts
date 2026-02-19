@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { SEL, EDITOR_URL } from './selectors'
+import { SEL, EDITOR_URL, dblClickNode } from './selectors'
 
 test.describe('Tabs', () => {
   test.beforeEach(async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe('Tabs', () => {
   })
 
   test('double-clicking a node opens a node tab', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).dblclick()
+    await dblClickNode(page, 'start_action')
     const nodeTab = page.locator(SEL.tabById('start_action'))
     await expect(nodeTab).toBeVisible()
     await expect(nodeTab).toHaveClass(/fp-tab--active/)
@@ -31,7 +31,7 @@ test.describe('Tabs', () => {
 
   test('clicking Graph tab switches back to canvas', async ({ page }) => {
     // Open a node tab first
-    await page.locator(SEL.nodeById('start_action')).dblclick()
+    await dblClickNode(page, 'start_action')
     await expect(page.locator(SEL.tabById('start_action'))).toHaveClass(/fp-tab--active/)
 
     // Switch back to Graph
@@ -41,7 +41,7 @@ test.describe('Tabs', () => {
   })
 
   test('node tab close button removes the tab', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).dblclick()
+    await dblClickNode(page, 'start_action')
     const nodeTab = page.locator(SEL.tabById('start_action'))
     await expect(nodeTab).toBeVisible()
 

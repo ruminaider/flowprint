@@ -65,7 +65,23 @@ export const SEL = {
   // React Flow internals
   edge: '.react-flow__edge',
   reactFlow: '.react-flow',
+  // React Flow node wrapper — use for clicks (RF registers handlers here)
+  rfNode: (id: string) => `.react-flow__node[data-id="${id}"]`,
 } as const
+
+/**
+ * Click a React Flow node reliably.
+ * React Flow's background SVG intercepts pointer events, so we dispatch
+ * a real click event on the RF node wrapper element.
+ */
+export async function clickNode(page: import('@playwright/test').Page, nodeId: string) {
+  await page.locator(SEL.rfNode(nodeId)).dispatchEvent('click')
+}
+
+/** Double-click a React Flow node reliably. */
+export async function dblClickNode(page: import('@playwright/test').Page, nodeId: string) {
+  await page.locator(SEL.rfNode(nodeId)).dispatchEvent('dblclick')
+}
 
 export const EDITOR_URL = (variant: string) =>
   `/iframe.html?viewMode=story&id=editor-flowprinteditor--${variant}`

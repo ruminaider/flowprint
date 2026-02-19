@@ -39,7 +39,7 @@ test.describe('Lanes', () => {
 
     test('all 6 node types render', async ({ page }) => {
       for (const type of ['action', 'switch', 'parallel', 'wait', 'error', 'terminal']) {
-        await expect(page.locator(SEL.node(type))).toBeAttached()
+        await expect(page.locator(SEL.node(type)).first()).toBeAttached()
       }
     })
   })

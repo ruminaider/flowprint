@@ -13,7 +13,7 @@ test.describe('FlowprintViewer', () => {
 
   test('all 6 node types are present', async ({ page }) => {
     for (const type of ['action', 'switch', 'parallel', 'wait', 'error', 'terminal']) {
-      await expect(page.locator(SEL.node(type))).toBeAttached()
+      await expect(page.locator(SEL.node(type)).first()).toBeAttached()
     }
   })
 
@@ -37,8 +37,9 @@ test.describe('FlowprintViewer', () => {
     await expect(page.locator(SEL.toolbar)).toHaveCount(0)
     await expect(page.locator(SEL.tabBar)).toHaveCount(0)
 
-    // Click a node — no popover should appear
-    await page.locator(SEL.node('action')).first().click()
+    // Viewer has elementsSelectable=false so clicking shouldn't trigger anything
+    // Use dispatchEvent since viewer nodes aren't meant to be interactive
+    await page.locator(SEL.node('action')).first().dispatchEvent('click')
     await expect(page.locator(SEL.popover)).not.toBeAttached()
   })
 })

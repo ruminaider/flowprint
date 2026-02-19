@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { SEL, EDITOR_URL } from './selectors'
+import { SEL, EDITOR_URL, clickNode } from './selectors'
 
 test.describe('Read-only mode', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,12 +12,12 @@ test.describe('Read-only mode', () => {
   })
 
   test('clicking a node does NOT open a popover', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.popover)).not.toBeAttached()
   })
 
   test('clicking a node does NOT add selected class', async ({ page }) => {
-    await page.locator(SEL.nodeById('start_action')).click()
+    await clickNode(page, 'start_action')
     await expect(page.locator(SEL.nodeSelected)).toHaveCount(0)
   })
 
