@@ -1,0 +1,95 @@
+.fp-lane {
+  position: absolute;
+  left: 0;
+}
+
+.fp-lane__header {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--fp-space-2);
+  background: color-mix(in srgb, var(--lane-color) 15%, transparent);
+  border-bottom: 1px solid var(--fp-border-default);
+  font-family: var(--fp-font-sans);
+}
+
+.fp-lane__drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--fp-text-tertiary);
+}
+
+.fp-lane__drag-handle:active {
+  cursor: grabbing;
+}
+
+.fp-lane__name {
+  font-size: var(--fp-text-sm);
+  font-weight: 500;
+  color: var(--fp-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fp-lane__name-input {
+  width: 100%;
+  border: 1px solid var(--fp-border-focus);
+  border-radius: var(--fp-radius-sm);
+  padding: var(--fp-space-1);
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-sans);
+  color: var(--fp-text-primary);
+  background: var(--fp-bg-surface);
+  outline: none;
+}
+
+.fp-lane__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--fp-text-tertiary);
+  transition: color var(--fp-transition-fast);
+}
+
+.fp-lane__chevron:hover {
+  color: var(--fp-text-primary);
+}
+
+.fp-lane__body {
+  background: color-mix(in srgb, var(--lane-color) 5%, transparent);
+}
+
+.fp-lane--collapsed .fp-lane__body {
+  display: none;
+}
+
+.fp-lane--drag-over {
+  outline: 2px dashed var(--fp-color-primary);
+  outline-offset: -2px;
+}
+
+.fp-lane__lov {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 2px dashed var(--fp-color-warning);
+}
+
+.fp-lane__lov-badge {
+  position: absolute;
+  right: var(--fp-space-4);
+  bottom: var(--fp-space-1);
+  padding: var(--fp-space-1) var(--fp-space-2);
+  background: var(--fp-bg-island);
+  border: 1px solid var(--fp-color-warning);
+  border-radius: var(--fp-radius-sm);
+  font-size: var(--fp-text-xs);
+  color: var(--fp-color-warning);
+  font-family: var(--fp-font-sans);
+}

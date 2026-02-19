@@ -1,0 +1,9 @@
+.fp-island {
+  background: var(--fp-bg-island);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--fp-border-default);
+  border-radius: var(--fp-radius-xl);
+  box-shadow: var(--fp-shadow-island);
+  font-family: var(--fp-font-sans);
+}

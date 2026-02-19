@@ -1,0 +1,107 @@
+/* ── Node Shell (v2) ────────────────────────── */
+
+.fp-node {
+  width: 220px;
+  min-height: 64px;
+  background: var(--fp-bg-node);
+  border: 1px solid var(--fp-border-default);
+  border-radius: var(--fp-radius-lg);
+  font-family: var(--fp-font-sans);
+  cursor: grab;
+  transition:
+    border-color var(--fp-transition-fast),
+    box-shadow var(--fp-transition-fast);
+  position: relative;
+}
+
+.fp-node:hover {
+  border-color: var(--fp-border-strong);
+  box-shadow: var(--fp-shadow-sm);
+}
+
+.fp-node--selected {
+  border-color: var(--fp-color-primary);
+  border-width: 2px;
+  box-shadow: var(--fp-shadow-md);
+}
+
+.fp-node--unassigned {
+  border-style: dashed;
+}
+
+.fp-node--error {
+  border-color: var(--fp-color-error);
+}
+
+.fp-node__header {
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: center;
+  gap: var(--fp-space-2);
+  height: 36px;
+  padding: 0 var(--fp-space-2);
+  border-left: 2px solid var(--node-accent);
+}
+
+.fp-node__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--fp-radius-sm);
+  background: var(--node-accent-subtle);
+  color: var(--node-accent);
+}
+
+.fp-node__name {
+  font-size: var(--fp-text-base);
+  font-weight: 500;
+  color: var(--fp-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fp-node__menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--fp-radius-sm);
+  cursor: pointer;
+  color: var(--fp-text-tertiary);
+  opacity: 0;
+  transition: opacity var(--fp-transition-fast);
+}
+
+.fp-node:hover .fp-node__menu {
+  opacity: 1;
+}
+
+.fp-node__body {
+  padding: var(--fp-space-1) var(--fp-space-2) var(--fp-space-2);
+  font-size: var(--fp-text-sm);
+  color: var(--fp-text-secondary);
+}
+
+/* ── Handle overrides ───────────────────────── */
+
+.fp-node .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--fp-border-default);
+  background: var(--fp-bg-node);
+  transition: transform var(--fp-transition-fast);
+}
+
+.fp-node .react-flow__handle::after {
+  content: '';
+  position: absolute;
+  inset: -14px;
+}
+
+.fp-node .react-flow__handle:hover {
+  transform: scale(1.5);
+}

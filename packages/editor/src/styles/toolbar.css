@@ -1,0 +1,96 @@
+/* ── Toolbar ───────────────────────────────── */
+
+.fp-toolbar {
+  position: absolute;
+  bottom: var(--fp-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--fp-z-toolbar);
+  display: flex;
+  align-items: center;
+  gap: var(--fp-space-1);
+  padding: var(--fp-space-1);
+}
+
+.fp-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--fp-space-1);
+}
+
+.fp-toolbar__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--fp-border-default);
+  margin: 0 var(--fp-space-1);
+}
+
+.fp-toolbar__button {
+  display: flex;
+  align-items: center;
+  gap: var(--fp-space-1);
+  padding: var(--fp-space-1) var(--fp-space-2);
+  border: none;
+  border-radius: var(--fp-radius-md);
+  background: transparent;
+  color: var(--fp-text-secondary);
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-sans);
+  cursor: pointer;
+  transition: background var(--fp-transition-fast), color var(--fp-transition-fast);
+}
+
+.fp-toolbar__button:hover {
+  background: var(--fp-color-primary-subtle);
+  color: var(--fp-text-primary);
+}
+
+.fp-toolbar__button--active {
+  background: var(--fp-color-primary-subtle);
+  color: var(--fp-color-primary);
+}
+
+.fp-toolbar__button-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fp-toolbar__button-label {
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .fp-toolbar__button-label {
+    display: none;
+  }
+}
+
+/* ── Tooltip ──────────────────────────────── */
+
+.fp-tooltip {
+  position: relative;
+}
+
+.fp-tooltip__text {
+  position: absolute;
+  bottom: calc(100% + var(--fp-space-2));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--fp-space-1) var(--fp-space-2);
+  background: var(--fp-bg-elevated);
+  border: 1px solid var(--fp-border-default);
+  border-radius: var(--fp-radius-sm);
+  font-size: var(--fp-text-xs);
+  color: var(--fp-text-primary);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--fp-transition-base);
+}
+
+.fp-tooltip:hover .fp-tooltip__text {
+  opacity: 1;
+  transition-delay: 300ms;
+}
