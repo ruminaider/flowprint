@@ -31,13 +31,14 @@
   },
   "dependencies": {
     "@ruminaider/flowprint-schema": "workspace:*",
-    "@xyflow/react": "^12.10.0"
+    "@xyflow/react": "^12.10.0",
+    "lucide-react": "^0.575.0"
   },
   "peerDependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0",
-    "web-tree-sitter": "^0.24.0",
-    "@monaco-editor/react": "^4.7.0"
+    "web-tree-sitter": "^0.24.0"
   },
   "peerDependenciesMeta": {
     "web-tree-sitter": {

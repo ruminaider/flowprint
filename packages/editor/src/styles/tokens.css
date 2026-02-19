@@ -1,0 +1,134 @@
+/* ── Spacing (8px grid) ────────────────────── */
+:root {
+  --fp-space-1: 4px;
+  --fp-space-2: 8px;
+  --fp-space-3: 12px;
+  --fp-space-4: 16px;
+  --fp-space-5: 24px;
+  --fp-space-6: 32px;
+  --fp-space-8: 48px;
+
+  /* ── Typography ────────────────────────────── */
+  --fp-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --fp-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --fp-text-xs: 11px;
+  --fp-text-sm: 12px;
+  --fp-text-base: 13px;
+  --fp-text-lg: 14px;
+  --fp-text-xl: 16px;
+  --fp-line-height: 1.5;
+
+  /* ── Border Radius ─────────────────────────── */
+  --fp-radius-sm: 4px;
+  --fp-radius-md: 6px;
+  --fp-radius-lg: 8px;
+  --fp-radius-xl: 12px;
+
+  /* ── Shadows ───────────────────────────────── */
+  --fp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --fp-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --fp-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --fp-shadow-island: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+  /* ── Z-Index Hierarchy ─────────────────────── */
+  --fp-z-canvas: 1;
+  --fp-z-lanes: 2;
+  --fp-z-nodes: 3;
+  --fp-z-edges: 4;
+  --fp-z-minimap: 50;
+  --fp-z-toolbar: 60;
+  --fp-z-popover: 70;
+  --fp-z-bottom-panel: 80;
+  --fp-z-tabs: 90;
+  --fp-z-command-palette: 100;
+  --fp-z-modal: 200;
+  --fp-z-toast: 300;
+
+  /* ── Transitions ───────────────────────────── */
+  --fp-transition-fast: 100ms ease;
+  --fp-transition-base: 150ms ease;
+  --fp-transition-slow: 250ms ease;
+}
+
+/* ── Light Theme ─────────────────────────────── */
+[data-fp-theme='light'] {
+  --fp-bg-canvas: #fafafa;
+  --fp-bg-surface: #ffffff;
+  --fp-bg-island: rgba(255, 255, 255, 0.85);
+  --fp-bg-elevated: #ffffff;
+  --fp-bg-muted: #f5f5f5;
+  --fp-bg-node: #ffffff;
+
+  --fp-text-primary: #1a1a1a;
+  --fp-text-secondary: #6b6b6b;
+  --fp-text-tertiary: #999999;
+  --fp-text-on-accent: #ffffff;
+
+  --fp-border-default: #e5e5e5;
+  --fp-border-strong: #d0d0d0;
+  --fp-border-focus: var(--fp-color-primary);
+
+  --fp-color-primary: #3b82f6;
+  --fp-color-primary-subtle: #eff6ff;
+  --fp-color-success: #22c55e;
+  --fp-color-warning: #eab308;
+  --fp-color-error: #ef4444;
+  --fp-color-info: #06b6d4;
+
+  /* Node type colors (light) */
+  --fp-node-orange: #FF9243;
+  --fp-node-orange-subtle: rgba(255, 146, 67, 0.10);
+  --fp-node-purple: #A374FF;
+  --fp-node-purple-subtle: rgba(163, 116, 255, 0.10);
+  --fp-node-cyan: #06b6d4;
+  --fp-node-cyan-subtle: rgba(6, 182, 212, 0.10);
+  --fp-node-yellow: #ca8a04;
+  --fp-node-yellow-subtle: rgba(202, 138, 4, 0.10);
+  --fp-node-red: #ef4444;
+  --fp-node-red-subtle: rgba(239, 68, 68, 0.10);
+  --fp-node-green: #22c55e;
+  --fp-node-green-subtle: rgba(34, 197, 94, 0.10);
+}
+
+/* ── Dark Theme ──────────────────────────────── */
+[data-fp-theme='dark'] {
+  --fp-bg-canvas: #101415;        /* Slate Shadow */
+  --fp-bg-surface: #190B14;       /* Velvet Aubergine */
+  --fp-bg-island: rgba(16, 20, 21, 0.88);
+  --fp-bg-elevated: #262020;      /* Chocolate Noir */
+  --fp-bg-muted: #110904;         /* Earthly Mocha */
+  --fp-bg-node: #262020;          /* Chocolate Noir */
+  --fp-bg-tab-bar: #0E1514;       /* Forest Shadow */
+  --fp-bg-bottom-panel: #0B1623;  /* Midnight Sapphire */
+  --fp-bg-lane-header: #110904;   /* Earthly Mocha */
+
+  --fp-text-primary: #C3C3C3;
+  --fp-text-secondary: rgba(195, 195, 195, 0.65);
+  --fp-text-tertiary: rgba(195, 195, 195, 0.4);
+  --fp-text-on-accent: #110904;
+
+  --fp-border-default: rgba(195, 195, 195, 0.12);
+  --fp-border-strong: rgba(195, 195, 195, 0.22);
+  --fp-border-focus: #A374FF;
+
+  --fp-color-primary: #A374FF;
+  --fp-color-primary-subtle: rgba(163, 116, 255, 0.12);
+  --fp-color-success: #3FDC77;
+  --fp-color-warning: #FEF455;
+  --fp-color-error: #FF362B;
+  --fp-color-info: #A8FFFD;
+
+  /* Node type colors (dark) */
+  --fp-node-orange: #FF9243;
+  --fp-node-orange-subtle: rgba(255, 146, 67, 0.15);
+  --fp-node-purple: #A374FF;
+  --fp-node-purple-subtle: rgba(163, 116, 255, 0.15);
+  --fp-node-cyan: #A8FFFD;
+  --fp-node-cyan-subtle: rgba(168, 255, 253, 0.12);
+  --fp-node-yellow: #FEF455;
+  --fp-node-yellow-subtle: rgba(254, 244, 85, 0.12);
+  --fp-node-red: #FF362B;
+  --fp-node-red-subtle: rgba(255, 54, 43, 0.15);
+  --fp-node-green: #3FDC77;
+  --fp-node-green-subtle: rgba(63, 220, 119, 0.12);
+}
