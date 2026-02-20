@@ -91,11 +91,11 @@ The editor provides a visual canvas for building service blueprints. Here are th
 
 ### Lanes
 
-Add swimlanes to represent different actors or tiers in your architecture (e.g., Customer, Backend, Database). Use the **Lane Panel** on the left to add, rename, reorder, or remove lanes. Each lane has a visibility (`external` for customer-facing, `internal` for backend systems) and a display order.
+Lanes are horizontal bands on the canvas. Double-click a lane header to rename it, drag the handle to reorder lanes, or use the Command Palette (Cmd+K / Ctrl+K) to add and remove lanes. Each lane has a visibility (`external` for customer-facing, `internal` for backend systems) and a display order.
 
 ### Nodes
 
-Drag nodes from the **Node Palette** onto the canvas. Six node types are available:
+Add nodes from the **floating toolbar** at the bottom of the canvas, or use the Command Palette (Cmd+K / Ctrl+K) to search for node types. Six node types are available:
 
 | Type       | Purpose                                                    |
 | ---------- | ---------------------------------------------------------- |
@@ -112,11 +112,11 @@ Click a node's output handle and drag to another node's input handle to create a
 
 ### Entry Points
 
-Select an action node and use the properties panel to add **entry points** -- references to the code that implements each step. Each entry point specifies a `file` (relative path from the repository root) and a `symbol` (function or method name).
+Click an action node to open the **node popover**, or double-click to open the **node editor tab**, where you can add **entry points** -- references to the code that implements each step. Each entry point specifies a `file` (relative path from the repository root) and a `symbol` (function or method name).
 
 ### Properties
 
-Select any node to edit its label, description, and metadata in the properties panel on the right.
+Click any node to edit its label and description in the **node popover**. Double-click to open the full **node editor tab** for detailed metadata and entry point editing.
 
 ### YAML Preview
 

@@ -45,6 +45,14 @@ nodes:
     outcome: success
 ```
 
+## Why Flowprint?
+
+Two worlds exist in service architecture: visual design tools (Miro, Smaply, UXPressia) where teams draw service blueprints, and workflow engines (Temporal, Step Functions, Camunda) where those designs get implemented in code. The diagram drifts from reality the moment the first commit lands.
+
+Flowprint bridges this gap. Blueprints are `.flowprint.yaml` files that live alongside code, go through pull requests, get CI validation, and generate Temporal workflow scaffolding. The editor is an embeddable React component, not a walled garden.
+
+Read more: [Why Flowprint?](docs/why-flowprint.md)
+
 ## Packages
 
 | Package                                           | Description                                                                            | npm                                        |
@@ -191,6 +199,8 @@ Build order: `schema` -> `editor` + `cli` (parallel) -> `app`
 - [CLI Reference](docs/cli-reference.md) — all commands, options, and exit codes
 - [Deployment Guide](docs/deployment.md) — Docker, Vercel, Cloudflare Pages, AWS, GCP
 - [Embedding Guide](packages/editor/docs/EMBEDDING_GUIDE.md) — editor component API, theming, symbol search
+- [Architecture Decision Records](docs/adr/) — design decisions and their rationale
+- [Why Flowprint?](docs/why-flowprint.md) — ecosystem positioning and motivation
 
 ## License
 

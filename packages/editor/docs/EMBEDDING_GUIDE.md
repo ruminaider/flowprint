@@ -335,11 +335,13 @@ All CSS classes use the `fp-` prefix to avoid collisions:
 - `.fp-viewer` -- read-only viewer root
 - `.fp-node` -- base node class
 - `.fp-node-action`, `.fp-node-switch`, etc. -- node type classes
-- `.fp-panel` -- properties panel
-- `.fp-palette` -- node palette
-- `.fp-lane-panel` -- lane manager panel
-- `.fp-yaml-preview` -- YAML preview panel
-- `.fp-export-btn` -- export button
+- `.fp-toolbar` -- floating toolbar with node type buttons
+- `.fp-command-palette` -- command palette overlay (Cmd+K)
+- `.fp-lane` / `.fp-lane__header` / `.fp-lane-layer` -- lane components
+- `.fp-bottom-panel` -- collapsible bottom panel (YAML preview, errors)
+- `.fp-node-popover` -- node click popover
+- `.fp-zoom-controls` -- zoom controls
+- `.fp-tab-bar` -- editor tab bar
 
 ### Overriding Styles
 
