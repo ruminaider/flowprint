@@ -60,6 +60,8 @@ vi.mock('@xyflow/react', () => ({
     screenToFlowPosition: (pos: { x: number; y: number }) => pos,
   }),
   useOnViewportChange: vi.fn(),
+  ViewportPortal: ({ children }: { children: React.ReactNode }) =>
+    React.createElement('div', { 'data-testid': 'viewport-portal' }, children),
 }))
 
 vi.mock('../layout', () => ({

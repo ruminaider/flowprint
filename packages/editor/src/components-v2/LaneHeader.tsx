@@ -75,7 +75,7 @@ export function LaneHeader({
 
   return (
     <div
-      className="fp-lane__header"
+      className="fp-lane__header nopan"
       style={{ '--lane-color': color } as React.CSSProperties}
     >
       <div

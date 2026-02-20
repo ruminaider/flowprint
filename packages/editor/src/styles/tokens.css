@@ -77,6 +77,8 @@
   --fp-color-error: #ef4444;
   --fp-color-info: #06b6d4;
 
+  --fp-bg-grid-dot: #94a3b8;
+
   /* Node type colors (light) */
   --fp-node-orange: #FF9243;
   --fp-node-orange-subtle: rgba(255, 146, 67, 0.10);
@@ -119,6 +121,8 @@
   --fp-color-warning: #FEF455;
   --fp-color-error: #FF362B;
   --fp-color-info: #A8FFFD;
+
+  --fp-bg-grid-dot: #585b70;
 
   /* Node type colors (dark) */
   --fp-node-orange: #FF9243;
