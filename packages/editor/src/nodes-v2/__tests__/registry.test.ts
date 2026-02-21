@@ -13,7 +13,7 @@ function makeStubSpec(type: string): NodeSpec {
     displayName: type.charAt(0).toUpperCase() + type.slice(1),
     icon: () => null,
     color: `--fp-node-${type}`,
-    shortcut: type[0],
+    shortcut: type[0] ?? '',
     renderNode: () => null,
     renderProperties: () => null,
     renderEditor: () => null,

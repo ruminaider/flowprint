@@ -12,7 +12,10 @@ interface UseKeyboardShortcutsOptions {
 
 function isMac(): boolean {
   if (typeof navigator === 'undefined') return false
-  return /Mac|iPod|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent)
+  if ('userAgentData' in navigator && (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform) {
+    return /mac/i.test((navigator as { userAgentData: { platform: string } }).userAgentData.platform)
+  }
+  return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent)
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {

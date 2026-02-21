@@ -43,11 +43,12 @@ describe('NodeShell', () => {
         icon={Zap}
       />,
     )
-    const root = container.querySelector('.fp-node') as HTMLElement
-    expect(root.style.getPropertyValue('--node-accent')).toBe(
+    const root = container.querySelector('.fp-node')
+    expect(root).toBeTruthy()
+    expect((root as HTMLElement).style.getPropertyValue('--node-accent')).toBe(
       'var(--fp-node-orange)',
     )
-    expect(root.style.getPropertyValue('--node-accent-subtle')).toBe(
+    expect((root as HTMLElement).style.getPropertyValue('--node-accent-subtle')).toBe(
       'var(--fp-node-orange-subtle)',
     )
   })
@@ -194,8 +195,9 @@ describe('NodeShell', () => {
         onMenuClick={handleClick}
       />,
     )
-    const menu = container.querySelector('.fp-node__menu') as HTMLElement
-    menu.click()
+    const menu = container.querySelector('.fp-node__menu')
+    expect(menu).toBeTruthy()
+    ;(menu as HTMLElement).click()
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
 })

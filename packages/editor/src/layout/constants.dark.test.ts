@@ -8,7 +8,7 @@ import {
 } from './constants'
 
 describe('DARK_LANE_COLORS', () => {
-  it(`defines all ${LANE_COLOR_COUNT} dark lane colors`, () => {
+  it(`defines all ${String(LANE_COLOR_COUNT)} dark lane colors`, () => {
     expect(Object.keys(DARK_LANE_COLORS)).toHaveLength(LANE_COLOR_COUNT)
     for (let i = 0; i < LANE_COLOR_COUNT; i++) {
       expect(DARK_LANE_COLORS[i]).toBeDefined()
@@ -25,7 +25,7 @@ describe('DARK_LANE_COLORS', () => {
 })
 
 describe('DARK_LANE_BORDER_COLORS', () => {
-  it(`defines all ${LANE_COLOR_COUNT} dark lane border colors`, () => {
+  it(`defines all ${String(LANE_COLOR_COUNT)} dark lane border colors`, () => {
     expect(Object.keys(DARK_LANE_BORDER_COLORS)).toHaveLength(LANE_COLOR_COUNT)
     for (let i = 0; i < LANE_COLOR_COUNT; i++) {
       expect(DARK_LANE_BORDER_COLORS[i]).toBeDefined()

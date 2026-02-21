@@ -69,6 +69,7 @@ export function FlowprintViewer({
   }, [layout])
 
   const emptySet = useMemo(() => new Set<string>(), [])
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const noop = useMemo(() => () => {}, [])
 
   const defaultViewport = useMemo(() => ({ x: 0, y: 0, zoom: 1 }), [])

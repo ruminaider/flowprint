@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import type { MutableRefObject } from 'react'
+import type { RefObject } from 'react'
 import type { LaneBand } from '../layout/types'
 import { MIN_LANE_HEIGHT } from '../layout/constants'
 
@@ -22,7 +22,7 @@ interface UseFlowprintStateLike {
 export function useLaneResize(
   state: UseFlowprintStateLike,
   bands: LaneBand[],
-  zoomRef: MutableRefObject<number>,
+  zoomRef: RefObject<number>,
   readOnly: boolean,
 ) {
   const [resizeOverride, setResizeOverride] = useState<ResizeOverride | null>(null)

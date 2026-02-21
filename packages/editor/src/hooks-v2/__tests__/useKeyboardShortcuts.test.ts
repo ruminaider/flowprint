@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, cleanup } from '@testing-library/react'
 import { useKeyboardShortcuts } from '../useKeyboardShortcuts'
 
@@ -15,11 +15,11 @@ describe('useKeyboardShortcuts', () => {
     const handler = vi.fn()
 
     renderHook(() =>
-      useKeyboardShortcuts({
+      { useKeyboardShortcuts({
         shortcuts: {
           v: { handler },
         },
-      }),
+      }); },
     )
 
     fireKey('v')
@@ -29,29 +29,29 @@ describe('useKeyboardShortcuts', () => {
   it('modifier combo works (mod+z fires on metaKey+z)', () => {
     const handler = vi.fn()
 
-    // Mock navigator.platform to simulate Mac
-    const originalPlatform = Object.getOwnPropertyDescriptor(navigator, 'platform')
-    Object.defineProperty(navigator, 'platform', {
-      value: 'MacIntel',
+    // Mock navigator.userAgent to simulate Mac
+    const originalUserAgent = Object.getOwnPropertyDescriptor(navigator, 'userAgent')
+    Object.defineProperty(navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
       configurable: true,
     })
 
     renderHook(() =>
-      useKeyboardShortcuts({
+      { useKeyboardShortcuts({
         shortcuts: {
           'mod+z': { handler },
         },
-      }),
+      }); },
     )
 
     fireKey('z', { metaKey: true })
     expect(handler).toHaveBeenCalledOnce()
 
-    // Restore original platform
-    if (originalPlatform) {
-      Object.defineProperty(navigator, 'platform', originalPlatform)
+    // Restore original userAgent
+    if (originalUserAgent) {
+      Object.defineProperty(navigator, 'userAgent', originalUserAgent)
     } else {
-      Object.defineProperty(navigator, 'platform', {
+      Object.defineProperty(navigator, 'userAgent', {
         value: '',
         configurable: true,
       })
@@ -62,11 +62,11 @@ describe('useKeyboardShortcuts', () => {
     const handler = vi.fn()
 
     renderHook(() =>
-      useKeyboardShortcuts({
+      { useKeyboardShortcuts({
         shortcuts: {
           v: { handler },
         },
-      }),
+      }); },
     )
 
     const input = document.createElement('input')
@@ -86,11 +86,11 @@ describe('useKeyboardShortcuts', () => {
     let enabled = false
 
     renderHook(() =>
-      useKeyboardShortcuts({
+      { useKeyboardShortcuts({
         shortcuts: {
           v: { handler, when: () => enabled },
         },
-      }),
+      }); },
     )
 
     fireKey('v')
@@ -105,12 +105,12 @@ describe('useKeyboardShortcuts', () => {
     const handler = vi.fn()
 
     renderHook(() =>
-      useKeyboardShortcuts({
+      { useKeyboardShortcuts({
         shortcuts: {
           v: { handler },
         },
         disabled: true,
-      }),
+      }); },
     )
 
     fireKey('v')

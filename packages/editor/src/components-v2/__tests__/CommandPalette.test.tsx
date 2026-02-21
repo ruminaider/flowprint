@@ -79,7 +79,8 @@ describe('CommandPalette', () => {
       <CommandPalette commands={mockCommands} isOpen={true} onClose={vi.fn()} />,
     )
 
-    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')!
+    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')
+    if (!palette) throw new Error('expected palette')
 
     // First item should be active initially
     const items = palette.querySelectorAll('.fp-command-palette__item')
@@ -103,7 +104,8 @@ describe('CommandPalette', () => {
       <CommandPalette commands={commands} isOpen={true} onClose={vi.fn()} />,
     )
 
-    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')!
+    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')
+    if (!palette) throw new Error('expected palette')
     fireEvent.keyDown(palette, { key: 'Enter' })
 
     expect(action).toHaveBeenCalledOnce()
@@ -116,7 +118,8 @@ describe('CommandPalette', () => {
       <CommandPalette commands={mockCommands} isOpen={true} onClose={onClose} />,
     )
 
-    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')!
+    const palette = screen.getByLabelText('Command search').closest('.fp-command-palette')
+    if (!palette) throw new Error('expected palette')
     fireEvent.keyDown(palette, { key: 'Escape' })
 
     expect(onClose).toHaveBeenCalledOnce()

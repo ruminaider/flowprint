@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { NodePopover } from '../NodePopover'
 import { registerNodeSpec, getAllNodeSpecs } from '../../nodes-v2/registry'
@@ -18,7 +18,7 @@ function makeStubSpec(type: string, displayName: string): NodeSpec {
     color: '--fp-node-orange',
     shortcut: 'A',
     renderNode: () => null,
-    renderProperties: ({ nodeId, data }: { nodeId: string; data: Record<string, unknown> }) => (
+    renderProperties: ({ nodeId }: { nodeId: string; data: Record<string, unknown> }) => (
       <div data-testid="properties">Properties for {nodeId}</div>
     ),
     renderEditor: () => null,

@@ -115,11 +115,11 @@ function purgeNodeReferences(nodes: Record<string, Node>, targetId: string): voi
       const filtered = node.cases.filter((c) => c.next !== targetId)
       // cases is a non-empty tuple in the schema, but during editing it may
       // temporarily be empty. We cast to keep TS happy.
-      node.cases = (filtered.length > 0 ? filtered : []) as typeof node.cases
+      node.cases = filtered.length > 0 ? filtered : []
       if (node.default === targetId) node.default = undefined
     } else if (isParallelNode(node)) {
       const filtered = node.branches.filter((b) => b !== targetId)
-      node.branches = (filtered.length > 0 ? filtered : []) as typeof node.branches
+      node.branches = filtered.length > 0 ? filtered : []
       if (node.join === targetId) node.join = '' // join is required, use empty sentinel
     } else if (isWaitNode(node)) {
       if (node.next === targetId) node.next = undefined
@@ -210,11 +210,11 @@ function removeConnection(sourceNode: Node, target: string): void {
     if (sourceNode.error?.catch === target) sourceNode.error.catch = undefined
   } else if (isSwitchNode(sourceNode)) {
     const filtered = sourceNode.cases.filter((c) => c.next !== target)
-    sourceNode.cases = (filtered.length > 0 ? filtered : []) as typeof sourceNode.cases
+    sourceNode.cases = filtered.length > 0 ? filtered : []
     if (sourceNode.default === target) sourceNode.default = undefined
   } else if (isParallelNode(sourceNode)) {
     const filtered = sourceNode.branches.filter((b) => b !== target)
-    sourceNode.branches = (filtered.length > 0 ? filtered : []) as typeof sourceNode.branches
+    sourceNode.branches = filtered.length > 0 ? filtered : []
     if (sourceNode.join === target) sourceNode.join = ''
   } else if (isWaitNode(sourceNode)) {
     if (sourceNode.next === target) sourceNode.next = undefined

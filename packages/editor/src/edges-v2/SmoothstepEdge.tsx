@@ -30,7 +30,7 @@ function SmoothstepEdge({
     borderRadius: 8,
   })
 
-  const isActive = selected || hovered
+  const isActive = selected ?? hovered
   const strokeColor = selected
     ? 'var(--fp-color-primary)'
     : 'var(--fp-text-tertiary)'
@@ -62,7 +62,7 @@ function SmoothstepEdge({
           className={`fp-edge-delete${hovered ? ' fp-edge-delete--visible' : ''}`}
           style={{ left: labelX, top: labelY }}
           onClick={() => {
-            const onDelete = (data as Record<string, unknown> | undefined)
+            const onDelete = (data)
               ?.onDelete as ((edgeId: string) => void) | undefined
             onDelete?.(id)
           }}

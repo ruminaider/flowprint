@@ -5,13 +5,13 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 
 function ParallelNode({ id, data, selected }: NodeProps) {
   const { label, description, isUnassigned, hasError } =
-    data as Record<string, unknown>
+    data
 
   return (
     <NodeShell
       nodeId={id}
       type="parallel"
-      label={(label as string) ?? 'Parallel'}
+      label={(label as string | undefined) ?? 'Parallel'}
       description={description as string | undefined}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}

@@ -30,12 +30,12 @@ function ConditionalEdge({
     borderRadius: 8,
   })
 
-  const isActive = selected || hovered
+  const isActive = selected ?? hovered
   const strokeColor = selected
     ? 'var(--fp-color-primary)'
     : 'var(--fp-text-tertiary)'
   const strokeWidth = isActive ? 3 : 2
-  const label = (data as Record<string, unknown> | undefined)?.label as
+  const label = (data)?.label as
     | string
     | undefined
 
@@ -73,7 +73,7 @@ function ConditionalEdge({
           className={`fp-edge-delete${hovered ? ' fp-edge-delete--visible' : ''}`}
           style={{ left: labelX, top: labelY - 24 }}
           onClick={() => {
-            const onDelete = (data as Record<string, unknown> | undefined)
+            const onDelete = (data)
               ?.onDelete as ((edgeId: string) => void) | undefined
             onDelete?.(id)
           }}

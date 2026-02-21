@@ -5,13 +5,13 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 
 function SwitchNode({ id, data, selected }: NodeProps) {
   const { label, description, isUnassigned, hasError } =
-    data as Record<string, unknown>
+    data
 
   return (
     <NodeShell
       nodeId={id}
       type="switch"
-      label={(label as string) ?? 'Switch'}
+      label={(label as string | undefined) ?? 'Switch'}
       description={description as string | undefined}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}

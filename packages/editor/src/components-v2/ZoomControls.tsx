@@ -33,7 +33,7 @@ export function ZoomControls() {
       const parsed = parseInt(value, 10)
       if (!isNaN(parsed) && parsed >= 10 && parsed <= 400) {
         const viewport = getViewport()
-        setViewport({ x: viewport.x, y: viewport.y, zoom: parsed / 100 })
+        void setViewport({ x: viewport.x, y: viewport.y, zoom: parsed / 100 })
       }
       setIsEditing(false)
     },
@@ -61,7 +61,7 @@ export function ZoomControls() {
         type="button"
         className="fp-zoom-controls__button"
         aria-label="Zoom out"
-        onClick={() => { zoomOut() }}
+        onClick={() => { void zoomOut() }}
       >
         <Minus size={16} />
       </button>
@@ -94,7 +94,7 @@ export function ZoomControls() {
         type="button"
         className="fp-zoom-controls__button"
         aria-label="Zoom in"
-        onClick={() => { zoomIn() }}
+        onClick={() => { void zoomIn() }}
       >
         <Plus size={16} />
       </button>
@@ -103,7 +103,7 @@ export function ZoomControls() {
         type="button"
         className="fp-zoom-controls__button"
         aria-label="Fit to view"
-        onClick={() => { fitView({ padding: 0.1 }) }}
+        onClick={() => { void fitView({ padding: 0.1 }) }}
       >
         <Maximize2 size={16} />
       </button>

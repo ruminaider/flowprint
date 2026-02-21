@@ -5,7 +5,7 @@ export interface BottomPanelProps {
   isOpen: boolean
   onClose: () => void
   yamlContent: string
-  validationErrors: Array<{ message: string; path?: string }>
+  validationErrors: { message: string; path?: string }[]
 }
 
 const STORAGE_KEY = 'fp-bottom-panel-height'
@@ -54,7 +54,6 @@ export function BottomPanel({
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
     window.removeEventListener('mousemove', handleMouseMove)
-    window.removeEventListener('mouseup', handleMouseUp)
 
     setHeight((h) => {
       try {
@@ -75,7 +74,7 @@ export function BottomPanel({
       document.body.style.cursor = 'row-resize'
       document.body.style.userSelect = 'none'
       window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('mouseup', handleMouseUp, { once: true })
     },
     [height, handleMouseMove, handleMouseUp],
   )

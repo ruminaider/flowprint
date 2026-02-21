@@ -40,7 +40,8 @@ function wouldCreateCycle(
   }
 
   while (stack.length > 0) {
-    const current = stack.pop()!
+    const current = stack.pop()
+    if (current === undefined) break
     if (current === source) return true
     if (visited.has(current)) continue
     visited.add(current)

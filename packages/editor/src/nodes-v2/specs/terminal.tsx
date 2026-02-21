@@ -5,13 +5,13 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 
 function TerminalNode({ id, data, selected }: NodeProps) {
   const { label, description, isUnassigned, hasError } =
-    data as Record<string, unknown>
+    data
 
   return (
     <NodeShell
       nodeId={id}
       type="terminal"
-      label={(label as string) ?? 'Terminal'}
+      label={(label as string | undefined) ?? 'Terminal'}
       description={description as string | undefined}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}

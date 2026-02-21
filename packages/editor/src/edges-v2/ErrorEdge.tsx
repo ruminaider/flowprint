@@ -59,7 +59,7 @@ function ErrorEdge({
           className={`fp-edge-delete${hovered ? ' fp-edge-delete--visible' : ''}`}
           style={{ left: labelX, top: labelY }}
           onClick={() => {
-            const onDelete = (data as Record<string, unknown> | undefined)
+            const onDelete = (data)
               ?.onDelete as ((edgeId: string) => void) | undefined
             onDelete?.(id)
           }}

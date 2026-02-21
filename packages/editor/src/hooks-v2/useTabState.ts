@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 
 export interface TabInfo {
   id: string
@@ -27,8 +27,6 @@ const GRAPH_TAB: TabInfo = {
 export function useTabState(): UseTabStateReturn {
   const [tabs, setTabs] = useState<TabInfo[]>([GRAPH_TAB])
   const [activeTabId, setActiveTabId] = useState('graph')
-  const tabsRef = useRef(tabs)
-  tabsRef.current = tabs
 
   const openTab = useCallback((nodeId: string, nodeType: string, label: string) => {
     setTabs((prev) => {
@@ -46,30 +44,23 @@ export function useTabState(): UseTabStateReturn {
       return
     }
 
-    const currentTabs = tabsRef.current
-    const idx = currentTabs.findIndex((t) => t.id === id)
-    if (idx === -1) {
-      return
-    }
+    setTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === id)
+      if (idx === -1) return prev
+      const filtered = prev.filter((t) => t.id !== id)
 
-    const filtered = currentTabs.filter((t) => t.id !== id)
-
-    // Compute neighbor before updating state
-    let neighborId = 'graph'
-    const prevTab = filtered[idx - 1]
-    const nextTab = filtered[idx]
-    if (idx > 0 && prevTab) {
-      neighborId = prevTab.id
-    } else if (nextTab) {
-      neighborId = nextTab.id
-    }
-
-    setTabs(filtered)
-    setActiveTabId((prevActive) => {
-      if (prevActive !== id) {
-        return prevActive
+      // Compute neighbor for active tab selection
+      let neighborId = 'graph'
+      const prevTab = filtered[idx - 1]
+      const nextTab = filtered[idx]
+      if (idx > 0 && prevTab) {
+        neighborId = prevTab.id
+      } else if (nextTab) {
+        neighborId = nextTab.id
       }
-      return neighborId
+
+      setActiveTabId((prevActive) => (prevActive !== id ? prevActive : neighborId))
+      return filtered
     })
   }, [])
 

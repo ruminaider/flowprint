@@ -5,13 +5,13 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 
 function ActionNode({ id, data, selected }: NodeProps) {
   const { label, description, isUnassigned, hasError } =
-    data as Record<string, unknown>
+    data
 
   return (
     <NodeShell
       nodeId={id}
       type="action"
-      label={(label as string) ?? 'Action'}
+      label={(label as string | undefined) ?? 'Action'}
       description={description as string | undefined}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}

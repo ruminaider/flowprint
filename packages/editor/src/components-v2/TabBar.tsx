@@ -1,7 +1,7 @@
 import { Tab } from './Tab'
 
 export interface TabBarProps {
-  tabs: Array<{ id: string; label: string; type: string; closable: boolean }>
+  tabs: { id: string; label: string; type: string; closable: boolean }[]
   activeTabId: string
   onTabSelect: (id: string) => void
   onTabClose: (id: string) => void

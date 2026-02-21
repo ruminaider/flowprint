@@ -149,7 +149,7 @@ function NodeTabContent({
   nodeId: string
   doc: FlowprintDocument
   onUpdate: (id: string, patch: Partial<Node>) => void
-  lanes: Array<{ id: string; label: string }>
+  lanes: { id: string; label: string }[]
 }) {
   const node = doc.nodes[nodeId]
   if (!node) {
@@ -286,6 +286,7 @@ export function FlowprintEditor({
     () => bands.map((b) => b.laneId),
     [bands],
   )
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- stable callback from hook
   const laneReorderHook = useLaneReorder(orderedLaneIds, state.reorderLanes)
 
   // --- UI state ---
@@ -341,7 +342,7 @@ export function FlowprintEditor({
 
       const snap = snapToLane(centerFlow.y + NODE_HEIGHT / 2, bands)
       const lane = snap?.laneId ?? (bands[0]?.laneId ?? '')
-      const id = `new_${type}_${Date.now()}`
+      const id = `new_${type}_${String(Date.now())}`
 
       const node = createDefaultNode(type, lane)
       if (!node) return
@@ -654,6 +655,7 @@ export function FlowprintEditor({
                 <NodeTabContent
                   nodeId={tabState.activeTabId}
                   doc={state.doc}
+                  // eslint-disable-next-line @typescript-eslint/unbound-method -- stable callback from hook
                   onUpdate={state.updateNode}
                   lanes={laneOptions}
                 />

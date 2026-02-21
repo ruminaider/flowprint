@@ -44,7 +44,7 @@ describe('BottomPanel', () => {
     const { container } = renderPanel()
     const pre = container.querySelector('.fp-bottom-panel__yaml')
     expect(pre).toBeTruthy()
-    expect(pre!.textContent).toBe('schema: flowprint/1.0\nname: test')
+    expect(pre?.textContent).toBe('schema: flowprint/1.0\nname: test')
   })
 
   it('defaults to yaml tab', () => {
@@ -81,7 +81,7 @@ describe('BottomPanel', () => {
     // Start on yaml tab
     const pre = container.querySelector('.fp-bottom-panel__yaml')
     expect(pre).toBeTruthy()
-    expect(pre!.textContent).toBe(defaultProps.yamlContent)
+    expect(pre?.textContent).toBe(defaultProps.yamlContent)
 
     // Switch to validation
     fireEvent.click(screen.getByRole('button', { name: 'Validation' }))
@@ -92,6 +92,6 @@ describe('BottomPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'YAML' }))
     const preAgain = container.querySelector('.fp-bottom-panel__yaml')
     expect(preAgain).toBeTruthy()
-    expect(preAgain!.textContent).toBe(defaultProps.yamlContent)
+    expect(preAgain?.textContent).toBe(defaultProps.yamlContent)
   })
 })

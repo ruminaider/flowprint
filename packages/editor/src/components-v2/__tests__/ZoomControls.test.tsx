@@ -81,7 +81,7 @@ describe('ZoomControls', () => {
 
     fireEvent.click(screen.getByLabelText('Zoom percentage'))
 
-    const input = screen.getByLabelText('Zoom percentage') as HTMLInputElement
+    const input = screen.getByLabelText<HTMLInputElement>('Zoom percentage')
     expect(input.tagName).toBe('INPUT')
     expect(input.type).toBe('number')
     expect(input.value).toBe('100')
@@ -92,7 +92,7 @@ describe('ZoomControls', () => {
 
     fireEvent.click(screen.getByLabelText('Zoom percentage'))
 
-    const input = screen.getByLabelText('Zoom percentage') as HTMLInputElement
+    const input = screen.getByLabelText('Zoom percentage')
     fireEvent.change(input, { target: { value: '150' } })
     fireEvent.keyDown(input, { key: 'Enter' })
 
@@ -104,7 +104,7 @@ describe('ZoomControls', () => {
 
     fireEvent.click(screen.getByLabelText('Zoom percentage'))
 
-    const input = screen.getByLabelText('Zoom percentage') as HTMLInputElement
+    const input = screen.getByLabelText('Zoom percentage')
     fireEvent.change(input, { target: { value: '200' } })
     fireEvent.keyDown(input, { key: 'Escape' })
 
@@ -118,7 +118,7 @@ describe('ZoomControls', () => {
 
     fireEvent.click(screen.getByLabelText('Zoom percentage'))
 
-    const input = screen.getByLabelText('Zoom percentage') as HTMLInputElement
+    const input = screen.getByLabelText('Zoom percentage')
     fireEvent.change(input, { target: { value: '75' } })
     fireEvent.blur(input)
 
@@ -130,7 +130,7 @@ describe('ZoomControls', () => {
 
     fireEvent.click(screen.getByLabelText('Zoom percentage'))
 
-    const input = screen.getByLabelText('Zoom percentage') as HTMLInputElement
+    const input = screen.getByLabelText('Zoom percentage')
     fireEvent.change(input, { target: { value: '5' } })
     fireEvent.keyDown(input, { key: 'Enter' })
 

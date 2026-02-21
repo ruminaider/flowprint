@@ -70,6 +70,7 @@ describe('useLaneReorder', () => {
     })
 
     expect(onReorder).toHaveBeenCalledWith(['b', 'a', 'c'])
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(dropEvent.preventDefault).toHaveBeenCalled()
   })
 

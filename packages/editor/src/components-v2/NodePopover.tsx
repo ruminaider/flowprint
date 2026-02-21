@@ -10,7 +10,7 @@ export interface NodePopoverProps {
   nodePosition: { x: number; y: number }
   nodeWidth: number
   nodeHeight: number
-  lanes: Array<{ id: string; label: string }>
+  lanes: { id: string; label: string }[]
   viewportWidth: number
   viewportHeight: number
   onChange: (data: Record<string, unknown>) => void

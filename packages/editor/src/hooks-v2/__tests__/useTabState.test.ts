@@ -88,7 +88,7 @@ describe('useTabState', () => {
     })
 
     expect(result.current.tabs).toHaveLength(1)
-    expect(result.current.tabs[0].id).toBe('graph')
+    expect(result.current.tabs[0]?.id).toBe('graph')
     expect(result.current.activeTabId).toBe('graph')
   })
 

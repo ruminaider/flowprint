@@ -27,14 +27,14 @@ export interface NodeSpec {
 export interface NodePropertiesProps {
   nodeId: string
   data: Record<string, unknown>
-  lanes: Array<{ id: string; label: string }>
+  lanes: { id: string; label: string }[]
   onChange: (data: Record<string, unknown>) => void
 }
 
 export interface NodeEditorProps {
   nodeId: string
   data: Record<string, unknown>
-  lanes: Array<{ id: string; label: string }>
+  lanes: { id: string; label: string }[]
   onChange: (data: Record<string, unknown>) => void
 }
 

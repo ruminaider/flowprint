@@ -5,13 +5,13 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 
 function WaitNode({ id, data, selected }: NodeProps) {
   const { label, description, isUnassigned, hasError } =
-    data as Record<string, unknown>
+    data
 
   return (
     <NodeShell
       nodeId={id}
       type="wait"
-      label={(label as string) ?? 'Wait'}
+      label={(label as string | undefined) ?? 'Wait'}
       description={description as string | undefined}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}
