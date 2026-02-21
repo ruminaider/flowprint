@@ -197,9 +197,8 @@ describe('useSymbolSearch', () => {
 
     // Wait for initial fallback to tree-sitter
     await waitFor(() => {
-      expect(result.current.loading).toBe(false)
+      expect(result.current.providerName).toBe('tree-sitter')
     })
-    expect(result.current.providerName).toBe('tree-sitter')
 
     // Now make code-search healthy and reconnect
     mockCodeSearchHealthy(true)

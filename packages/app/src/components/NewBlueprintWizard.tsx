@@ -97,7 +97,7 @@ function WizardForm({
       ]),
     )
 
-    const firstLaneId = lanes[0].id || 'lane-0'
+    const firstLaneId = lanes[0]?.id || 'lane-0'
 
     const doc: FlowprintDocument = {
       schema: schemaVersion,
