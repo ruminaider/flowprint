@@ -112,7 +112,7 @@ function purgeNodeReferences(nodes: Record<string, Node>, targetId: string): voi
       if (node.error?.catch === targetId) node.error.catch = undefined
     } else if (isSwitchNode(node)) {
       // Remove matching cases; keep at least the tuple shape valid
-      const filtered = node.cases.filter((c) => c.next !== targetId)
+      const filtered = (node.cases ?? []).filter((c) => c.next !== targetId)
       // cases is a non-empty tuple in the schema, but during editing it may
       // temporarily be empty. We cast to keep TS happy.
       node.cases = filtered.length > 0 ? filtered : []
@@ -153,7 +153,7 @@ function applyConnection(sourceNode: Node, target: string, config: ConnectionCon
         throw new Error(`switch_case connection requires a switch node`)
       }
       sourceNode.cases = [
-        ...sourceNode.cases,
+        ...(sourceNode.cases ?? []),
         { when: config.when, next: target },
       ] as typeof sourceNode.cases
       break
@@ -209,7 +209,7 @@ function removeConnection(sourceNode: Node, target: string): void {
     if (sourceNode.next === target) sourceNode.next = undefined
     if (sourceNode.error?.catch === target) sourceNode.error.catch = undefined
   } else if (isSwitchNode(sourceNode)) {
-    const filtered = sourceNode.cases.filter((c) => c.next !== target)
+    const filtered = (sourceNode.cases ?? []).filter((c) => c.next !== target)
     sourceNode.cases = filtered.length > 0 ? filtered : []
     if (sourceNode.default === target) sourceNode.default = undefined
   } else if (isParallelNode(sourceNode)) {

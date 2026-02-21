@@ -234,8 +234,8 @@ describe('integration: type guards on example nodes', () => {
       expect(isSwitchNode(node)).toBe(true)
       expect(isActionNode(node)).toBe(false)
       if (isSwitchNode(node)) {
-        expect(node.cases.length).toBe(2)
-        expect(node.cases[0]?.when).toBe('needs_prescription')
+        expect(node.cases?.length).toBe(2)
+        expect(node.cases?.[0]?.when).toBe('needs_prescription')
         expect(node.default).toBe('create_prescription')
       }
     })

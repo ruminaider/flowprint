@@ -329,13 +329,15 @@ function generateSwitchCode(
 
   lines.push(`// Switch: ${node.label}`)
 
-  for (let i = 0; i < node.cases.length; i++) {
-    const c = node.cases[i]
-    if (!c) continue
-    const prefix = i === 0 ? 'if' : '} else if'
-    lines.push(`${prefix} (${c.when}) {`)
-    lines.push(`  upsertSearchAttributes({ flowprint_switch_decisions: ['${id}:${c.next}'] })`)
-    lines.push(`  // -> ${c.next}`)
+  if (node.cases) {
+    for (let i = 0; i < node.cases.length; i++) {
+      const c = node.cases[i]
+      if (!c) continue
+      const prefix = i === 0 ? 'if' : '} else if'
+      lines.push(`${prefix} (${c.when}) {`)
+      lines.push(`  upsertSearchAttributes({ flowprint_switch_decisions: ['${id}:${c.next}'] })`)
+      lines.push(`  // -> ${c.next}`)
+    }
   }
 
   if (node.default) {

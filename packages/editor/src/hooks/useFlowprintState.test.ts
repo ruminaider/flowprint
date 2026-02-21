@@ -259,8 +259,8 @@ describe('removeNode', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]?.next).toBe('other')
+    expect(sw.cases?.length).toBe(1)
+    expect(sw.cases?.[0]?.next).toBe('other')
   })
 
   it('cleans up switch.default references', () => {
@@ -403,9 +403,9 @@ describe('connectNodes', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(2)
-    expect(sw.cases[1]!.when).toBe('no')
-    expect(sw.cases[1]!.next).toBe('b')
+    expect(sw.cases?.length).toBe(2)
+    expect(sw.cases?.[1]?.when).toBe('no')
+    expect(sw.cases?.[1]?.next).toBe('b')
   })
 
   it('sets switch default', () => {
@@ -587,8 +587,8 @@ describe('disconnectNodes', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]?.next).toBe('b')
+    expect(sw.cases?.length).toBe(1)
+    expect(sw.cases?.[0]?.next).toBe('b')
   })
 
   it('removes switch.default reference', () => {

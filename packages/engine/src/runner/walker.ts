@@ -219,8 +219,8 @@ function executeSwitch(
   const stepStart = performance.now()
 
   // Evaluate cases top-to-bottom, follow first match
-  for (let i = 0; i < node.cases.length; i++) {
-    const c = node.cases[i]
+  for (let i = 0; i < (node.cases?.length ?? 0); i++) {
+    const c = node.cases?.[i]
     if (!c) continue
 
     const result = evaluateExpression(c.when, context, options.expressionTimeout)

@@ -31,8 +31,8 @@ export function validateExpressions(doc: FlowprintDocument): ExpressionValidatio
   for (const [nodeId, node] of Object.entries(doc.nodes)) {
     // Validate switch expressions
     if (isSwitchNode(node)) {
-      for (let i = 0; i < node.cases.length; i++) {
-        const c = node.cases[i]
+      for (let i = 0; i < (node.cases?.length ?? 0); i++) {
+        const c = node.cases?.[i]
         if (c) {
           validateSingleExpression(
             c.when,

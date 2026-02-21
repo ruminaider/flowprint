@@ -94,6 +94,7 @@ export interface ActionNode {
     [k: string]: string;
   };
   entry_points?: EntryPoint[];
+  rules?: RulesRef;
   position?: Position;
   /**
    * Named input mapping: parameter name to expression
@@ -115,6 +116,16 @@ export interface EntryPoint {
    * Function/method name in the file
    */
   symbol: string;
+}
+export interface RulesRef {
+  /**
+   * Relative path to .rules.yaml file
+   */
+  file: string;
+  /**
+   * Evaluator plugin name (default: builtin)
+   */
+  evaluator?: string;
 }
 export interface Position {
   x: number;
@@ -200,8 +211,9 @@ export interface SwitchNode {
     [k: string]: string;
   };
   entry_points?: EntryPoint[];
+  rules?: RulesRef;
   position?: Position;
-  cases: {
+  cases?: {
     when: string;
     next: string;
   }[];

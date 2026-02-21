@@ -69,7 +69,7 @@ describe('generated types compile correctly', () => {
       default: 'b',
     }
     expect(node.type).toBe('switch')
-    expect(node.cases.length).toBe(1)
+    expect(node.cases?.length).toBe(1)
   })
 
   it('creates valid ParallelNode', () => {

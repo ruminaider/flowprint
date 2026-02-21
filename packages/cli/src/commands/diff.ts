@@ -185,7 +185,7 @@ function extractEdgeSet(doc: FlowprintDocument): Set<string> {
         if (node.error?.catch) edges.add(`${nodeId} -error-> ${node.error.catch}`)
         break
       case 'switch':
-        for (const c of node.cases) {
+        for (const c of node.cases ?? []) {
           edges.add(`${nodeId} -[${c.when}]-> ${c.next}`)
         }
         if (node.default) edges.add(`${nodeId} -default-> ${node.default}`)

@@ -41,6 +41,33 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
     const type = node.type as string
 
+    // Mutual exclusion: rules vs entry_points/cases
+    if (type === 'action' && node.rules !== undefined && node.entry_points !== undefined) {
+      errors.push({
+        path: `/nodes/${nodeId}`,
+        message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
+        severity: 'error',
+      })
+    }
+    if (type === 'switch') {
+      const hasCases = node.cases !== undefined
+      const hasRules = node.rules !== undefined
+      if (hasCases && hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Switch node cannot have both "rules" and "cases". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (!hasCases && !hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Switch node must have either "cases" or "rules"',
+          severity: 'error',
+        })
+      }
+    }
+
     // Check node references based on type
     switch (type) {
       case 'action': {

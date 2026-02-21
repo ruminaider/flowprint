@@ -119,7 +119,7 @@ describe('type narrowing', () => {
     const node: Node = switchNode
     if (isSwitchNode(node)) {
       expect(node.cases).toBeDefined()
-      expect(node.cases.length).toBe(1)
+      expect(node.cases?.length).toBe(1)
     }
   })
 
