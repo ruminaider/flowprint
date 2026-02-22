@@ -72,13 +72,13 @@ function SwitchEditor({ nodeId, data, onChange }: NodeEditorProps) {
   function handleRulesRefChange(ref: RulesRef | undefined) {
     const updated: Record<string, unknown> = { ...data }
     if (ref) {
-      // Switching to rules mode: set rules, clear cases
+      // Switching to rules mode: set rules, remove cases
       updated.rules = ref
-      delete updated.cases
+      updated.cases = undefined
     } else {
-      // Switching away from rules: clear rules, restore cases
-      delete updated.rules
-      delete updated._rulesData
+      // Switching away from rules: remove rules, restore cases
+      updated.rules = undefined
+      updated._rulesData = undefined
       updated.cases = [{ when: '', next: '' }]
     }
     onChange(updated)

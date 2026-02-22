@@ -70,13 +70,13 @@ function ActionEditor({ nodeId, data, onChange }: NodeEditorProps) {
   function handleRulesRefChange(ref: RulesRef | undefined) {
     const updated: Record<string, unknown> = { ...data }
     if (ref) {
-      // Switching to rules mode: set rules, clear entry_points
+      // Switching to rules mode: set rules, remove entry_points
       updated.rules = ref
-      delete updated.entry_points
+      updated.entry_points = undefined
     } else {
-      // Switching away from rules: clear rules, restore entry_points
-      delete updated.rules
-      delete updated._rulesData
+      // Switching away from rules: remove rules, restore entry_points
+      updated.rules = undefined
+      updated._rulesData = undefined
       updated.entry_points = []
     }
     onChange(updated)

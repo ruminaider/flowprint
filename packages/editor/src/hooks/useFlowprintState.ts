@@ -298,7 +298,14 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
       commit((draft) => {
         const existing = draft.nodes[id]
         if (!existing) throw new Error(`Node '${id}' not found`)
-        draft.nodes[id] = { ...existing, ...patch } as Node
+        const merged = { ...existing, ...patch }
+        // Strip keys explicitly set to undefined (used by editors to delete fields)
+        for (const key of Object.keys(merged)) {
+          if ((merged as Record<string, unknown>)[key] === undefined) {
+            delete (merged as Record<string, unknown>)[key]
+          }
+        }
+        draft.nodes[id] = merged as Node
       })
     },
     [commit],
