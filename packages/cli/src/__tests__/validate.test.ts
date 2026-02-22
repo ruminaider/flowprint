@@ -41,4 +41,32 @@ describe('flowprint validate', () => {
     expect(exitCode).toBe(1)
     expect(stdout).toContain('FAIL')
   })
+
+  it('should validate blueprint with valid referenced rules file', () => {
+    const { stdout, exitCode } = run([
+      'validate',
+      resolve(__dirname, 'fixtures/rules-valid.flowprint.yaml'),
+    ])
+    expect(exitCode).toBe(0)
+    expect(stdout).toContain('PASS')
+  })
+
+  it('should report error for blueprint referencing missing rules file', () => {
+    const { stdout, exitCode } = run([
+      'validate',
+      resolve(__dirname, 'fixtures/rules-missing-file.flowprint.yaml'),
+    ])
+    expect(exitCode).toBe(1)
+    expect(stdout).toContain('RULES')
+    expect(stdout).toContain('file not found')
+  })
+
+  it('should report validation errors for blueprint referencing invalid rules file', () => {
+    const { stdout, exitCode } = run([
+      'validate',
+      resolve(__dirname, 'fixtures/rules-invalid-file.flowprint.yaml'),
+    ])
+    expect(exitCode).toBe(1)
+    expect(stdout).toContain('RULES')
+  })
 })

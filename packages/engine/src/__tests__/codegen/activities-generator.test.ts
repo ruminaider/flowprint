@@ -208,4 +208,59 @@ describe('generateActivities', () => {
     const result = generateActivities(doc)
     expect(result.content).toContain("export { handleError as handleError } from 'src/errors.ts'")
   })
+
+  it('generates evaluator activity for action node with rules', () => {
+    const doc = makeDoc({
+      nodes: {
+        calculate_discount: {
+          type: 'action',
+          lane: 'default',
+          label: 'Calculate Discount',
+          rules: { file: 'discount.rules.yaml' },
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateActivities(doc)
+    expect(result.content).toContain('// Calculate Discount (rules-driven)')
+    expect(result.content).toContain('export async function evaluateCalculateDiscountRules')
+    expect(result.content).toContain("loadRulesFile('discount.rules.yaml', process.cwd())")
+    expect(result.content).toContain('evaluateRules(doc, { input, results: new Map() })')
+    expect(result.content).toContain(
+      "import { loadRulesFile, evaluateRules } from '@ruminaider/flowprint-engine'",
+    )
+  })
+
+  it('generates evaluator activity for switch node with rules', () => {
+    const doc = makeDoc({
+      nodes: {
+        route_order: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Route Order',
+          rules: { file: 'routing.rules.yaml' },
+          cases: [{ when: 'true', next: 'done' }],
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateActivities(doc)
+    expect(result.content).toContain('// Route Order (rules-driven)')
+    expect(result.content).toContain('export async function evaluateRouteOrderRules')
+    expect(result.content).toContain("loadRulesFile('routing.rules.yaml', process.cwd())")
+    expect(result.content).toContain(
+      "import { loadRulesFile, evaluateRules } from '@ruminaider/flowprint-engine'",
+    )
+  })
 })

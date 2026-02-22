@@ -1,0 +1,4 @@
+schema: flowprint-rules/1.0
+name: invalid-rules
+hit_policy: invalid_policy
+rules: not-an-array
