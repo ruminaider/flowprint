@@ -264,7 +264,7 @@ describe('Graph Topology Edge Cases', () => {
     const trace = await runGraph(doc, makeOptions())
 
     expect(trace.status).toBe('error')
-    expect(trace.error).toContain('has no entry_point defined')
+    expect(trace.error).toContain('has no entry_point or rules defined')
     expect(trace.error).toContain('action')
   })
 
