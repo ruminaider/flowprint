@@ -1,0 +1,43 @@
+schema: flowprint-rules/1.0
+name: shopify_order_routing
+description: >-
+  Route orders to the appropriate handler node based on
+  classified order_type. Maps to Evvy's process_shopify_order_for_* functions.
+hit_policy: first
+inputs:
+  - order_type
+  - business_vertical
+rules:
+  - when:
+      order_type: {in: [test, expanded_test]}
+    then:
+      next: process_test_order
+
+  - when:
+      order_type: urine_test
+    then:
+      next: process_test_order
+
+  - when:
+      order_type: pcr_add_on
+    then:
+      next: process_test_order
+
+  - when:
+      order_type: {in: [vaginitis_care, sti_care, uti_care, a_la_carte, dynamic_bundle, male_partner]}
+    then:
+      next: process_care_order
+
+  - when:
+      order_type: prescription_treatment
+    then:
+      next: process_treatment_refill
+
+  - when:
+      order_type: ungated_rx
+    then:
+      next: check_ungated_rx
+
+  - when: {}
+    then:
+      next: handle_unknown
