@@ -5,6 +5,11 @@ description: Patient consultation flow with triage, specialist routing, and mult
 metadata:
   owner: clinical-ops
   domain: telehealth
+workflow:
+  task_queue: consultation-tasks
+  execution_timeout: 4h
+  input_type: ConsultationInput
+  input_type_import: ./types
 
 lanes:
   patient:
@@ -33,6 +38,11 @@ nodes:
     entry_points:
       - file: backend/consults/api.py
         symbol: create_consultation
+    inputs:
+      patient_id: input.patient_id
+      symptoms: input.symptoms
+    temporal:
+      start_to_close_timeout: 30s
     next: collect_intake
 
   collect_intake:
@@ -42,6 +52,10 @@ nodes:
     entry_points:
       - file: backend/consults/intake.py
         symbol: process_intake_form
+    inputs:
+      consultation_id: initiate_consultation.id
+    temporal:
+      start_to_close_timeout: 1m
     next: triage_assessment
 
   triage_assessment:
@@ -50,15 +64,15 @@ nodes:
     label: Triage Assessment
     description: Clinical rules engine evaluates urgency and routes to appropriate path
     cases:
-      - when: emergency
+      - when: input.urgency === 'emergency'
         next: escalate_emergency
-      - when: urgent
+      - when: input.urgency === 'urgent'
         next: urgent_consult
-      - when: routine_dermatology
+      - when: input.category === 'dermatology'
         next: route_specialist_consults
-      - when: routine_general
+      - when: input.category === 'general'
         next: route_specialist_consults
-      - when: mental_health
+      - when: input.category === 'mental_health'
         next: mental_health_screening
     default: route_specialist_consults
 
@@ -70,6 +84,15 @@ nodes:
     entry_points:
       - file: backend/consults/emergency.py
         symbol: escalate_to_emergency
+    compensation:
+      file: backend/consults/emergency.py
+      symbol: cancel_escalation
+    temporal:
+      start_to_close_timeout: 10s
+      retry:
+        max_attempts: 3
+        backoff_coefficient: 2
+        initial_interval: 1s
     next: emergency_referral_complete
 
   emergency_referral_complete:
@@ -85,6 +108,18 @@ nodes:
     entry_points:
       - file: backend/scheduling/service.py
         symbol: schedule_urgent
+    temporal:
+      start_to_close_timeout: 30s
+      schedule_to_close_timeout: 2m
+      heartbeat_timeout: 10s
+      retry:
+        max_attempts: 5
+        backoff_coefficient: 1.5
+        initial_interval: 2s
+        max_interval: 30s
+        non_retryable_errors:
+          - ProviderNotLicensed
+          - PatientNotEligible
     next: await_provider_availability
     error:
       catch: scheduling_failed
@@ -94,6 +129,8 @@ nodes:
     lane: specialist
     label: Await Provider Availability
     event: provider.available
+    event_type: ProviderAvailableSignal
+    event_type_import: ./signals
     timeout: 2h
     next: conduct_consultation
     timeout_next: scheduling_failed
@@ -116,6 +153,8 @@ nodes:
     entry_points:
       - file: backend/consults/mental_health.py
         symbol: run_screening
+    temporal:
+      start_to_close_timeout: 5m
     next: evaluate_screening
 
   evaluate_screening:
@@ -123,11 +162,11 @@ nodes:
     lane: specialist
     label: Evaluate Screening Results
     cases:
-      - when: crisis
+      - when: mental_health_screening.severity === 'crisis'
         next: escalate_emergency
-      - when: needs_specialist
+      - when: mental_health_screening.needs_specialist === true
         next: route_specialist_consults
-      - when: self_guided
+      - when: mental_health_screening.self_guided === true
         next: assign_self_care_plan
     default: route_specialist_consults
 
@@ -149,7 +188,7 @@ nodes:
       - assign_specialist
       - prepare_documentation
     join: conduct_consultation
-    join_strategy: all_reached
+    join_strategy: all
 
   assign_specialist:
     type: action
@@ -158,6 +197,11 @@ nodes:
     entry_points:
       - file: backend/scheduling/service.py
         symbol: assign_specialist_provider
+    compensation:
+      file: backend/scheduling/service.py
+      symbol: release_specialist
+    temporal:
+      start_to_close_timeout: 1m
     next: conduct_consultation
     error:
       catch: scheduling_failed
@@ -169,6 +213,8 @@ nodes:
     entry_points:
       - file: backend/records/service.py
         symbol: compile_patient_record
+    temporal:
+      start_to_close_timeout: 2m
     next: conduct_consultation
 
   conduct_consultation:
@@ -185,13 +231,13 @@ nodes:
     lane: specialist
     label: Determine Consultation Outcome
     cases:
-      - when: treatment_prescribed
+      - when: conduct_consultation.outcome === 'treatment_prescribed'
         next: generate_treatment_plan
-      - when: follow_up_needed
+      - when: conduct_consultation.outcome === 'follow_up_needed'
         next: schedule_follow_up
-      - when: referred_out
+      - when: conduct_consultation.outcome === 'referred_out'
         next: external_referral
-      - when: resolved
+      - when: conduct_consultation.outcome === 'resolved'
         next: consultation_complete
     default: generate_treatment_plan
 

@@ -1,0 +1,49 @@
+schema: flowprint-rules/1.0
+name: shopify_bulk_discount
+description: >-
+  Apply provider discount tiers based on test order quantity.
+  3-9 units: 10% (basic), 10-24: 15% (standard), 25+: 20% (premium).
+hit_policy: first
+inputs:
+  - order.quantity
+  - order.is_provider_order
+rules:
+  # Provider orders get enhanced tiers
+  - when:
+      order.quantity: {gte: 25}
+      order.is_provider_order: true
+    then:
+      discount_percent: 25
+      tier: provider_premium
+
+  - when:
+      order.quantity: {gte: 10}
+      order.is_provider_order: true
+    then:
+      discount_percent: 20
+      tier: provider_standard
+
+  # Standard bulk tiers
+  - when:
+      order.quantity: {gte: 25}
+    then:
+      discount_percent: 20
+      tier: premium
+
+  - when:
+      order.quantity: {gte: 10}
+    then:
+      discount_percent: 15
+      tier: standard
+
+  - when:
+      order.quantity: {gte: 3}
+    then:
+      discount_percent: 10
+      tier: basic
+
+  # No discount
+  - when: {}
+    then:
+      discount_percent: 0
+      tier: none

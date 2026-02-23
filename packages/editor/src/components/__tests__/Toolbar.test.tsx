@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { Toolbar } from '../Toolbar'
-import { registerNodeSpec, getAllNodeSpecs } from '../../nodes-v2/registry'
-import type { NodeSpec } from '../../nodes-v2/types'
+import { registerNodeSpec, getAllNodeSpecs } from '../../nodes/registry'
+import type { NodeSpec } from '../../nodes/types'
 
 // ---------------------------------------------------------------------------
 // Register stub specs for testing (simulates what specs/index would do)

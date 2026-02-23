@@ -399,7 +399,7 @@ function generateParallelCode(
     lines.push(`  ])`)
     lines.push(`})`)
   } else {
-    // Default: all / all_reached / await_all
+    // Default: all — wait for all branches
     const assignments = branchVars.map((v) => v).join(', ')
     lines.push(`const [${assignments}] = await Promise.all([`)
     for (const branch of node.branches) {

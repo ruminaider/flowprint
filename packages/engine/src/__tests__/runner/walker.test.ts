@@ -14,7 +14,7 @@ const mockedLoadEntryPoint = vi.mocked(loadEntryPoint)
 
 function makeDoc(nodes: FlowprintDocument['nodes']): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test-flow',
     version: '1.0.0',
     lanes: {
@@ -791,7 +791,7 @@ describe('runGraph', () => {
   })
 
   describe('integration: consultation flow', () => {
-    it('runs a full consultation flow v2 example', async () => {
+    it('runs a full consultation flow example', async () => {
       const doc = makeDoc({
         validate_request: {
           type: 'action',

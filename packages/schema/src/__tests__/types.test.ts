@@ -79,7 +79,7 @@ describe('generated types compile correctly', () => {
       label: 'Fork',
       branches: ['a', 'b'],
       join: 'c',
-      join_strategy: 'await_all',
+      join_strategy: 'all',
     }
     expect(node.type).toBe('parallel')
   })

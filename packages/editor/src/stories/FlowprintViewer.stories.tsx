@@ -61,7 +61,7 @@ const prescriptionFulfillment: FlowprintDocument = {
       label: 'Fulfill Order',
       branches: ['submit_to_pharmacy', 'notify_patient'],
       join: 'delivery_tracking',
-      join_strategy: 'all_reached',
+      join_strategy: 'all',
     },
     submit_to_pharmacy: {
       type: 'action',

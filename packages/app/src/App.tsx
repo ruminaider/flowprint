@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { FlowprintEditor, useTheme, useSymbolSearch } from '@ruminaider/flowprint-editor'
+import type { RulesDataMap } from '@ruminaider/flowprint-editor'
 import '@ruminaider/flowprint-editor/styles.css'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { Header } from './components/Header'
@@ -8,6 +9,7 @@ import { NewBlueprintWizard } from './components/NewBlueprintWizard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { UnsavedChangesGuard } from './components/UnsavedChangesGuard'
 import { useFileManager } from './hooks/useFileManager'
+import { useProjectDirectory } from './hooks/useProjectDirectory'
 import { useRecentFiles } from './hooks/useRecentFiles'
 import { useSettings } from './hooks/useSettings'
 import type { AppSettings } from './hooks/useSettings'
@@ -18,6 +20,7 @@ export function App() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rulesDataMap, setRulesDataMap] = useState<RulesDataMap>({})
 
   const settingsHook = useSettings()
   const { settings } = settingsHook
@@ -37,6 +40,14 @@ export function App() {
     [addRecent],
   )
 
+  const handleFileDocLoaded = useCallback(
+    (loaded: FlowprintDocument, fileName: string) => {
+      setRulesDataMap({})
+      handleDocLoaded(loaded, fileName)
+    },
+    [handleDocLoaded],
+  )
+
   const handleError = useCallback((err: Error) => {
     setError(err.message)
   }, [])
@@ -49,7 +60,13 @@ export function App() {
       lanes: {},
       nodes: {},
     },
+    onDocLoaded: handleFileDocLoaded,
+    onError: handleError,
+  })
+
+  const projectDirectory = useProjectDirectory({
     onDocLoaded: handleDocLoaded,
+    onRulesResolved: setRulesDataMap,
     onError: handleError,
   })
 
@@ -107,6 +124,10 @@ export function App() {
             onOpen={() => {
               void fileManager.openFile()
             }}
+            onOpenProject={() => {
+              void projectDirectory.openProject()
+            }}
+            supportsOpenProject={projectDirectory.supportsDirectoryPicker}
             onSave={() => {
               void fileManager.saveFile()
             }}
@@ -123,6 +144,10 @@ export function App() {
               onOpenFile={() => {
                 void fileManager.openFile()
               }}
+              onOpenProject={() => {
+                void projectDirectory.openProject()
+              }}
+              supportsOpenProject={projectDirectory.supportsDirectoryPicker}
               onNewBlueprint={() => {
                 setWizardOpen(true)
               }}
@@ -133,13 +158,17 @@ export function App() {
       ) : (
         <>
           <Header
-            fileName={fileManager.fileName ?? doc.name}
+            fileName={projectDirectory.projectName ?? fileManager.fileName ?? doc.name}
             dirty={fileManager.dirty}
             themeMode={settings.theme}
             onCycleTheme={cycleTheme}
             onOpen={() => {
               void fileManager.openFile()
             }}
+            onOpenProject={() => {
+              void projectDirectory.openProject()
+            }}
+            supportsOpenProject={projectDirectory.supportsDirectoryPicker}
             onSave={() => {
               void fileManager.saveFile()
             }}
@@ -156,6 +185,7 @@ export function App() {
               onChange={handleChange}
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
+              rulesDataMap={rulesDataMap}
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}

@@ -3,6 +3,8 @@ import type { RecentFile } from '../hooks/useRecentFiles'
 export interface WelcomeScreenProps {
   recentFiles: RecentFile[]
   onOpenFile: () => void
+  onOpenProject?: () => void
+  supportsOpenProject?: boolean
   onNewBlueprint: () => void
   onOpenRecent: (file: RecentFile) => void
 }
@@ -35,6 +37,8 @@ const buttonStyle: React.CSSProperties = {
 export function WelcomeScreen({
   recentFiles,
   onOpenFile,
+  onOpenProject,
+  supportsOpenProject,
   onNewBlueprint,
   onOpenRecent,
 }: WelcomeScreenProps) {
@@ -61,6 +65,11 @@ export function WelcomeScreen({
         <button type="button" onClick={onOpenFile} style={buttonStyle}>
           Open File
         </button>
+        {supportsOpenProject && onOpenProject && (
+          <button type="button" onClick={onOpenProject} style={buttonStyle}>
+            Open Project
+          </button>
+        )}
         <button type="button" onClick={onNewBlueprint} style={buttonStyle}>
           New Blueprint
         </button>

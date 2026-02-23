@@ -11,12 +11,10 @@ import type { Node as RFNode, ReactFlowInstance } from '@xyflow/react'
 import type { FlowprintDocument, Node } from '@ruminaider/flowprint-schema'
 import { topoSort, validate, serialize } from '@ruminaider/flowprint-schema'
 
-// V2 node + edge types (importing registers specs as side effect)
-import { nodeTypes } from '../nodes-v2/specs'
-import { edgeTypes } from '../edges-v2'
-import { getAllNodeSpecs, getNodeSpec } from '../nodes-v2/registry'
+import { nodeTypes } from '../nodes/specs'
+import { edgeTypes } from '../edges'
+import { getAllNodeSpecs, getNodeSpec } from '../nodes/registry'
 
-// Layout utilities (preserved)
 import { computeEdges, computeLaneBands, autoLayout } from '../layout'
 import {
   LANE_LABEL_WIDTH,
@@ -27,23 +25,20 @@ import {
 } from '../layout/constants'
 import { snapToLane } from '../hooks/useLaneSnap'
 
-// V2 components
-import { TabBar } from '../components-v2/TabBar'
-import { Toolbar } from '../components-v2/Toolbar'
-import { NodePopover } from '../components-v2/NodePopover'
-import { CommandPalette } from '../components-v2/CommandPalette'
-import type { Command } from '../components-v2/CommandPaletteItem'
-import { ZoomControls } from '../components-v2/ZoomControls'
-import { BottomPanel } from '../components-v2/BottomPanel'
-import { LaneBackground as LaneBackgroundV2 } from '../components-v2/LaneBackground'
+import { TabBar } from './TabBar'
+import { Toolbar } from './Toolbar'
+import { NodePopover } from './NodePopover'
+import { CommandPalette } from './CommandPalette'
+import type { Command } from './CommandPaletteItem'
+import { ZoomControls } from './ZoomControls'
+import { BottomPanel } from './BottomPanel'
+import { LaneBackground } from './LaneBackground'
 
-// V2 hooks
-import { useTabState } from '../hooks-v2/useTabState'
-import { useLaneCollapse } from '../hooks-v2/useLaneCollapse'
-import { useLaneReorder } from '../hooks-v2/useLaneReorder'
-import { useKeyboardShortcuts } from '../hooks-v2/useKeyboardShortcuts'
+import { useTabState } from '../hooks/useTabState'
+import { useLaneCollapse } from '../hooks/useLaneCollapse'
+import { useLaneReorder } from '../hooks/useLaneReorder'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 
-// Preserved hooks
 import { useFlowprintState } from '../hooks/useFlowprintState'
 import { useConnectionHandler } from '../hooks/useConnectionHandler'
 import { useDeleteHandler } from '../hooks/useDeleteHandler'
@@ -51,13 +46,14 @@ import { useAddNode } from '../hooks/useAddNode'
 import { useLaneDrag } from '../hooks/useLaneDrag'
 import { useTheme } from '../hooks/useTheme'
 
-// Preserved old components (still needed for dialogs)
 import { SwitchConditionPopover } from './SwitchConditionPopover'
 import { DeleteConfirmation } from './DeleteConfirmation'
 import { ErrorBoundary } from './ErrorBoundary'
 
 import type { ThemeMode } from '../hooks/useTheme'
 import type { SymbolSearchProvider } from '../symbols/types'
+import { RulesDataProvider } from '../contexts/RulesDataContext'
+import type { RulesDataMap } from '../contexts/RulesDataContext'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,7 +71,10 @@ export interface FlowprintEditorProps {
   symbolSearch?: SymbolSearchProvider
   showYamlPreview?: boolean
   showExportButton?: boolean
+  rulesDataMap?: RulesDataMap
 }
+
+const emptyRulesDataMap: RulesDataMap = {}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -204,6 +203,7 @@ export function FlowprintEditor({
   showGrid = true,
   readOnly = false,
   theme = 'system',
+  rulesDataMap,
 }: FlowprintEditorProps) {
   const resolvedTheme = useTheme(theme)
   const state = useFlowprintState({ initialDoc: value, onChange })
@@ -278,7 +278,7 @@ export function FlowprintEditor({
   const addNode = useAddNode(state, bands, rfInstanceRef, handleAfterAdd)
   const laneDrag = useLaneDrag(state, bands)
 
-  // --- V2 hooks ---
+  // --- Editor hooks ---
   const tabState = useTabState()
   const laneCollapse = useLaneCollapse()
 
@@ -299,8 +299,8 @@ export function FlowprintEditor({
   // --- Pro options (stable reference) ---
   const proOptions = useMemo(() => ({ hideAttribution: true }), [])
 
-  // --- Lane data for v2 components ---
-  const v2Lanes = useMemo(
+  // --- Lane data for LaneBackground ---
+  const laneProps = useMemo(
     () =>
       bands.map((band) => ({
         id: band.laneId,
@@ -504,7 +504,7 @@ export function FlowprintEditor({
     return cmds
   }, [handleAddNodeFromToolbar, state, handleTidyLayout])
 
-  // --- V2 keyboard shortcuts ---
+  // --- Keyboard shortcuts ---
   useKeyboardShortcuts({
     shortcuts: {
       'mod+z': { handler: () => { state.undo() } },
@@ -545,6 +545,7 @@ export function FlowprintEditor({
 
   return (
     <ErrorBoundary doc={state.doc}>
+      <RulesDataProvider value={rulesDataMap ?? emptyRulesDataMap}>
       <ReactFlowProvider>
         <div
           className={`fp-editor${className ? ` ${className}` : ''}`}
@@ -599,8 +600,8 @@ export function FlowprintEditor({
                 snapGrid={[20, 20]}
                 proOptions={proOptions}
               >
-                <LaneBackgroundV2
-                  lanes={v2Lanes}
+                <LaneBackground
+                  lanes={laneProps}
                   totalWidth={canvasDims.width}
                   collapsedLaneIds={laneCollapse.collapsedIds}
                   onToggleCollapse={laneCollapse.toggleCollapse}
@@ -694,6 +695,7 @@ export function FlowprintEditor({
           )}
         </div>
       </ReactFlowProvider>
+      </RulesDataProvider>
     </ErrorBoundary>
   )
 }

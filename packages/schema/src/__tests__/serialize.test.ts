@@ -191,7 +191,7 @@ describe('serialize', () => {
       expect(filteredActual).toEqual(expectedOrder)
     })
 
-    it('outputs action node keys in canonical order with 2.0 fields', () => {
+    it('outputs action node keys in canonical order with all fields', () => {
       const doc = makeDoc({
         nodes: {
           my_node: {
@@ -244,7 +244,7 @@ describe('serialize', () => {
       expect(nodeKeys).toEqual(expectedOrder)
     })
 
-    it('outputs wait node keys in canonical order with 2.0 fields', () => {
+    it('outputs wait node keys in canonical order with all fields', () => {
       const doc = makeDoc({
         nodes: {
           w: {
@@ -330,7 +330,7 @@ describe('serialize', () => {
             label: 'Parallel',
             branches: ['a', 'b'],
             join: 'c',
-            join_strategy: 'all_reached',
+            join_strategy: 'all',
           },
           a: { type: 'action', lane: 'main', label: 'A', next: 'c' },
           b: { type: 'action', lane: 'main', label: 'B', next: 'c' },
@@ -563,10 +563,10 @@ describe('serialize', () => {
   })
 
   // -------------------------------------------------------------------------
-  // Schema 2.0 fields
+  // Schema 1.0 extended fields
   // -------------------------------------------------------------------------
 
-  describe('schema 2.0 fields', () => {
+  describe('schema 1.0 extended fields', () => {
     it('round-trips workflow configuration', () => {
       const doc = makeDoc({
         workflow: {
@@ -696,9 +696,9 @@ describe('serialize', () => {
       expect(yaml).not.toContain('workflow:')
     })
 
-    it('round-trips a full 2.0 action node with all new fields', () => {
+    it('round-trips a full action node with all fields', () => {
       const doc = makeDoc({
-        schema: 'flowprint/2.0',
+        schema: 'flowprint/1.0',
         workflow: { task_queue: 'q', execution_timeout: '1h' },
         nodes: {
           a: {

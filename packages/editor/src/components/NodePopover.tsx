@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Island } from './Island'
-import { getNodeSpec } from '../nodes-v2/registry'
-import { computePopoverPosition } from '../hooks-v2/usePopoverPosition'
+import { getNodeSpec } from '../nodes/registry'
+import { computePopoverPosition } from '../hooks/usePopoverPosition'
 
 export interface NodePopoverProps {
   nodeId: string

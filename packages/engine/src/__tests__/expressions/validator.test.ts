@@ -6,7 +6,7 @@ function makeDoc(
   overrides: Partial<FlowprintDocument> & { nodes: FlowprintDocument['nodes'] },
 ): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test',
     version: '1.0.0',
     lanes: {
@@ -196,7 +196,7 @@ describe('validateExpressions', () => {
     expect(result.errors.some((e) => e.message.includes('Parse error'))).toBe(true)
   })
 
-  it('skips entry_point count check for 1.0 docs', () => {
+  it('allows action nodes with rules instead of entry_points', () => {
     const doc = makeDoc({
       schema: 'flowprint/1.0',
       nodes: {
@@ -204,7 +204,8 @@ describe('validateExpressions', () => {
           type: 'action',
           lane: 'main',
           label: 'Act',
-          // No entry_points — valid for 1.0
+          // No entry_points but has rules — valid
+          rules: { file: 'rules.yaml' },
           next: 'done',
         },
         done: {

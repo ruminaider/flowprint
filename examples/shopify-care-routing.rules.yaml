@@ -1,0 +1,42 @@
+schema: flowprint-rules/1.0
+name: shopify_care_routing
+description: >-
+  Route care orders to appropriate processing based on purchase
+  type and consult availability.
+hit_policy: first
+inputs:
+  - purchase_type
+  - has_consult
+rules:
+  - when:
+      purchase_type: a-la-carte
+    then:
+      next: create_consult_order
+      flow: a_la_carte
+
+  - when:
+      purchase_type: dynamic-bundle
+    then:
+      next: create_consult_order
+      flow: dynamic_bundle
+
+  - when:
+      purchase_type: mixed-care
+      has_consult: true
+    then:
+      next: create_consult_order
+      flow: mixed_care
+
+  # Mixed-care without a consult is an error
+  - when:
+      purchase_type: mixed-care
+      has_consult: false
+    then:
+      next: handle_error
+      reason: missing_consult_for_mixed_care
+
+  # Default: standard care flow
+  - when: {}
+    then:
+      next: create_consult_order
+      flow: standard

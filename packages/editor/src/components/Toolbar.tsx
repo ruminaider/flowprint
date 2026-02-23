@@ -1,7 +1,7 @@
 import { MousePointer2, Hand, Search, LayoutGrid } from 'lucide-react'
 import { Island } from './Island'
 import { ToolbarButton } from './ToolbarButton'
-import { getAllNodeSpecs } from '../nodes-v2/registry'
+import { getAllNodeSpecs } from '../nodes/registry'
 
 export interface ToolbarProps {
   activeTool: string

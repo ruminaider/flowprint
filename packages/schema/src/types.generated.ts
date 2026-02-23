@@ -231,7 +231,7 @@ export interface ParallelNode {
   position?: Position;
   branches: string[];
   join: string;
-  join_strategy?: "all_reached" | "await_all" | "all" | "first";
+  join_strategy?: "all" | "first";
 }
 export interface WaitNode {
   type: "wait";

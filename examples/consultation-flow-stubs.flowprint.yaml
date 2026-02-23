@@ -1,6 +1,6 @@
-schema: flowprint/2.0
+schema: flowprint/1.0
 name: consultation-flow
-version: '2.0.0'
+version: '1.0.0'
 description: Patient consultation flow with triage, specialist routing, and multiple outcomes
 metadata:
   owner: clinical-ops

@@ -2,9 +2,9 @@ import type { NodeProps } from '@xyflow/react'
 import { Zap } from 'lucide-react'
 import { NodeShell } from '../NodeShell'
 import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
-import { RulesRefEditor } from '../../components-v2/RulesRefEditor'
-import { RulesPreview } from '../../components-v2/RulesPreview'
-import type { RulesData } from '../../components-v2/DecisionTable'
+import { RulesRefEditor } from '../../components/RulesRefEditor'
+import { RulesPreview } from '../../components/RulesPreview'
+import { useRulesData } from '../../contexts/RulesDataContext'
 
 interface RulesRef {
   file: string
@@ -62,7 +62,7 @@ function ActionProperties({ nodeId, data }: NodePropertiesProps) {
 function ActionEditor({ nodeId, data, onChange }: NodeEditorProps) {
   const rules = data.rules as RulesRef | undefined
   const entryPoints = data.entry_points as unknown[] | undefined
-  const rulesData = data._rulesData as RulesData | undefined
+  const { rulesData, validationErrors } = useRulesData(rules?.file)
   const hasRules = rules !== undefined
   const hasCasesOrEntryPoints =
     entryPoints !== undefined && entryPoints.length > 0
@@ -76,7 +76,6 @@ function ActionEditor({ nodeId, data, onChange }: NodeEditorProps) {
     } else {
       // Switching away from rules: remove rules, restore entry_points
       updated.rules = undefined
-      updated._rulesData = undefined
       updated.entry_points = []
     }
     onChange(updated)
@@ -97,6 +96,7 @@ function ActionEditor({ nodeId, data, onChange }: NodeEditorProps) {
           <RulesPreview
             rulesRef={rules}
             rulesData={rulesData}
+            validationErrors={validationErrors}
           />
         </div>
       )}

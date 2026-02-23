@@ -1,6 +1,6 @@
-schema: flowprint/2.0
+schema: flowprint/1.0
 name: shopify_order_processing
-version: '1.0.0'
+version: '2.0.0'
 description: >-
   Process incoming Shopify orders: classify line items by SKU,
   route to the appropriate handler (test, care, treatment refill,
@@ -19,6 +19,10 @@ lanes:
     visibility: internal
     order: 2
 nodes:
+  # ═══════════════════════════════════════════════
+  # SHOPIFY LANE (external boundary)
+  # ═══════════════════════════════════════════════
+
   receive_order:
     type: action
     lane: shopify
@@ -42,6 +46,22 @@ nodes:
         symbol: extractOrderData
     next: classify_line_items
 
+  order_complete:
+    type: terminal
+    lane: shopify
+    label: Order Complete
+    outcome: success
+
+  order_failed:
+    type: terminal
+    lane: shopify
+    label: Order Failed
+    outcome: failure
+
+  # ═══════════════════════════════════════════════
+  # ORDER PROCESSING LANE (classification & routing)
+  # ═══════════════════════════════════════════════
+
   classify_line_items:
     type: action
     lane: order_processing
@@ -59,67 +79,38 @@ nodes:
     lane: order_processing
     label: Route by Order Type
     description: >-
-      Route to the appropriate handler based on the classified
-      order_type. Maps to Evvy's process_shopify_order_for_* functions.
+      Route to the appropriate handler sub-flow based on the
+      classified order_type. Maps to Evvy's
+      process_shopify_order_for_* functions.
     rules:
       file: shopify-order-routing.rules.yaml
     default: handle_unknown
-
-  process_test_order:
-    type: action
-    lane: fulfillment
-    label: Process Test Order
-    description: >-
-      Create Test records, handle bulk orders (qty >= 3 with provider
-      discount tiers), link provider test orders, fire Braze events
-    entry_points:
-      - file: stubs/shopify-order/test-order.js
-        symbol: processTestOrder
-    next: send_to_fulfillment
-
-  process_care_order:
-    type: action
-    lane: fulfillment
-    label: Process Care Order
-    description: >-
-      Link to consult via consult_uid, create ConsultOrder record,
-      add ordered treatments to consult selection, handle a-la-carte
-      / dynamic-bundle / mixed-care purchase types
-    entry_points:
-      - file: stubs/shopify-order/care-order.js
-        symbol: processCareOrder
-    next: send_to_fulfillment
-
-  process_treatment_refill:
-    type: action
-    lane: fulfillment
-    label: Process Treatment Refill
-    description: >-
-      Resolve prescriptions, validate state restrictions on shipping
-      address, send to Precision pharmacy via async task
-    entry_points:
-      - file: stubs/shopify-order/treatment-refill.js
-        symbol: processTreatmentRefill
-    error:
-      retry:
-        limit: 3
-        backoff: exponential
-      catch: handle_error
-    next: send_to_fulfillment
 
   check_ungated_rx:
     type: switch
     lane: order_processing
     label: Check Ungated Rx
     description: >-
-      If user has valid, refillable prescriptions for all Rx products,
-      route to direct refill. Otherwise, create/link to consult for
-      intake and prescription generation.
+      If user has valid, refillable prescriptions for all Rx
+      products, route to direct refill. Otherwise, create/link
+      to consult for intake and prescription generation.
     cases:
       - when: can_refill
-        next: process_treatment_refill
+        next: resolve_prescriptions
       - when: needs_consult
-        next: process_care_order
+        next: link_consult
+    default: handle_error
+
+  validate_shipping_state:
+    type: switch
+    lane: order_processing
+    label: Validate Shipping State
+    description: >-
+      Check state-level restrictions on prescription shipping.
+      Controlled substances prohibited in ID/WV, no cold-chain
+      to AK/HI, compounding restrictions in CT/NJ.
+    rules:
+      file: shopify-state-restrictions.rules.yaml
     default: handle_error
 
   handle_unknown:
@@ -132,6 +123,138 @@ nodes:
         symbol: processUnknownSku
     next: handle_error
 
+  handle_error:
+    type: error
+    lane: order_processing
+    label: Handle Error
+    description: Create ConsultTask for manual intervention
+    next: order_failed
+
+  # ═══════════════════════════════════════════════
+  # FULFILLMENT LANE — Test Order Sub-flow
+  # ═══════════════════════════════════════════════
+
+  check_bulk_order:
+    type: switch
+    lane: fulfillment
+    label: Check Bulk Order
+    description: >-
+      Check if test order quantity >= 3 for provider bulk
+      discount tiers. Single orders skip discounting.
+    cases:
+      - when: is_bulk
+        next: apply_bulk_discount
+      - when: is_single
+        next: create_test_record
+    default: create_test_record
+
+  apply_bulk_discount:
+    type: action
+    lane: fulfillment
+    label: Apply Bulk Discount
+    description: >-
+      Apply provider discount tier based on order quantity.
+      Provider orders get enhanced tiers (up to 25% off).
+    rules:
+      file: shopify-bulk-discount.rules.yaml
+    next: create_test_record
+
+  create_test_record:
+    type: action
+    lane: fulfillment
+    label: Create Test Record
+    description: >-
+      Create Test records in database, link provider test orders,
+      fire Braze events for test order confirmation
+    entry_points:
+      - file: stubs/shopify-order/test-order.js
+        symbol: createTestRecord
+    next: send_to_fulfillment
+
+  # ═══════════════════════════════════════════════
+  # FULFILLMENT LANE — Care Order Sub-flow
+  # ═══════════════════════════════════════════════
+
+  link_consult:
+    type: action
+    lane: fulfillment
+    label: Link Consult
+    description: >-
+      Find or create consult via consult_uid from note_attributes,
+      validate consult status is open and matches account
+    entry_points:
+      - file: stubs/shopify-order/care-order.js
+        symbol: linkConsult
+    error:
+      catch: handle_error
+    next: determine_care_type
+
+  determine_care_type:
+    type: switch
+    lane: fulfillment
+    label: Determine Care Type
+    description: >-
+      Route care order based on purchase type: a-la-carte,
+      dynamic-bundle, or mixed-care. Mixed-care without a
+      consult is an error.
+    rules:
+      file: shopify-care-routing.rules.yaml
+    default: create_consult_order
+
+  create_consult_order:
+    type: action
+    lane: fulfillment
+    label: Create Consult Order
+    description: >-
+      Create ConsultOrder record, add ordered treatments to
+      consult selection, handle insurance and payment info
+    entry_points:
+      - file: stubs/shopify-order/care-order.js
+        symbol: createConsultOrder
+    next: send_to_fulfillment
+
+  # ═══════════════════════════════════════════════
+  # FULFILLMENT LANE — Treatment Refill Sub-flow
+  # ═══════════════════════════════════════════════
+
+  resolve_prescriptions:
+    type: action
+    lane: fulfillment
+    label: Resolve Prescriptions
+    description: >-
+      Match line items to active prescriptions, validate Rx
+      is refillable and not expired
+    entry_points:
+      - file: stubs/shopify-order/treatment-refill.js
+        symbol: resolvePrescriptions
+    error:
+      retry:
+        limit: 3
+        backoff: exponential
+      catch: handle_error
+    next: validate_shipping_state
+
+  send_to_pharmacy:
+    type: action
+    lane: fulfillment
+    label: Send to Pharmacy
+    description: >-
+      Submit verified prescription to Precision pharmacy
+      via async task, track fulfillment status
+    entry_points:
+      - file: stubs/shopify-order/treatment-refill.js
+        symbol: sendToPharmacy
+    error:
+      retry:
+        limit: 2
+        backoff: exponential
+      catch: handle_error
+    next: send_to_fulfillment
+
+  # ═══════════════════════════════════════════════
+  # FULFILLMENT LANE — Common exit
+  # ═══════════════════════════════════════════════
+
   send_to_fulfillment:
     type: action
     lane: fulfillment
@@ -143,22 +266,3 @@ nodes:
       - file: stubs/shopify-order/fulfillment.js
         symbol: sendToBerlin
     next: order_complete
-
-  handle_error:
-    type: error
-    lane: order_processing
-    label: Handle Error
-    description: Create ConsultTask for manual intervention
-    next: order_failed
-
-  order_complete:
-    type: terminal
-    lane: shopify
-    label: Order Complete
-    outcome: success
-
-  order_failed:
-    type: terminal
-    lane: shopify
-    label: Order Failed
-    outcome: failure

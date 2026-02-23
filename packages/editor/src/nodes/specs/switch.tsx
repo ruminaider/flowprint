@@ -2,9 +2,9 @@ import type { NodeProps } from '@xyflow/react'
 import { GitBranch } from 'lucide-react'
 import { NodeShell } from '../NodeShell'
 import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
-import { RulesRefEditor } from '../../components-v2/RulesRefEditor'
-import { RulesPreview } from '../../components-v2/RulesPreview'
-import type { RulesData } from '../../components-v2/DecisionTable'
+import { RulesRefEditor } from '../../components/RulesRefEditor'
+import { RulesPreview } from '../../components/RulesPreview'
+import { useRulesData } from '../../contexts/RulesDataContext'
 
 interface RulesRef {
   file: string
@@ -65,7 +65,7 @@ function SwitchProperties({ nodeId, data }: NodePropertiesProps) {
 function SwitchEditor({ nodeId, data, onChange }: NodeEditorProps) {
   const rules = data.rules as RulesRef | undefined
   const cases = data.cases as SwitchCase[] | undefined
-  const rulesData = data._rulesData as RulesData | undefined
+  const { rulesData, validationErrors } = useRulesData(rules?.file)
   const hasRules = rules !== undefined
   const hasCasesOrEntryPoints = cases !== undefined && cases.length > 0
 
@@ -78,7 +78,6 @@ function SwitchEditor({ nodeId, data, onChange }: NodeEditorProps) {
     } else {
       // Switching away from rules: remove rules, restore cases
       updated.rules = undefined
-      updated._rulesData = undefined
       updated.cases = [{ when: '', next: '' }]
     }
     onChange(updated)
@@ -99,6 +98,7 @@ function SwitchEditor({ nodeId, data, onChange }: NodeEditorProps) {
           <RulesPreview
             rulesRef={rules}
             rulesData={rulesData}
+            validationErrors={validationErrors}
           />
         </div>
       )}

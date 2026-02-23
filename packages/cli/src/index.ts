@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { validateCommand } from './commands/validate.js'
 import { lintCommand } from './commands/lint.js'
 import { diffCommand } from './commands/diff.js'
-import { migrateCommand } from './commands/migrate.js'
+
 import { initCommand } from './commands/init.js'
 import { generateCommand } from './commands/generate.js'
 import { runCommand } from './commands/run.js'
@@ -21,7 +21,7 @@ program
 program.addCommand(validateCommand)
 program.addCommand(lintCommand)
 program.addCommand(diffCommand)
-program.addCommand(migrateCommand)
+
 program.addCommand(initCommand)
 program.addCommand(generateCommand)
 program.addCommand(runCommand)

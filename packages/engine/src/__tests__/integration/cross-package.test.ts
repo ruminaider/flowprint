@@ -22,8 +22,8 @@ vi.mock('../../runner/loader.js', () => ({
 
 const EXAMPLES_DIR = resolve(import.meta.dirname, '../../../../..', 'examples')
 
-const STUBS_YAML = resolve(EXAMPLES_DIR, 'consultation-flow-v2-stubs.flowprint.yaml')
-const V2_YAML = resolve(EXAMPLES_DIR, 'consultation-flow-v2.flowprint.yaml')
+const STUBS_YAML = resolve(EXAMPLES_DIR, 'consultation-flow-stubs.flowprint.yaml')
+const CONSULTATION_YAML = resolve(EXAMPLES_DIR, 'consultation-flow.flowprint.yaml')
 const FIXTURES_PATH = resolve(EXAMPLES_DIR, 'stubs/consultation/fixtures.json')
 
 function loadYaml(path: string): FlowprintDocument {
@@ -59,12 +59,12 @@ describe('cross-package integration', () => {
     expect(trace.steps.length).toBeGreaterThan(0)
   })
 
-  it('validate then generate: v2 doc produces 7 generated files', () => {
-    const raw = readFileSync(V2_YAML, 'utf-8')
+  it('validate then generate: doc produces 7 generated files', () => {
+    const raw = readFileSync(CONSULTATION_YAML, 'utf-8')
     const validation = validateYaml(raw)
     expect(validation.valid).toBe(true)
 
-    const doc = loadYaml(V2_YAML)
+    const doc = loadYaml(CONSULTATION_YAML)
     const result = generateCode(doc, { outputDir: './out', flowName: doc.name })
 
     expect(result.files).toHaveLength(7)
@@ -77,7 +77,7 @@ describe('cross-package integration', () => {
 
   it('serialize roundtrip validates', () => {
     const doc: FlowprintDocument = {
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'roundtrip-test',
       version: '1.0.0',
       lanes: {
@@ -101,19 +101,18 @@ describe('cross-package integration', () => {
     }
 
     const yaml = serialize(doc)
-    expect(yaml).toContain('flowprint/2.0')
+    expect(yaml).toContain('flowprint/1.0')
     expect(yaml).toContain('roundtrip-test')
 
     const validation = validateYaml(yaml)
     expect(validation.valid).toBe(true)
   })
 
-  it('v1 doc fails v2 expression validation for entry_point count', () => {
-    // v1 docs don't require entry_points, but v2 does
-    // Construct a doc with v2 schema but missing entry_points to verify enforcement
+  it('doc fails expression validation when missing entry_points', () => {
+    // Construct a doc with missing entry_points to verify enforcement
     const doc: FlowprintDocument = {
-      schema: 'flowprint/2.0',
-      name: 'v2-strict-test',
+      schema: 'flowprint/1.0',
+      name: 'strict-test',
       version: '1.0.0',
       lanes: {
         main: { label: 'Main', visibility: 'internal', order: 0 },
@@ -124,7 +123,7 @@ describe('cross-package integration', () => {
           lane: 'main',
           label: 'Act',
           next: 'done',
-          // No entry_points — invalid for v2
+          // No entry_points — invalid
         },
         done: {
           type: 'terminal',
@@ -140,13 +139,13 @@ describe('cross-package integration', () => {
     expect(result.errors.some((e) => e.message.includes('exactly one entry_point'))).toBe(true)
   })
 
-  it('all v2 generated code has balanced braces and parens', () => {
-    const v2Files = readdirSync(EXAMPLES_DIR).filter(
-      (f) => f.endsWith('.flowprint.yaml') && f.includes('v2'),
+  it('all generated code has balanced braces and parens', () => {
+    const yamlFiles = readdirSync(EXAMPLES_DIR).filter(
+      (f) => f.endsWith('.flowprint.yaml'),
     )
-    expect(v2Files.length).toBeGreaterThan(0)
+    expect(yamlFiles.length).toBeGreaterThan(0)
 
-    for (const file of v2Files) {
+    for (const file of yamlFiles) {
       const content = readFileSync(resolve(EXAMPLES_DIR, file), 'utf-8')
       const doc = parse(content) as FlowprintDocument
       const result = generateCode(doc, { outputDir: './out', flowName: doc.name })

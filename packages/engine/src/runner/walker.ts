@@ -27,7 +27,7 @@ interface CompensationEntry {
 }
 
 /**
- * Execute a flowprint/2.0 document using an in-process graph walker.
+ * Execute a flowprint document using an in-process graph walker.
  *
  * Walks the graph starting from root nodes, executing each node in sequence.
  * Action nodes call their entry_point functions, switch nodes evaluate
@@ -398,7 +398,7 @@ async function executeParallel(
     const first = await Promise.race(branchPromises)
     context.results.set(nodeId, first.result)
   } else {
-    // 'all', 'all_reached', 'await_all' — wait for all branches
+    // 'all' — wait for all branches
     const results = await Promise.all(branchPromises)
     const resultMap: Record<string, unknown> = {}
     for (const r of results) {

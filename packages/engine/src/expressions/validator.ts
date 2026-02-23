@@ -60,13 +60,14 @@ export function validateExpressions(doc: FlowprintDocument): ExpressionValidatio
       }
     }
 
-    // Validate 2.0 action nodes have exactly one entry_point
-    if (doc.schema === 'flowprint/2.0' && isActionNode(node)) {
+    // Action nodes must have exactly one entry_point or a rules reference
+    if (isActionNode(node)) {
       const epCount = node.entry_points?.length ?? 0
-      if (epCount !== 1) {
+      const hasRules = Boolean(node.rules)
+      if (epCount !== 1 && !hasRules) {
         errors.push({
           path: `/nodes/${nodeId}/entry_points`,
-          message: `Schema 2.0 action nodes must have exactly one entry_point for execution (found ${String(epCount)})`,
+          message: `Action nodes must have exactly one entry_point for execution (found ${String(epCount)})`,
         })
       }
     }

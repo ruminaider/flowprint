@@ -348,7 +348,7 @@ describe('rules structural warnings', () => {
 describe('flowprint rules reference on nodes', () => {
   it('accepts action node with rules reference', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -369,7 +369,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('accepts action node with rules reference and evaluator', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -390,7 +390,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('accepts switch node with rules reference (no cases)', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -411,7 +411,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('rejects action node with both rules and entry_points', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -440,7 +440,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('rejects switch node with both rules and cases', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -466,7 +466,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('rejects switch node with neither rules nor cases', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -491,7 +491,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('rejects invalid rules reference (missing file)', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -511,7 +511,7 @@ describe('flowprint rules reference on nodes', () => {
 
   it('rejects rules reference with empty file path', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
@@ -536,7 +536,7 @@ describe('rules serialization', () => {
   it('serializes action node with rules reference', async () => {
     const { serialize } = await import('../serialize.js')
     const yaml = serialize({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: {
@@ -561,7 +561,7 @@ describe('rules serialization', () => {
   it('serializes switch node with rules reference', async () => {
     const { serialize } = await import('../serialize.js')
     const yaml = serialize({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: {
@@ -590,7 +590,7 @@ describe('graph edges with rules nodes', () => {
   it('handles switch node with rules (no cases, no edges from cases)', async () => {
     const { getEdges } = await import('../graph.js')
     const edges = getEdges({
-      schema: 'flowprint/2.0',
+      schema: 'flowprint/1.0',
       name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },

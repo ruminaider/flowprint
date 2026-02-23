@@ -7,7 +7,7 @@ import { runGraph } from '../../runner/walker.js'
 
 const EXAMPLES_DIR = resolve(import.meta.dirname, '../../../../..', 'examples')
 
-const STUBS_YAML = resolve(EXAMPLES_DIR, 'consultation-flow-v2-stubs.flowprint.yaml')
+const STUBS_YAML = resolve(EXAMPLES_DIR, 'consultation-flow-stubs.flowprint.yaml')
 const FIXTURES_PATH = resolve(EXAMPLES_DIR, 'stubs/consultation/fixtures.json')
 
 function loadStubsDoc(): FlowprintDocument {
@@ -20,7 +20,7 @@ function loadFixtures(): Record<string, unknown> {
   return JSON.parse(content) as Record<string, unknown>
 }
 
-describe('e2e: consultation-flow-v2-stubs', () => {
+describe('e2e: consultation-flow-stubs', () => {
   it('happy path — default triage routes through specialist to completion', async () => {
     const doc = loadStubsDoc()
     const fixtures = loadFixtures()

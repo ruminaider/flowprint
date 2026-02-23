@@ -78,7 +78,7 @@ export const ReadOnly: StoryObj = {
 }
 
 const withRulesActionDoc: FlowprintDocument = {
-  schema: 'flowprint/2.0',
+  schema: 'flowprint/1.0',
   name: 'rules-action-flow',
   version: '1.0.0',
   lanes: {
@@ -107,7 +107,7 @@ export const WithRulesAction: StoryObj = {
 }
 
 const withRulesSwitchDoc: FlowprintDocument = {
-  schema: 'flowprint/2.0',
+  schema: 'flowprint/1.0',
   name: 'rules-switch-flow',
   version: '1.0.0',
   lanes: {

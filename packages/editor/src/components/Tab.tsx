@@ -1,5 +1,5 @@
 import { X, LayoutGrid } from 'lucide-react'
-import { getNodeSpec } from '../nodes-v2/registry'
+import { getNodeSpec } from '../nodes/registry'
 
 export interface TabProps {
   id: string

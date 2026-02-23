@@ -331,7 +331,7 @@
         },
         "join_strategy": {
           "type": "string",
-          "enum": ["all_reached", "await_all", "all", "first"]
+          "enum": ["all", "first"]
         }
       }
     },

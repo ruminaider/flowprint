@@ -6,6 +6,8 @@ export interface HeaderProps {
   themeMode: ThemeMode
   onCycleTheme: () => void
   onOpen: () => void
+  onOpenProject?: () => void
+  supportsOpenProject?: boolean
   onSave: () => void
   onSaveAs: () => void
   onSettings: () => void
@@ -33,6 +35,8 @@ export function Header({
   themeMode,
   onCycleTheme,
   onOpen,
+  onOpenProject,
+  supportsOpenProject,
   onSave,
   onSaveAs,
   onSettings,
@@ -68,6 +72,11 @@ export function Header({
         <button type="button" onClick={onOpen} style={btnStyle}>
           Open
         </button>
+        {supportsOpenProject && onOpenProject && (
+          <button type="button" onClick={onOpenProject} style={btnStyle}>
+            Open Project
+          </button>
+        )}
         <button type="button" onClick={onSave} style={btnStyle}>
           Save
         </button>

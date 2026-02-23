@@ -8,17 +8,17 @@ import { generateCode } from '../../codegen/index.js'
 const FIXTURE_PATH = resolve(
   import.meta.dirname,
   '../../../../..',
-  'examples/consultation-flow-v2.flowprint.yaml',
+  'examples/consultation-flow.flowprint.yaml',
 )
 
-function loadConsultationFlowV2(): FlowprintDocument {
+function loadConsultationFlow(): FlowprintDocument {
   const content = readFileSync(FIXTURE_PATH, 'utf-8')
   return parse(content) as FlowprintDocument
 }
 
 describe('codegen integration', () => {
-  it('generates all expected files from consultation-flow-v2', () => {
-    const doc = loadConsultationFlowV2()
+  it('generates all expected files from consultation-flow', () => {
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -35,7 +35,7 @@ describe('codegen integration', () => {
   })
 
   it('all files have the generated header', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -47,7 +47,7 @@ describe('codegen integration', () => {
   })
 
   it('workflow file contains Temporal imports', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -64,7 +64,7 @@ describe('codegen integration', () => {
   })
 
   it('workflow file contains ConsultationInput type import', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -76,7 +76,7 @@ describe('codegen integration', () => {
   })
 
   it('activities file contains re-exports for action nodes', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -90,7 +90,7 @@ describe('codegen integration', () => {
   })
 
   it('activities file contains compensation re-exports', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -102,7 +102,7 @@ describe('codegen integration', () => {
   })
 
   it('worker file uses configured task queue', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -113,7 +113,7 @@ describe('codegen integration', () => {
   })
 
   it('types file re-exports ConsultationInput and ProviderAvailableSignal', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -125,7 +125,7 @@ describe('codegen integration', () => {
   })
 
   it('signal fixtures file contains ProviderAvailableSignal fixture', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -137,7 +137,7 @@ describe('codegen integration', () => {
   })
 
   it('generated workflow code contains valid syntax markers', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -159,7 +159,7 @@ describe('codegen integration', () => {
   })
 
   it('workflow contains compensation try/catch block', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -173,7 +173,7 @@ describe('codegen integration', () => {
   })
 
   it('workflow contains wait node signal handling', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,
@@ -187,7 +187,7 @@ describe('codegen integration', () => {
   })
 
   it('returns correct flowName in result', () => {
-    const doc = loadConsultationFlowV2()
+    const doc = loadConsultationFlow()
     const result = generateCode(doc, {
       outputDir: './generated',
       flowName: doc.name,

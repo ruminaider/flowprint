@@ -24,7 +24,7 @@ function loadExamples(): { name: string; content: string; path: string }[] {
  */
 function makeDoc(overrides: Partial<FlowprintDocument> = {}): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test-blueprint',
     version: '1.0.0',
     lanes: {
@@ -52,15 +52,15 @@ describe('serialize round-trip', () => {
     }
   })
 
-  it('serialize-then-revalidate: serialized v2 docs pass validation', () => {
+  it('serialize-then-revalidate: serialized v1 docs pass validation', () => {
     const examples = loadExamples()
-    const v2Examples = examples.filter((e) => {
+    const v1Examples = examples.filter((e) => {
       const doc = parse(e.content) as FlowprintDocument
-      return doc.schema === 'flowprint/2.0'
+      return doc.schema === 'flowprint/1.0'
     })
-    expect(v2Examples.length).toBeGreaterThan(0)
+    expect(v1Examples.length).toBeGreaterThan(0)
 
-    for (const example of v2Examples) {
+    for (const example of v1Examples) {
       const doc = parse(example.content) as FlowprintDocument
       const serialized = serialize(doc)
       const result = validateYaml(serialized)
