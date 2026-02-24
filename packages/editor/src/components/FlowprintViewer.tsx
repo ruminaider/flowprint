@@ -8,11 +8,11 @@ import {
   type ReactFlowProps,
 } from '@xyflow/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
-import { nodeTypes } from '../nodes-v2/specs'
-import { edgeTypes } from '../edges-v2'
+import { nodeTypes } from '../nodes/specs'
+import { edgeTypes } from '../edges'
 import { computeLayout } from '../layout'
-import { LaneBackground } from '../components-v2/LaneBackground'
-import type { LaneBackgroundLane } from '../components-v2/LaneBackground'
+import { LaneBackground } from './LaneBackground'
+import type { LaneBackgroundLane } from './LaneBackground'
 
 /**
  * Props for {@link FlowprintViewer}.
@@ -51,7 +51,7 @@ export function FlowprintViewer({
 }: FlowprintViewerProps) {
   const layout = useMemo(() => computeLayout(doc), [doc])
 
-  const v2Lanes: LaneBackgroundLane[] = useMemo(() => {
+  const laneProps: LaneBackgroundLane[] = useMemo(() => {
     const laneList = layout.lanes
     return laneList.map((lane, idx) => ({
       id: lane.laneId,
@@ -106,7 +106,7 @@ export function FlowprintViewer({
         proOptions={proOptions}
       >
         <LaneBackground
-          lanes={v2Lanes}
+          lanes={laneProps}
           totalWidth={layout.width}
           collapsedLaneIds={emptySet}
           onToggleCollapse={noop}

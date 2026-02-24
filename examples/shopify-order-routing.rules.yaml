@@ -1,0 +1,48 @@
+schema: flowprint-rules/1.0
+name: shopify_order_routing
+description: >-
+  Route orders to the appropriate handler sub-flow based on
+  classified order_type. Maps to Evvy's process_shopify_order_for_* functions.
+hit_policy: first
+inputs:
+  - order_type
+  - business_vertical
+rules:
+  # All test types → bulk check sub-flow
+  - when:
+      order_type: {in: [test, expanded_test]}
+    then:
+      next: check_bulk_order
+
+  - when:
+      order_type: urine_test
+    then:
+      next: check_bulk_order
+
+  - when:
+      order_type: pcr_add_on
+    then:
+      next: check_bulk_order
+
+  # All care types → consult linking sub-flow
+  - when:
+      order_type: {in: [vaginitis_care, sti_care, uti_care, a_la_carte, dynamic_bundle, male_partner]}
+    then:
+      next: link_consult
+
+  # Direct refills → prescription resolution sub-flow
+  - when:
+      order_type: prescription_treatment
+    then:
+      next: resolve_prescriptions
+
+  # Ungated Rx → eligibility check
+  - when:
+      order_type: ungated_rx
+    then:
+      next: check_ungated_rx
+
+  # Fallback
+  - when: {}
+    then:
+      next: handle_unknown

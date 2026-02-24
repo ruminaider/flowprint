@@ -9,7 +9,7 @@ import {
   isErrorNode,
 } from '@ruminaider/flowprint-schema'
 import type { GeneratedFile } from './types.js'
-import { FILE_HEADER, indent, camelCase } from './utils.js'
+import { FILE_HEADER, indent, camelCase, pascalCase } from './utils.js'
 
 export function generateWorkflow(doc: FlowprintDocument): GeneratedFile {
   const lines: string[] = []
@@ -150,7 +150,12 @@ function generateActivityProxies(doc: FlowprintDocument): string[] {
         nodesWithTemporal.push({ id, node })
       } else if (node.entry_points && node.entry_points.length > 0) {
         hasNodesWithoutTemporal = true
+      } else if (node.rules?.file) {
+        hasNodesWithoutTemporal = true
       }
+    }
+    if (isSwitchNode(node) && node.rules?.file) {
+      hasNodesWithoutTemporal = true
     }
   }
 
@@ -279,6 +284,13 @@ function generateActionCode(id: string, node: ActionNode): string[] {
   const lines: string[] = []
   const varName = camelCase(id)
 
+  if (node.rules?.file) {
+    const fnName = `evaluate${pascalCase(id)}Rules`
+    lines.push(`// ${node.label} (rules-driven)`)
+    lines.push(`const ${varName} = await defaultActivities.${fnName}()`)
+    return lines
+  }
+
   if (!node.entry_points || node.entry_points.length === 0) {
     lines.push(`// ${node.label} (no entry points)`)
     return lines
@@ -327,15 +339,27 @@ function generateSwitchCode(
 ): string[] {
   const lines: string[] = []
 
+  if (node.rules?.file) {
+    const varName = camelCase(id)
+    const fnName = `evaluate${pascalCase(id)}Rules`
+    lines.push(`// Switch: ${node.label} (rules-driven)`)
+    lines.push(`// Rules evaluated at runtime via ${node.rules.file}`)
+    lines.push(`const ${varName}Result = await defaultActivities.${fnName}()`)
+    lines.push(`// Routing determined by rules output`)
+    return lines
+  }
+
   lines.push(`// Switch: ${node.label}`)
 
-  for (let i = 0; i < node.cases.length; i++) {
-    const c = node.cases[i]
-    if (!c) continue
-    const prefix = i === 0 ? 'if' : '} else if'
-    lines.push(`${prefix} (${c.when}) {`)
-    lines.push(`  upsertSearchAttributes({ flowprint_switch_decisions: ['${id}:${c.next}'] })`)
-    lines.push(`  // -> ${c.next}`)
+  if (node.cases) {
+    for (let i = 0; i < node.cases.length; i++) {
+      const c = node.cases[i]
+      if (!c) continue
+      const prefix = i === 0 ? 'if' : '} else if'
+      lines.push(`${prefix} (${c.when}) {`)
+      lines.push(`  upsertSearchAttributes({ flowprint_switch_decisions: ['${id}:${c.next}'] })`)
+      lines.push(`  // -> ${c.next}`)
+    }
   }
 
   if (node.default) {
@@ -375,7 +399,7 @@ function generateParallelCode(
     lines.push(`  ])`)
     lines.push(`})`)
   } else {
-    // Default: all / all_reached / await_all
+    // Default: all — wait for all branches
     const assignments = branchVars.map((v) => v).join(', ')
     lines.push(`const [${assignments}] = await Promise.all([`)
     for (const branch of node.branches) {

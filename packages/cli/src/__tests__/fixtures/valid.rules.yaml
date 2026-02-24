@@ -1,0 +1,14 @@
+schema: flowprint-rules/1.0
+name: test-rules
+description: Test rules for validation
+hit_policy: first
+inputs:
+  - order.total
+rules:
+  - when:
+      order.total:
+        gte: 100
+    then:
+      discount: 20
+  - then:
+      discount: 0

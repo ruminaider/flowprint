@@ -1,92 +1,92 @@
 import { useEffect } from 'react'
 
-// ---------------------------------------------------------------------------
-// Public types
-// ---------------------------------------------------------------------------
+interface ShortcutConfig {
+  handler: () => void
+  when?: () => boolean
+}
 
-export interface UseKeyboardShortcutsOptions {
-  undo: () => void
-  redo: () => void
-  deleteSelected: () => void
-  selectAll: () => void
-  onSave?: () => void
-  deselect: () => void
+interface UseKeyboardShortcutsOptions {
+  shortcuts: Record<string, ShortcutConfig>
   disabled?: boolean
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+function isMac(): boolean {
+  if (typeof navigator === 'undefined') return false
+  if ('userAgentData' in navigator && (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform) {
+    return /mac/i.test((navigator as { userAgentData: { platform: string } }).userAgentData.platform)
+  }
+  return /Mac|iPod|iPhone|iPad/.test(navigator.userAgent)
+}
 
-/**
- * Returns true when the event target is an editable element (input, textarea,
- * select, or contentEditable). Shortcuts should not fire while the user is
- * typing in a form field.
- */
-function isEditableTarget(event: KeyboardEvent): boolean {
-  const target = event.target
+function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   const tag = target.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
-  if (target.contentEditable === 'true') return true
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return true
+  if (target.isContentEditable) return true
   return false
 }
 
-/**
- * Returns true when the platform modifier key is pressed (Cmd on macOS,
- * Ctrl on Windows/Linux).
- */
-function hasMod(event: KeyboardEvent): boolean {
-  const isMac = /mac/i.test(navigator.userAgent)
-  return isMac ? event.metaKey : event.ctrlKey
+interface ParsedShortcut {
+  mod: boolean
+  shift: boolean
+  alt: boolean
+  key: string
 }
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
+function parseShortcut(shortcut: string): ParsedShortcut {
+  const parts = shortcut.toLowerCase().split('+')
+  const result: ParsedShortcut = {
+    mod: false,
+    shift: false,
+    alt: false,
+    key: '',
+  }
 
-export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions): void {
-  const { undo, redo, deleteSelected, onSave, deselect, disabled } = options
+  for (const part of parts) {
+    if (part === 'mod') {
+      result.mod = true
+    } else if (part === 'shift') {
+      result.shift = true
+    } else if (part === 'alt') {
+      result.alt = true
+    } else {
+      result.key = part
+    }
+  }
 
+  return result
+}
+
+function matchesShortcut(event: KeyboardEvent, parsed: ParsedShortcut): boolean {
+  const mac = isMac()
+  const modPressed = mac ? event.metaKey : event.ctrlKey
+
+  if (parsed.mod !== modPressed) return false
+  if (parsed.shift !== event.shiftKey) return false
+  if (parsed.alt !== event.altKey) return false
+
+  return event.key.toLowerCase() === parsed.key
+}
+
+export function useKeyboardShortcuts({ shortcuts, disabled }: UseKeyboardShortcutsOptions): void {
   useEffect(() => {
     if (disabled) return
 
+    const parsedEntries = Object.entries(shortcuts).map(([shortcutStr, config]) => ({
+      parsed: parseShortcut(shortcutStr),
+      config,
+    }))
+
     function handleKeyDown(event: KeyboardEvent) {
-      if (isEditableTarget(event)) return
+      if (isEditableTarget(event.target)) return
 
-      // Mod+Shift+Z → redo (must be checked before Mod+Z)
-      if (hasMod(event) && event.shiftKey && event.key === 'z') {
-        event.preventDefault()
-        redo()
-        return
-      }
-
-      // Mod+Z → undo
-      if (hasMod(event) && !event.shiftKey && event.key === 'z') {
-        event.preventDefault()
-        undo()
-        return
-      }
-
-      // Mod+S → save
-      if (hasMod(event) && event.key === 's') {
-        event.preventDefault()
-        onSave?.()
-        return
-      }
-
-      // Delete / Backspace → delete selected
-      if (event.key === 'Delete' || event.key === 'Backspace') {
-        event.preventDefault()
-        deleteSelected()
-        return
-      }
-
-      // Escape → deselect
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        deselect()
-        return
+      for (const { parsed, config } of parsedEntries) {
+        if (matchesShortcut(event, parsed)) {
+          if (config.when && !config.when()) continue
+          event.preventDefault()
+          config.handler()
+          return
+        }
       }
     }
 
@@ -94,5 +94,5 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions): void
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [undo, redo, deleteSelected, onSave, deselect, disabled])
+  }, [shortcuts, disabled])
 }

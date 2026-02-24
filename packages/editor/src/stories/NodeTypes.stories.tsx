@@ -105,7 +105,7 @@ export const ParallelNodeStory: Story = {
           label: 'Fork Work',
           branches: ['branch_a', 'branch_b'],
           join: 'done',
-          join_strategy: 'all_reached',
+          join_strategy: 'all',
         },
         branch_a: {
           type: 'action',

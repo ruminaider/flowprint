@@ -62,6 +62,15 @@ export const SEL = {
   popoverHeader: '.fp-node-popover__header',
   popoverOpenEditor: '.fp-node-popover__open-editor',
 
+  // Rules UI
+  rulesEditor: '.fp-rules-editor',
+  rulesPreview: '.fp-rules-preview',
+  decisionTable: '.fp-decision-table',
+  rulesToggle: '[data-testid="toggle-rules"]',
+  alternateToggle: '[data-testid="toggle-alternate"]',
+  rulesFileInput: '[data-testid="rules-file-input"]',
+  rulesEvaluatorSelect: '[data-testid="rules-evaluator-select"]',
+
   // React Flow internals
   edge: '.react-flow__edge',
   reactFlow: '.react-flow',

@@ -4,7 +4,7 @@ import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
 
 export const runCommand = new Command('run')
-  .description('Execute a flowprint/2.0 document using the dev runner')
+  .description('Execute a flowprint document using the dev runner')
   .argument('<file>', 'Path to .flowprint.yaml file')
   .option('--input <json>', 'Workflow input as JSON string', '{}')
   .option('--fixtures <path>', 'Path to JSON fixtures file for wait nodes')

@@ -19,6 +19,7 @@ import {
 import type { RunOptions, ExecutionContext, StepResult, ExecutionTrace } from './types.js'
 import { evaluateExpression } from './evaluator.js'
 import { loadEntryPoint } from './loader.js'
+import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
 
 interface CompensationEntry {
   nodeId: string
@@ -26,7 +27,7 @@ interface CompensationEntry {
 }
 
 /**
- * Execute a flowprint/2.0 document using an in-process graph walker.
+ * Execute a flowprint document using an in-process graph walker.
  *
  * Walks the graph starting from root nodes, executing each node in sequence.
  * Action nodes call their entry_point functions, switch nodes evaluate
@@ -143,9 +144,32 @@ async function executeAction(
   const stepStart = performance.now()
 
   try {
+    // Rules-driven action: evaluate rules file instead of entry points
+    if (node.rules) {
+      if (node.rules.evaluator && node.rules.evaluator !== 'builtin') {
+        throw new Error(
+          `Action node "${nodeId}" uses unknown evaluator "${node.rules.evaluator}". Only "builtin" is supported.`,
+        )
+      }
+
+      const rulesDoc = loadRulesFile(node.rules.file, options.projectRoot)
+      const rulesResult = evaluateRules(rulesDoc, context, options.expressionTimeout)
+      context.results.set(nodeId, rulesResult.output)
+
+      steps.push({
+        node_id: nodeId,
+        type: 'action',
+        status: 'completed',
+        duration_ms: Math.round(performance.now() - stepStart),
+        next: node.next,
+      })
+
+      return node.next
+    }
+
     const entryPoint = node.entry_points?.[0]
     if (!entryPoint) {
-      throw new Error(`Action node "${nodeId}" has no entry_point defined`)
+      throw new Error(`Action node "${nodeId}" has no entry_point or rules defined`)
     }
 
     const fn = await loadEntryPoint(entryPoint, options.projectRoot)
@@ -218,9 +242,57 @@ function executeSwitch(
 ): string | undefined {
   const stepStart = performance.now()
 
+  // Rules-driven switch: evaluate rules file for routing
+  if (node.rules) {
+    if (node.rules.evaluator && node.rules.evaluator !== 'builtin') {
+      throw new Error(
+        `Switch node "${nodeId}" uses unknown evaluator "${node.rules.evaluator}". Only "builtin" is supported.`,
+      )
+    }
+
+    const rulesDoc = loadRulesFile(node.rules.file, options.projectRoot)
+    const rulesResult = evaluateRules(rulesDoc, context, options.expressionTimeout)
+    context.results.set(nodeId, rulesResult.output)
+
+    // Route via `then.next` from matching rule
+    const output = rulesResult.output as Record<string, unknown>
+    const nextNode = output.next as string | undefined
+
+    if (nextNode) {
+      steps.push({
+        node_id: nodeId,
+        type: 'switch',
+        status: 'matched',
+        duration_ms: Math.round(performance.now() - stepStart),
+        next: nextNode,
+      })
+      return nextNode
+    }
+
+    // No `next` in output — fall through to default
+    if (node.default) {
+      steps.push({
+        node_id: nodeId,
+        type: 'switch',
+        status: 'default',
+        duration_ms: Math.round(performance.now() - stepStart),
+        next: node.default,
+      })
+      return node.default
+    }
+
+    steps.push({
+      node_id: nodeId,
+      type: 'switch',
+      status: 'no-match',
+      duration_ms: Math.round(performance.now() - stepStart),
+    })
+    return undefined
+  }
+
   // Evaluate cases top-to-bottom, follow first match
-  for (let i = 0; i < node.cases.length; i++) {
-    const c = node.cases[i]
+  for (let i = 0; i < (node.cases?.length ?? 0); i++) {
+    const c = node.cases?.[i]
     if (!c) continue
 
     const result = evaluateExpression(c.when, context, options.expressionTimeout)
@@ -326,7 +398,7 @@ async function executeParallel(
     const first = await Promise.race(branchPromises)
     context.results.set(nodeId, first.result)
   } else {
-    // 'all', 'all_reached', 'await_all' — wait for all branches
+    // 'all' — wait for all branches
     const results = await Promise.all(branchPromises)
     const resultMap: Record<string, unknown> = {}
     for (const r of results) {

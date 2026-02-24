@@ -192,6 +192,9 @@
             "$ref": "#/definitions/EntryPoint"
           }
         },
+        "rules": {
+          "$ref": "#/definitions/RulesRef"
+        },
         "position": {
           "$ref": "#/definitions/Position"
         },
@@ -221,7 +224,7 @@
     },
     "SwitchNode": {
       "type": "object",
-      "required": ["type", "lane", "label", "cases"],
+      "required": ["type", "lane", "label"],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -250,6 +253,9 @@
           "items": {
             "$ref": "#/definitions/EntryPoint"
           }
+        },
+        "rules": {
+          "$ref": "#/definitions/RulesRef"
         },
         "position": {
           "$ref": "#/definitions/Position"
@@ -325,7 +331,7 @@
         },
         "join_strategy": {
           "type": "string",
-          "enum": ["all_reached", "await_all", "all", "first"]
+          "enum": ["all", "first"]
         }
       }
     },
@@ -466,6 +472,23 @@
           "type": "string",
           "enum": ["success", "failure"],
           "description": "Whether this terminal represents a successful or failed outcome"
+        }
+      }
+    },
+    "RulesRef": {
+      "type": "object",
+      "required": ["file"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path to .rules.yaml file"
+        },
+        "evaluator": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Evaluator plugin name (default: builtin)"
         }
       }
     },

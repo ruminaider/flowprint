@@ -28,8 +28,10 @@ export function getEdges(doc: FlowprintDocument): Edge[] {
       }
 
       case 'switch': {
-        for (const c of node.cases) {
-          edges.push({ source: nodeId, target: c.next, label: c.when, type: 'normal' })
+        if (node.cases) {
+          for (const c of node.cases) {
+            edges.push({ source: nodeId, target: c.next, label: c.when, type: 'normal' })
+          }
         }
         if (node.default) {
           edges.push({ source: nodeId, target: node.default, type: 'default' })

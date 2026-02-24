@@ -1,0 +1,21 @@
+schema: flowprint/1.0
+name: rules-valid-test
+version: 1.0.0
+lanes:
+  default:
+    label: Default
+    visibility: internal
+    order: 0
+nodes:
+  calculate_discount:
+    type: action
+    lane: default
+    label: Calculate Discount
+    rules:
+      file: valid.rules.yaml
+    next: done
+  done:
+    type: terminal
+    lane: default
+    label: Done
+    outcome: success

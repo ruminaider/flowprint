@@ -224,6 +224,9 @@ importers:
       acorn:
         specifier: ^8.14.0
         version: 8.15.0
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
     devDependencies:
       '@types/node':
         specifier: ^25.2.2
@@ -237,9 +240,6 @@ importers:
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@types/node@25.2.2)(jsdom@28.0.0)(yaml@2.8.2)
-      yaml:
-        specifier: ^2.8.2
-        version: 2.8.2
 
   packages/schema:
     dependencies:

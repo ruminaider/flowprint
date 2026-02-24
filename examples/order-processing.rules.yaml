@@ -1,0 +1,33 @@
+schema: flowprint-rules/1.0
+name: order-processing
+description: Determines discount and shipping based on order attributes
+hit_policy: first
+inputs:
+  - order.total_amount
+  - order.subscription_type
+  - label: Is VIP
+    expr: customer.loyalty_points > 1000
+rules:
+  - when:
+      order.total_amount:
+        gte: 100
+      order.subscription_type:
+        eq: premium
+    then:
+      discount_percent: 20
+      shipping: free
+  - when:
+      order.total_amount:
+        between: [50, 99.99]
+    then:
+      discount_percent: 10
+      shipping: standard
+  - when:
+      order.subscription_type:
+        in: [premium, enterprise]
+    then:
+      discount_percent: 15
+      shipping: free
+  - then:
+      discount_percent: 0
+      shipping: standard

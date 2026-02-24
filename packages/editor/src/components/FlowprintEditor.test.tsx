@@ -78,11 +78,11 @@ vi.mock('../layout', () => ({
   autoLayout: vi.fn(() => new Map()),
 }))
 
-vi.mock('../nodes-v2/specs', () => ({
+vi.mock('../nodes/specs', () => ({
   nodeTypes: {},
 }))
 
-vi.mock('../nodes-v2/registry', () => ({
+vi.mock('../nodes/registry', () => ({
   registerNodeSpec: vi.fn(),
   getNodeSpec: () => null,
   getAllNodeSpecs: () => [],
@@ -91,11 +91,11 @@ vi.mock('../nodes-v2/registry', () => ({
   },
 }))
 
-vi.mock('../edges-v2', () => ({
+vi.mock('../edges', () => ({
   edgeTypes: {},
 }))
 
-vi.mock('../components-v2/LaneBackground', () => ({
+vi.mock('./LaneBackground', () => ({
   LaneBackground: () => null,
 }))
 

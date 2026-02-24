@@ -13,7 +13,7 @@ const mockedLoadEntryPoint = vi.mocked(loadEntryPoint)
 
 function makeDoc(nodes: FlowprintDocument['nodes']): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test-flow',
     version: '1.0.0',
     lanes: {
@@ -264,7 +264,7 @@ describe('Graph Topology Edge Cases', () => {
     const trace = await runGraph(doc, makeOptions())
 
     expect(trace.status).toBe('error')
-    expect(trace.error).toContain('has no entry_point defined')
+    expect(trace.error).toContain('has no entry_point or rules defined')
     expect(trace.error).toContain('action')
   })
 

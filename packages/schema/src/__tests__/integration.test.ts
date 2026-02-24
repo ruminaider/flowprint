@@ -36,7 +36,7 @@ const EXAMPLES = [
   'prescription-fulfillment.flowprint.yaml',
   'subscription-renewal.flowprint.yaml',
   'consultation-flow.flowprint.yaml',
-  'consultation-flow-v2.flowprint.yaml',
+  'consultation-flow-stubs.flowprint.yaml',
 ] as const
 
 function readExample(name: string): string {
@@ -234,8 +234,8 @@ describe('integration: type guards on example nodes', () => {
       expect(isSwitchNode(node)).toBe(true)
       expect(isActionNode(node)).toBe(false)
       if (isSwitchNode(node)) {
-        expect(node.cases.length).toBe(2)
-        expect(node.cases[0]?.when).toBe('needs_prescription')
+        expect(node.cases?.length).toBe(2)
+        expect(node.cases?.[0]?.when).toBe('needs_prescription')
         expect(node.default).toBe('create_prescription')
       }
     })
@@ -247,7 +247,7 @@ describe('integration: type guards on example nodes', () => {
         expect(node.branches).toContain('submit_to_pharmacy')
         expect(node.branches).toContain('notify_patient')
         expect(node.join).toBe('delivery_tracking')
-        expect(node.join_strategy).toBe('all_reached')
+        expect(node.join_strategy).toBe('all')
       }
     })
 
@@ -369,11 +369,11 @@ describe('integration: type guards on example nodes', () => {
     })
   })
 
-  describe('consultation-flow-v2', () => {
-    const doc = loadExample('consultation-flow-v2.flowprint.yaml')
+  describe('consultation-flow (extended)', () => {
+    const doc = loadExample('consultation-flow.flowprint.yaml')
 
-    it('uses schema version 2.0', () => {
-      expect(doc.schema).toBe('flowprint/2.0')
+    it('uses schema version 1.0', () => {
+      expect(doc.schema).toBe('flowprint/1.0')
     })
 
     it('has workflow configuration', () => {
@@ -465,7 +465,7 @@ describe('integration: cross-example checks', () => {
   it('all examples use a supported schema version', () => {
     for (const example of EXAMPLES) {
       const doc = loadExample(example)
-      expect(['flowprint/1.0', 'flowprint/2.0']).toContain(doc.schema)
+      expect(['flowprint/1.0']).toContain(doc.schema)
     }
   })
 

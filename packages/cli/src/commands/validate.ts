@@ -1,10 +1,10 @@
 import { Command } from 'commander'
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
 import chalk from 'chalk'
 import { glob } from 'glob'
 import { parse } from 'yaml'
-import { validateYaml } from '@ruminaider/flowprint-schema'
+import { validateYaml, validateRulesYaml } from '@ruminaider/flowprint-schema'
 import type { FlowprintDocument, ValidationError } from '@ruminaider/flowprint-schema'
 import { checkEntryPoints } from '../entry-points.js'
 
@@ -77,6 +77,47 @@ export const validateCommand = new Command('validate')
           console.log(chalk.red(`  EXEC  ${file}`))
           for (const err of exprResult.errors) {
             console.log(chalk.red(`    ${err.path}: ${err.message}`))
+          }
+        }
+      }
+
+      // Validate referenced rules files
+      if (result.valid) {
+        const doc = parse(content) as FlowprintDocument
+        for (const [nodeId, node] of Object.entries(doc.nodes)) {
+          if ('rules' in node && node.rules?.file) {
+            const rulesPath = resolve(dirname(filePath), node.rules.file)
+            let rulesContent: string
+            try {
+              rulesContent = readFileSync(rulesPath, 'utf-8')
+            } catch {
+              hasErrors = true
+              console.log(
+                chalk.red(
+                  `  RULES ${file} -> ${node.rules.file} (node: ${nodeId}): file not found`,
+                ),
+              )
+              continue
+            }
+            const rulesResult = validateRulesYaml(rulesContent)
+            const rulesErrors = rulesResult.errors.filter((e) => e.severity === 'error')
+            const rulesWarnings = rulesResult.errors.filter((e) => e.severity === 'warning')
+            if (rulesErrors.length > 0) {
+              hasErrors = true
+              console.log(
+                chalk.red(`  RULES ${file} -> ${node.rules.file} (node: ${nodeId})`),
+              )
+              for (const err of rulesErrors) {
+                console.log(chalk.red(`    ${err.path}: ${err.message}`))
+              }
+            } else if (rulesWarnings.length > 0) {
+              console.log(
+                chalk.yellow(`  RULES ${file} -> ${node.rules.file} (node: ${nodeId})`),
+              )
+              for (const warn of rulesWarnings) {
+                console.log(chalk.yellow(`    ${warn.path}: ${warn.message}`))
+              }
+            }
           }
         }
       }

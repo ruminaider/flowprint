@@ -1,0 +1,39 @@
+schema: flowprint-rules/1.0
+name: shopify_state_restrictions
+description: >-
+  Validate state-level restrictions on prescription shipping.
+  Some states prohibit controlled substances or refrigerated meds.
+hit_policy: first
+inputs:
+  - shipping_address.state
+  - rx_category
+rules:
+  # Controlled substance restrictions
+  - when:
+      shipping_address.state: {in: [ID, WV]}
+      rx_category: controlled
+    then:
+      next: handle_error
+      reason: state_prohibits_controlled_rx
+
+  # Refrigerated shipping restrictions (no cold-chain to Alaska/Hawaii)
+  - when:
+      shipping_address.state: {in: [AK, HI]}
+      rx_category: refrigerated
+    then:
+      next: handle_error
+      reason: no_cold_chain_shipping
+
+  # Compounding restrictions
+  - when:
+      shipping_address.state: {in: [CT, NJ]}
+      rx_category: compounded
+    then:
+      next: handle_error
+      reason: state_compounding_restriction
+
+  # All clear
+  - when: {}
+    then:
+      next: send_to_pharmacy
+      reason: approved

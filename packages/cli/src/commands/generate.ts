@@ -7,7 +7,7 @@ import { validateYaml } from '@ruminaider/flowprint-schema'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 
 export const generateCommand = new Command('generate')
-  .description('Generate Temporal TypeScript workflow from a flowprint/2.0 document')
+  .description('Generate Temporal TypeScript workflow from a flowprint document')
   .argument('<file>', 'Path to .flowprint.yaml file')
   .option('--output <dir>', 'Output directory', './generated')
   .action(async (file: string, opts: { output: string }) => {

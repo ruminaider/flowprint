@@ -6,7 +6,7 @@ function makeDoc(
   overrides: Partial<FlowprintDocument> & { nodes: FlowprintDocument['nodes'] },
 ): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test-flow',
     version: '1.0.0',
     lanes: {
@@ -579,5 +579,94 @@ describe('generateWorkflow', () => {
     // The name is 'consultation-flow', camelCase only handles underscores
     // Let's check what gets generated
     expect(result.content).toContain('export async function')
+  })
+
+  it('generates rules evaluator invocation for switch node with rules', () => {
+    const doc = makeDoc({
+      nodes: {
+        route_order: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Route Order',
+          rules: { file: 'order.rules.yaml' },
+          cases: [{ when: 'true', next: 'done' }],
+          default: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('// Switch: Route Order (rules-driven)')
+    expect(result.content).toContain('// Rules evaluated at runtime via order.rules.yaml')
+    expect(result.content).toContain('defaultActivities.evaluateRouteOrderRules()')
+    expect(result.content).toContain('// Routing determined by rules output')
+    // Should NOT contain if/else chain
+    expect(result.content).not.toContain("if (true)")
+  })
+
+  it('generates rules evaluator activity call for action node with rules', () => {
+    const doc = makeDoc({
+      nodes: {
+        calculate_discount: {
+          type: 'action',
+          lane: 'default',
+          label: 'Calculate Discount',
+          rules: { file: 'discount.rules.yaml' },
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    expect(result.content).toContain('// Calculate Discount (rules-driven)')
+    expect(result.content).toContain(
+      'const calculateDiscount = await defaultActivities.evaluateCalculateDiscountRules()',
+    )
+    // Should include default activity proxy
+    expect(result.content).toContain('defaultActivities')
+  })
+
+  it('generates correct code for mixed rules and entry_point nodes', () => {
+    const doc = makeDoc({
+      nodes: {
+        calculate_discount: {
+          type: 'action',
+          lane: 'default',
+          label: 'Calculate Discount',
+          rules: { file: 'discount.rules.yaml' },
+          next: 'process_order',
+        },
+        process_order: {
+          type: 'action',
+          lane: 'default',
+          label: 'Process Order',
+          entry_points: [{ file: 'src/order.ts', symbol: 'processOrder' }],
+          next: 'done',
+        },
+        done: {
+          type: 'terminal',
+          lane: 'default',
+          label: 'Done',
+          outcome: 'success',
+        },
+      },
+    })
+    const result = generateWorkflow(doc)
+    // Rules-driven node
+    expect(result.content).toContain('evaluateCalculateDiscountRules()')
+    // Regular entry point node
+    expect(result.content).toContain('defaultActivities.processOrder()')
+    // Both use default proxy
+    expect(result.content).toContain("startToCloseTimeout: '1m'")
   })
 })

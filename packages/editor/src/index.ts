@@ -11,22 +11,22 @@ export type { ErrorBoundaryProps } from './components/ErrorBoundary'
 export { ExportButton } from './components/ExportButton'
 export type { ExportButtonProps } from './components/ExportButton'
 
-// V2 components
-export { Toolbar } from './components-v2/Toolbar'
-export { TabBar } from './components-v2/TabBar'
-export type { TabBarProps } from './components-v2/TabBar'
-export { CommandPalette } from './components-v2/CommandPalette'
-export { BottomPanel } from './components-v2/BottomPanel'
-export type { BottomPanelProps } from './components-v2/BottomPanel'
-export { Island } from './components-v2/Island'
-export { NodePopover } from './components-v2/NodePopover'
-export { ZoomControls } from './components-v2/ZoomControls'
+// Components
+export { Toolbar } from './components/Toolbar'
+export { TabBar } from './components/TabBar'
+export type { TabBarProps } from './components/TabBar'
+export { CommandPalette } from './components/CommandPalette'
+export { BottomPanel } from './components/BottomPanel'
+export type { BottomPanelProps } from './components/BottomPanel'
+export { Island } from './components/Island'
+export { NodePopover } from './components/NodePopover'
+export { ZoomControls } from './components/ZoomControls'
 
 // Node spec system
-export type { NodeSpec } from './nodes-v2/types'
-export { registerNodeSpec, getNodeSpec, getAllNodeSpecs } from './nodes-v2/registry'
-export { nodeTypes } from './nodes-v2/specs'
-export { edgeTypes } from './edges-v2'
+export type { NodeSpec } from './nodes/types'
+export { registerNodeSpec, getNodeSpec, getAllNodeSpecs } from './nodes/registry'
+export { nodeTypes } from './nodes/specs'
+export { edgeTypes } from './edges'
 
 // State
 export { useFlowprintState } from './hooks/useFlowprintState'
@@ -48,6 +48,10 @@ export { CodeSearchProvider } from './symbols/CodeSearchProvider'
 export type { CodeSearchProviderOptions } from './symbols/CodeSearchProvider'
 export { useSymbolSearch } from './symbols/useSymbolSearch'
 export type { UseSymbolSearchOptions, UseSymbolSearchReturn } from './symbols/useSymbolSearch'
+
+// Rules data context
+export { RulesDataProvider, useRulesData } from './contexts/RulesDataContext'
+export type { RulesDataMap, RulesDataEntry } from './contexts/RulesDataContext'
 
 // Theme
 export { useTheme } from './hooks/useTheme'

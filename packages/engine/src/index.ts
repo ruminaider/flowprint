@@ -19,6 +19,19 @@ export {
 } from './runner/index.js'
 export type { RunOptions, ExecutionTrace, StepResult, ExecutionContext } from './runner/index.js'
 
+// Rules
+export { loadRulesFile, evaluateRules } from './rules/index.js'
+export type {
+  RulesDocument,
+  HitPolicy,
+  InputDef,
+  LabeledInput,
+  Rule,
+  Condition,
+  OperatorCondition,
+  RulesEvaluationResult,
+} from './rules/index.js'
+
 // Codegen
 export { generateCode } from './codegen/index.js'
 export type { GenerateResult, GenerateOptions, GeneratedFile } from './codegen/index.js'

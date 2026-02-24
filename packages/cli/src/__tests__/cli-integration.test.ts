@@ -37,7 +37,6 @@ describe('CLI integration', () => {
       expect(stdout).toContain('validate')
       expect(stdout).toContain('lint')
       expect(stdout).toContain('diff')
-      expect(stdout).toContain('migrate')
       expect(stdout).toContain('init')
       expect(stdout).toContain('Exit codes')
     })
@@ -115,47 +114,6 @@ describe('CLI integration', () => {
     })
   })
 
-  describe('flowprint migrate', () => {
-    it('should skip files already at 2.0', () => {
-      const { stdout, exitCode } = run([
-        'migrate',
-        `${EXAMPLES}/consultation-flow-v2.flowprint.yaml`,
-        '--dry-run',
-      ])
-      expect(exitCode).toBe(0)
-      expect(stdout).toContain('SKIP')
-      expect(stdout).toContain('already at flowprint/2.0')
-    })
-
-    it('should show diff for 1.0 files in dry-run mode', () => {
-      const { stdout, exitCode } = run([
-        'migrate',
-        `${EXAMPLES}/consultation-flow.flowprint.yaml`,
-        '--dry-run',
-      ])
-      expect(exitCode).toBe(0)
-      expect(stdout).toContain('DIFF')
-      expect(stdout).toContain('flowprint/2.0')
-      expect(stdout).toContain('Summary:')
-      expect(stdout).toContain('1 migrated')
-    })
-
-    it('should exit 2 for no matching files', () => {
-      const { exitCode } = run(['migrate', 'no-match-*.yaml'])
-      expect(exitCode).toBe(2)
-    })
-
-    it('should warn about non-expression switch when values', () => {
-      const { stdout } = run([
-        'migrate',
-        `${EXAMPLES}/consultation-flow.flowprint.yaml`,
-        '--dry-run',
-      ])
-      expect(stdout).toContain('WARN')
-      expect(stdout).toContain('looks like a label')
-    })
-  })
-
   describe('flowprint init', () => {
     const testOutput = resolve(ROOT, 'test-init-output.flowprint.yaml')
 
@@ -192,7 +150,7 @@ describe('CLI integration', () => {
       const fixturesPath = resolve(EXAMPLES, 'stubs/consultation/fixtures.json')
       const { stdout, exitCode } = run([
         'run',
-        `${EXAMPLES}/consultation-flow-v2-stubs.flowprint.yaml`,
+        `${EXAMPLES}/consultation-flow-stubs.flowprint.yaml`,
         '--input',
         '{"patient_id":"P001","symptoms":["headache"]}',
         '--fixtures',
@@ -213,7 +171,7 @@ describe('CLI integration', () => {
     it('should exit 1 on execution failure (timeout path)', () => {
       const { stdout, exitCode } = run([
         'run',
-        `${EXAMPLES}/consultation-flow-v2-stubs.flowprint.yaml`,
+        `${EXAMPLES}/consultation-flow-stubs.flowprint.yaml`,
         '--input',
         '{"patient_id":"P001","symptoms":["headache"],"urgency":"urgent"}',
         '--json',
@@ -238,10 +196,10 @@ describe('CLI integration', () => {
       }
     })
 
-    it('should generate Temporal TypeScript from v2 example', () => {
+    it('should generate Temporal TypeScript from consultation-flow example', () => {
       const { stdout, exitCode } = run([
         'generate',
-        `${EXAMPLES}/consultation-flow-v2.flowprint.yaml`,
+        `${EXAMPLES}/consultation-flow.flowprint.yaml`,
         '--output',
         testGenDir,
       ])

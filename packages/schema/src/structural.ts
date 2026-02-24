@@ -41,6 +41,33 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
     const type = node.type as string
 
+    // Mutual exclusion: rules vs entry_points/cases
+    if (type === 'action' && node.rules !== undefined && node.entry_points !== undefined) {
+      errors.push({
+        path: `/nodes/${nodeId}`,
+        message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
+        severity: 'error',
+      })
+    }
+    if (type === 'switch') {
+      const hasCases = node.cases !== undefined
+      const hasRules = node.rules !== undefined
+      if (hasCases && hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Switch node cannot have both "rules" and "cases". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (!hasCases && !hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Switch node must have either "cases" or "rules"',
+          severity: 'error',
+        })
+      }
+    }
+
     // Check node references based on type
     switch (type) {
       case 'action': {
@@ -171,30 +198,17 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
     }
   }
 
-  // Version-conditional join_strategy validation
-  const schemaVersion = doc.schema as string | undefined
-  if (schemaVersion) {
-    for (const [nodeId, nodeDef] of Object.entries(nodes)) {
-      const node = nodeDef as Record<string, unknown>
-      if (node.type === 'parallel' && node.join_strategy) {
-        const strategy = node.join_strategy as string
-        if (schemaVersion === 'flowprint/2.0') {
-          if (strategy === 'all_reached' || strategy === 'await_all') {
-            errors.push({
-              path: `/nodes/${nodeId}/join_strategy`,
-              message: `join_strategy "${strategy}" is not valid for schema 2.0. Use "all" or "first" instead`,
-              severity: 'error',
-            })
-          }
-        } else if (schemaVersion === 'flowprint/1.0') {
-          if (strategy === 'all' || strategy === 'first') {
-            errors.push({
-              path: `/nodes/${nodeId}/join_strategy`,
-              message: `join_strategy "${strategy}" is not valid for schema 1.0. Use "all_reached" or "await_all" instead`,
-              severity: 'error',
-            })
-          }
-        }
+  // join_strategy validation — only "all" and "first" are valid
+  for (const [nodeId, nodeDef] of Object.entries(nodes)) {
+    const node = nodeDef as Record<string, unknown>
+    if (node.type === 'parallel' && node.join_strategy) {
+      const strategy = node.join_strategy as string
+      if (strategy !== 'all' && strategy !== 'first') {
+        errors.push({
+          path: `/nodes/${nodeId}/join_strategy`,
+          message: `join_strategy "${strategy}" is not valid. Use "all" or "first" instead`,
+          severity: 'error',
+        })
       }
     }
   }

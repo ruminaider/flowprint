@@ -145,6 +145,23 @@ describe('updateNode', () => {
       })
     }).toThrow("Node 'missing' not found")
   })
+
+  it('strips keys set to undefined in the patch', () => {
+    const doc = makeDoc({
+      nodes: {
+        a: actionNode({ entry_points: [{ file: 'f.js', symbol: 's' }] } as Partial<ActionNode>),
+      },
+    })
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: doc }))
+
+    act(() => {
+      result.current.updateNode('a', { entry_points: undefined } as Partial<ActionNode>)
+    })
+
+    const node = result.current.doc.nodes.a!
+    expect('entry_points' in node).toBe(false)
+    expect(node.label).toBe('Do something')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -259,8 +276,8 @@ describe('removeNode', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]?.next).toBe('other')
+    expect(sw.cases?.length).toBe(1)
+    expect(sw.cases?.[0]?.next).toBe('other')
   })
 
   it('cleans up switch.default references', () => {
@@ -403,9 +420,9 @@ describe('connectNodes', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(2)
-    expect(sw.cases[1]!.when).toBe('no')
-    expect(sw.cases[1]!.next).toBe('b')
+    expect(sw.cases?.length).toBe(2)
+    expect(sw.cases?.[1]?.when).toBe('no')
+    expect(sw.cases?.[1]?.next).toBe('b')
   })
 
   it('sets switch default', () => {
@@ -587,8 +604,8 @@ describe('disconnectNodes', () => {
     })
 
     const sw = result.current.doc.nodes.sw as SwitchNode
-    expect(sw.cases.length).toBe(1)
-    expect(sw.cases[0]?.next).toBe('b')
+    expect(sw.cases?.length).toBe(1)
+    expect(sw.cases?.[0]?.next).toBe('b')
   })
 
   it('removes switch.default reference', () => {

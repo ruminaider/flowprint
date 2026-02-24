@@ -10,7 +10,7 @@ function makeDoc(
   overrides: Partial<FlowprintDocument> & { nodes: FlowprintDocument['nodes'] },
 ): FlowprintDocument {
   return {
-    schema: 'flowprint/2.0',
+    schema: 'flowprint/1.0',
     name: 'test-flow',
     version: '1.0.0',
     lanes: {
@@ -28,8 +28,8 @@ function loadDoc(filename: string): FlowprintDocument {
 }
 
 describe('codegen edge cases', () => {
-  it('all generated files from consultation-flow-v2 have balanced braces', () => {
-    const doc = loadDoc('consultation-flow-v2.flowprint.yaml')
+  it('all generated files from consultation-flow have balanced braces', () => {
+    const doc = loadDoc('consultation-flow.flowprint.yaml')
     const result = generateCode(doc, { outputDir: './out', flowName: doc.name })
 
     for (const file of result.files) {
@@ -39,8 +39,8 @@ describe('codegen edge cases', () => {
     }
   })
 
-  it('all generated files from consultation-flow-v2 have balanced parentheses', () => {
-    const doc = loadDoc('consultation-flow-v2.flowprint.yaml')
+  it('all generated files from consultation-flow have balanced parentheses', () => {
+    const doc = loadDoc('consultation-flow.flowprint.yaml')
     const result = generateCode(doc, { outputDir: './out', flowName: doc.name })
 
     for (const file of result.files) {

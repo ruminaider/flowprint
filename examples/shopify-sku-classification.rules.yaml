@@ -1,0 +1,93 @@
+schema: flowprint-rules/1.0
+name: shopify_sku_classification
+description: >-
+  Classify Shopify line items by SKU into order_type and
+  business_vertical. Based on Evvy's _get_order_type_from_sku.
+hit_policy: first
+inputs:
+  - line_item.sku
+  - label: Purchase Type Override
+    expr: custom_properties._linePurchaseType
+rules:
+  # --- TEST vertical ---
+  - when:
+      line_item.sku: VMT001
+    then:
+      order_type: test
+      business_vertical: TEST
+
+  - when:
+      line_item.sku: {in: [VMTEXP001, VMTEXP002, VMTEXP003]}
+    then:
+      order_type: expanded_test
+      business_vertical: TEST
+
+  - when:
+      line_item.sku: UTI001
+    then:
+      order_type: urine_test
+      business_vertical: TEST
+
+  - when:
+      line_item.sku: VPCR001
+    then:
+      order_type: pcr_add_on
+      business_vertical: TEST
+
+  # --- CARE vertical ---
+  - when:
+      line_item.sku: {in: [TRMT001, TRMT002, TRMT003, TRMT005]}
+    then:
+      order_type: vaginitis_care
+      business_vertical: CARE
+
+  - when:
+      line_item.sku: TRMT004
+    then:
+      order_type: sti_care
+      business_vertical: CARE
+
+  - when:
+      line_item.sku: TRMT006
+    then:
+      order_type: uti_care
+      business_vertical: CARE
+
+  # --- Treatment refills (CARE) ---
+  - when:
+      line_item.sku: {in: [RFLBA001, RFLBA002, RFLVP001, RFLVP002, RFLOP001, RFLOP002, RFLHA001]}
+    then:
+      order_type: prescription_treatment
+      business_vertical: CARE
+
+  # --- Special types ---
+  - when:
+      line_item.sku: URXBA004
+    then:
+      order_type: ungated_rx
+      business_vertical: CARE
+
+  - when:
+      line_item.sku: {in: [MPTCL001, MPTMG001]}
+    then:
+      order_type: male_partner
+      business_vertical: CARE
+
+  # --- Purchase type overrides ---
+  - when:
+      Purchase Type Override: a-la-carte
+    then:
+      order_type: a_la_carte
+      business_vertical: CARE
+
+  - when:
+      Purchase Type Override: dynamic-bundle
+    then:
+      order_type: dynamic_bundle
+      business_vertical: CARE
+
+  # --- Fallback ---
+  - when: {}
+    then:
+      order_type: unknown
+      business_vertical: OTHER

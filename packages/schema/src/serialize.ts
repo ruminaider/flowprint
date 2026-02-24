@@ -33,8 +33,8 @@ const NODE_KEY_PREFIX = [
  * Order matters for deterministic output.
  */
 const NODE_TYPE_FIELDS: Record<string, readonly string[]> = {
-  action: ['inputs', 'compensation', 'temporal', 'next', 'error'],
-  switch: ['cases', 'default'],
+  action: ['rules', 'inputs', 'compensation', 'temporal', 'next', 'error'],
+  switch: ['rules', 'cases', 'default'],
   parallel: ['branches', 'join', 'join_strategy'],
   wait: ['event', 'event_type', 'event_type_import', 'timeout', 'next', 'timeout_next'],
   error: ['next'],
@@ -119,7 +119,9 @@ function serializeNode(node: Node): YAMLMap {
     const value = nodeObj[key]
     if (value === undefined) continue
 
-    if (key === 'entry_points' && Array.isArray(value)) {
+    if (key === 'rules' && typeof value === 'object' && value !== null) {
+      nodeMap.add(new Pair(key, serializeRulesRef(value as Record<string, unknown>)))
+    } else if (key === 'entry_points' && Array.isArray(value)) {
       nodeMap.add(new Pair(key, serializeEntryPoints(value as Record<string, unknown>[])))
     } else if (key === 'cases' && Array.isArray(value)) {
       nodeMap.add(new Pair(key, serializeCases(value as Record<string, unknown>[])))
@@ -171,6 +173,16 @@ function serializeEntryPoints(entryPoints: Record<string, unknown>[]): YAMLSeq {
   }
 
   return seq
+}
+
+/**
+ * Serialize rules reference with deterministic field order (file, evaluator).
+ */
+function serializeRulesRef(rules: Record<string, unknown>): YAMLMap {
+  const map = new YAMLMap()
+  if (rules.file !== undefined) map.add(new Pair('file', createScalar(rules.file)))
+  if (rules.evaluator !== undefined) map.add(new Pair('evaluator', createScalar(rules.evaluator)))
+  return map
 }
 
 /**

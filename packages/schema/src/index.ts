@@ -11,6 +11,7 @@ export type {
   TerminalNode,
   EntryPoint,
   ErrorHandler,
+  RulesRef,
   TemporalConfig,
   Position,
   ValidationResult,
@@ -21,6 +22,15 @@ export type {
 
 // Validation
 export { validate, validateYaml, SUPPORTED_VERSIONS, NODE_TYPES } from './validate.js'
+
+// Rules validation
+export {
+  validateRules,
+  validateRulesYaml,
+  SUPPORTED_RULES_VERSIONS,
+  HIT_POLICIES,
+  OPERATORS,
+} from './rules.js'
 
 // Graph utilities
 export { topoSort, detectCycles, getEdges, findRoots } from './graph.js'

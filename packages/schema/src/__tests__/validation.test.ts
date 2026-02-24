@@ -550,7 +550,7 @@ describe('terminal outcome enum', () => {
 // ── Join strategy enum ───────────────────────────────────────────
 
 describe('parallel join_strategy enum', () => {
-  it('accepts all_reached', () => {
+  it('accepts "all"', () => {
     const result = validate({
       schema: 'flowprint/1.0',
       name: 'test',
@@ -564,7 +564,7 @@ describe('parallel join_strategy enum', () => {
           label: 'Fork',
           branches: ['step_a'],
           join: 'end',
-          join_strategy: 'all_reached',
+          join_strategy: 'all',
         },
         end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
       },
@@ -572,7 +572,7 @@ describe('parallel join_strategy enum', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('accepts await_all', () => {
+  it('accepts "first"', () => {
     const result = validate({
       schema: 'flowprint/1.0',
       name: 'test',
@@ -586,7 +586,7 @@ describe('parallel join_strategy enum', () => {
           label: 'Fork',
           branches: ['step_a'],
           join: 'end',
-          join_strategy: 'await_all',
+          join_strategy: 'first',
         },
         end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
       },
@@ -667,13 +667,13 @@ describe('error handler', () => {
   })
 })
 
-// ── Schema 2.0 validation ───────────────────────────────────────
+// ── Schema 1.0 validation ───────────────────────────────────────
 
-describe('schema 2.0 validation', () => {
-  it('accepts a valid 2.0 document', () => {
+describe('schema 1.0 validation', () => {
+  it('accepts a valid 1.0 document', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -685,10 +685,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with workflow config', () => {
+  it('accepts 1.0 document with workflow config', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       workflow: {
         task_queue: 'my-queue',
@@ -706,10 +706,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with inputs', () => {
+  it('accepts 1.0 document with inputs', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -727,10 +727,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with compensation', () => {
+  it('accepts 1.0 document with compensation', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -748,10 +748,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with temporal config', () => {
+  it('accepts 1.0 document with temporal config', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -776,10 +776,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with join_strategy "all"', () => {
+  it('accepts 1.0 document with join_strategy "all"', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -799,10 +799,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('accepts 2.0 document with join_strategy "first"', () => {
+  it('accepts 1.0 document with join_strategy "first"', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test-v1',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -822,10 +822,10 @@ describe('schema 2.0 validation', () => {
     expect(result.errors).toEqual([])
   })
 
-  it('rejects 2.0 document with join_strategy "all_reached"', () => {
+  it('rejects document with join_strategy "all_reached"', () => {
     const result = validate({
-      schema: 'flowprint/2.0',
-      name: 'test-v2',
+      schema: 'flowprint/1.0',
+      name: 'test',
       version: '1.0.0',
       lanes: { main: { label: 'Main', visibility: 'external', order: 0 } },
       nodes: {
@@ -843,14 +843,11 @@ describe('schema 2.0 validation', () => {
     })
     expect(result.valid).toBe(false)
     expect(
-      result.errors.some(
-        (e) =>
-          e.path === '/nodes/fork/join_strategy' && e.message.includes('not valid for schema 2.0'),
-      ),
+      result.errors.some((e) => e.path.includes('join_strategy')),
     ).toBe(true)
   })
 
-  it('rejects 1.0 document with join_strategy "all"', () => {
+  it('accepts document with join_strategy "all"', () => {
     const result = validate({
       schema: 'flowprint/1.0',
       name: 'test',
@@ -869,13 +866,7 @@ describe('schema 2.0 validation', () => {
         end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
       },
     })
-    expect(result.valid).toBe(false)
-    expect(
-      result.errors.some(
-        (e) =>
-          e.path === '/nodes/fork/join_strategy' && e.message.includes('not valid for schema 1.0'),
-      ),
-    ).toBe(true)
+    expect(result.valid).toBe(true)
   })
 })
 

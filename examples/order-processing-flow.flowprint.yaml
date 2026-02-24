@@ -1,0 +1,54 @@
+schema: flowprint/1.0
+name: order-processing-flow
+version: 1.0.0
+description: Processes orders using rules-driven discount calculation and routing
+
+lanes:
+  processing:
+    label: Order Processing
+    visibility: internal
+    order: 0
+
+nodes:
+  calculate_discount:
+    type: action
+    lane: processing
+    label: Calculate Discount
+    rules:
+      file: order-processing.rules.yaml
+    next: route_fulfillment
+
+  route_fulfillment:
+    type: switch
+    lane: processing
+    label: Route Fulfillment
+    cases:
+      - when: 'calculate_discount.shipping === "free"'
+        next: priority_fulfillment
+      - when: 'calculate_discount.shipping === "standard"'
+        next: standard_fulfillment
+    default: standard_fulfillment
+
+  priority_fulfillment:
+    type: action
+    lane: processing
+    label: Priority Fulfillment
+    entry_points:
+      - file: stubs/order-processing/fulfill.js
+        symbol: priorityFulfill
+    next: complete
+
+  standard_fulfillment:
+    type: action
+    lane: processing
+    label: Standard Fulfillment
+    entry_points:
+      - file: stubs/order-processing/fulfill.js
+        symbol: standardFulfill
+    next: complete
+
+  complete:
+    type: terminal
+    lane: processing
+    label: Order Complete
+    outcome: success

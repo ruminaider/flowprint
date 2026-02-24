@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flowprint.dev/schema/flowprint-rules/1.0",
+  "title": "Flowprint Decision Table Rules",
+  "description": "A decision table defining condition-action rules for flowprint nodes",
+  "type": "object",
+  "required": ["schema", "name", "hit_policy", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "flowprint-rules/1.0",
+      "description": "Rules schema version identifier"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Machine-readable name for this rules file"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the decision table"
+    },
+    "hit_policy": {
+      "type": "string",
+      "enum": ["first", "collect", "all", "priority"],
+      "description": "How to handle multiple matching rules: first match wins, collect all matches, require all to match, or use priority ordering"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/InputDef"
+      },
+      "description": "Input definitions: simple dot-paths or labeled expressions"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Rule"
+      },
+      "description": "Decision rules evaluated in order"
+    }
+  },
+  "definitions": {
+    "InputDef": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Simple dot-path input (e.g. order.total_amount)"
+        },
+        {
+          "type": "object",
+          "required": ["label", "expr"],
+          "additionalProperties": false,
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Human-readable label for this computed input"
+            },
+            "expr": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Expression to compute this input value"
+            }
+          },
+          "description": "Labeled expression input for computed values"
+        }
+      ]
+    },
+    "Rule": {
+      "type": "object",
+      "required": ["then"],
+      "additionalProperties": false,
+      "properties": {
+        "when": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Condition"
+          },
+          "description": "Conditions keyed by input name. Omit a field for wildcard (match any)"
+        },
+        "then": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Output values when this rule matches"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Priority for 'priority' hit policy (lower number = higher priority)"
+        }
+      }
+    },
+    "Condition": {
+      "oneOf": [
+        { "$ref": "#/definitions/OperatorCondition" },
+        {
+          "type": ["string", "number", "boolean", "null"],
+          "description": "Shorthand for { eq: value }"
+        }
+      ]
+    },
+    "OperatorCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "eq": {
+          "description": "Equal to value (any type)"
+        },
+        "not_eq": {
+          "description": "Not equal to value (any type)"
+        },
+        "gt": {
+          "type": "number",
+          "description": "Greater than (numeric)"
+        },
+        "gte": {
+          "type": "number",
+          "description": "Greater than or equal (numeric)"
+        },
+        "lt": {
+          "type": "number",
+          "description": "Less than (numeric)"
+        },
+        "lte": {
+          "type": "number",
+          "description": "Less than or equal (numeric)"
+        },
+        "in": {
+          "type": "array",
+          "description": "Value is one of the listed items"
+        },
+        "not_in": {
+          "type": "array",
+          "description": "Value is not one of the listed items"
+        },
+        "between": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Value is between [min, max] (inclusive)"
+        }
+      }
+    }
+  }
+}
