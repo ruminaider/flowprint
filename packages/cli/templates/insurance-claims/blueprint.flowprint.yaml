@@ -1,0 +1,217 @@
+schema: flowprint/1.0
+name: insurance_claims
+version: 1.0.0
+description: Insurance claims processing covering claim filing, classification, auto-adjudication, fraud detection, investigation, reserve setting, settlement calculation, payment, and appeals across claimant, agent, adjuster, legal, and finance lanes.
+metadata:
+  owner: claims-department
+  domain: insurance
+lanes:
+  claimant:
+    label: Claimant
+    visibility: external
+    order: 0
+  agent:
+    label: Agent
+    visibility: external
+    order: 1
+  adjuster:
+    label: Adjuster
+    visibility: internal
+    order: 2
+  legal:
+    label: Legal
+    visibility: internal
+    order: 3
+  finance:
+    label: Finance
+    visibility: internal
+    order: 4
+nodes:
+  file_claim:
+    type: action
+    lane: claimant
+    label: File Claim
+    description: Claimant submits claim with incident details, photos, and supporting documents
+    next: acknowledge_claim
+  acknowledge_claim:
+    type: action
+    lane: agent
+    label: Acknowledge Claim
+    description: Assign claim number, send confirmation to claimant, and record filing date
+    next: classify_claim
+  classify_claim:
+    type: switch
+    lane: agent
+    label: Classify Claim
+    description: Categorize claim by type to determine processing path and required expertise
+    cases:
+      - when: Auto
+        next: check_auto_adjudication
+      - when: Health
+        next: check_auto_adjudication
+      - when: Property
+        next: check_auto_adjudication
+      - when: Liability
+        next: assign_adjuster
+  check_auto_adjudication:
+    type: switch
+    lane: agent
+    label: Check Auto-Adjudication
+    description: Determine if claim qualifies for automatic approval without manual review
+    cases:
+      - when: Auto-approve
+        next: set_reserves
+      - when: Requires review
+        next: run_fraud_detection
+  run_fraud_detection:
+    type: switch
+    lane: adjuster
+    label: Run Fraud Detection
+    description: Screen claim against fraud detection patterns and scoring model
+    cases:
+      - when: Clear
+        next: assign_adjuster
+      - when: Suspicious
+        next: escalate_to_siu
+  escalate_to_siu:
+    type: action
+    lane: adjuster
+    label: Escalate to SIU
+    description: Refer claim to Special Investigations Unit for detailed fraud investigation
+    next: await_investigation
+  await_investigation:
+    type: wait
+    lane: adjuster
+    label: Await Investigation
+    description: Hold claim pending SIU investigation results and recommendation
+    event: await_investigation_signal
+    next: check_investigation_result
+  check_investigation_result:
+    type: switch
+    lane: adjuster
+    label: Check Investigation Result
+    description: Evaluate SIU findings and determine next steps
+    cases:
+      - when: Fraud confirmed
+        next: deny_claim
+      - when: Cleared
+        next: assign_adjuster
+      - when: Inconclusive
+        next: escalate_to_legal
+  assign_adjuster:
+    type: action
+    lane: adjuster
+    label: Assign Adjuster
+    description: Assign qualified adjuster based on claim type, complexity, and workload
+    rules:
+      file: rules/escalation.rules.yaml
+    next: set_reserves
+  set_reserves:
+    type: action
+    lane: finance
+    label: Set Reserves
+    description: Establish financial reserves based on estimated claim value and type
+    rules:
+      file: rules/reserve-setting.rules.yaml
+    next: evaluate_claim
+  evaluate_claim:
+    type: action
+    lane: adjuster
+    label: Evaluate Claim
+    description: Review documentation, inspect damage, interview witnesses, and assess liability
+    next: check_escalation
+  check_escalation:
+    type: switch
+    lane: adjuster
+    label: Check Escalation
+    description: Determine if claim requires escalation to senior adjuster or legal review
+    cases:
+      - when: Standard processing
+        next: calculate_settlement
+      - when: Escalate to senior
+        next: senior_adjuster_review
+      - when: Escalate to legal
+        next: escalate_to_legal
+  senior_adjuster_review:
+    type: action
+    lane: adjuster
+    label: Senior Adjuster Review
+    description: Senior adjuster reviews complex claim and provides settlement recommendation
+    next: calculate_settlement
+  escalate_to_legal:
+    type: action
+    lane: legal
+    label: Escalate to Legal
+    description: Legal team reviews claim for litigation risk and regulatory compliance
+    next: calculate_settlement
+  calculate_settlement:
+    type: action
+    lane: adjuster
+    label: Calculate Settlement
+    description: Compute settlement amount based on policy limits, deductibles, and assessed damages
+    rules:
+      file: rules/settlement-calculation.rules.yaml
+    next: present_offer
+  present_offer:
+    type: action
+    lane: agent
+    label: Present Settlement Offer
+    description: Communicate settlement offer to claimant with itemized breakdown
+    next: await_claimant_response
+  await_claimant_response:
+    type: wait
+    lane: claimant
+    label: Await Claimant Response
+    description: Wait for claimant to accept, negotiate, or reject the settlement offer
+    event: await_claimant_response_signal
+    next: check_claimant_decision
+  check_claimant_decision:
+    type: switch
+    lane: agent
+    label: Check Claimant Decision
+    description: Route based on claimant response to settlement offer
+    cases:
+      - when: Accepted
+        next: process_payment
+      - when: Rejected
+        next: handle_appeal
+      - when: Counter-offer
+        next: evaluate_claim
+  process_payment:
+    type: action
+    lane: finance
+    label: Process Payment
+    description: Issue settlement payment via check or direct deposit and close reserves
+    next: claim_complete
+  handle_appeal:
+    type: action
+    lane: legal
+    label: Handle Appeal
+    description: Review appeal, assess litigation risk, and determine if revised offer is warranted
+    next: check_appeal_outcome
+  check_appeal_outcome:
+    type: switch
+    lane: legal
+    label: Check Appeal Outcome
+    description: Determine resolution path for the appeal
+    cases:
+      - when: Revised offer
+        next: present_offer
+      - when: Uphold denial
+        next: deny_claim
+  deny_claim:
+    type: action
+    lane: agent
+    label: Deny Claim
+    description: Issue formal denial letter with explanation and appeal rights notice
+    next: claim_denied
+  claim_complete:
+    type: terminal
+    lane: claimant
+    label: Claim Complete
+    outcome: success
+  claim_denied:
+    type: terminal
+    lane: claimant
+    label: Claim Denied
+    outcome: failure

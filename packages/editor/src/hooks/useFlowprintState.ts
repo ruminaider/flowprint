@@ -8,6 +8,7 @@ import {
   isErrorNode,
   isTerminalNode,
 } from '@ruminaider/flowprint-schema'
+import type { RulesData } from '../components/decision-table/shared'
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -42,6 +43,8 @@ export interface UseFlowprintStateOptions {
   initialDoc: FlowprintDocument
   /** Optional callback fired after every document mutation. */
   onChange?: (doc: FlowprintDocument) => void
+  /** Optional callback fired after every rules data mutation. */
+  onRulesDataChange?: (filePath: string, data: RulesData) => void
   /** Maximum number of undo history entries to keep. Defaults to 50. */
   maxHistory?: number
 }
@@ -89,6 +92,10 @@ export interface UseFlowprintStateReturn {
   canRedo: boolean
   /** Replace the entire document (for external sync). Does not push to undo history. */
   setDoc(doc: FlowprintDocument): void
+  /** Rules data keyed by file path (e.g. "pricing.rules.yaml"). */
+  rulesData: Record<string, RulesData>
+  /** Update rules data for a specific file. Records the change in the undo stack. */
+  updateRulesData(filePath: string, data: RulesData): void
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +103,16 @@ export interface UseFlowprintStateReturn {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_MAX_HISTORY = 50
+
+/**
+ * Composite snapshot for the unified undo stack.
+ * Captures both the graph document and all rules data so that
+ * undo/redo restores both atomically.
+ */
+interface EditorSnapshot {
+  doc: FlowprintDocument
+  rulesData: Record<string, RulesData>
+}
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -244,26 +261,32 @@ function removeConnection(sourceNode: Node, target: string): void {
  * ```
  */
 export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowprintStateReturn {
-  const { initialDoc, onChange, maxHistory = DEFAULT_MAX_HISTORY } = options
+  const { initialDoc, onChange, onRulesDataChange, maxHistory = DEFAULT_MAX_HISTORY } = options
 
   const [doc, setDocState] = useState<FlowprintDocument>(() => structuredClone(initialDoc))
-  const pastRef = useRef<FlowprintDocument[]>([])
-  const futureRef = useRef<FlowprintDocument[]>([])
+  const [rulesData, setRulesDataState] = useState<Record<string, RulesData>>({})
+  const pastRef = useRef<EditorSnapshot[]>([])
+  const futureRef = useRef<EditorSnapshot[]>([])
+  const rulesDataRef = useRef<Record<string, RulesData>>({})
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
   // -----------------------------------------------------------------------
-  // Core mutation helper
+  // Core mutation helpers
   // -----------------------------------------------------------------------
 
-  const commit = useCallback(
+  const commitDoc = useCallback(
     (mutate: (draft: FlowprintDocument) => void) => {
-      setDocState((current) => {
-        const draft = structuredClone(current)
+      setDocState((currentDoc) => {
+        const draft = structuredClone(currentDoc)
         mutate(draft)
 
-        // Push current onto past, trim if needed
-        pastRef.current = [...pastRef.current, current]
+        // Push current snapshot onto past, trim if needed
+        const snapshot: EditorSnapshot = {
+          doc: currentDoc,
+          rulesData: rulesDataRef.current,
+        }
+        pastRef.current = [...pastRef.current, snapshot]
         if (pastRef.current.length > maxHistory) {
           pastRef.current = pastRef.current.slice(pastRef.current.length - maxHistory)
         }
@@ -286,16 +309,16 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
 
   const addNode = useCallback(
     (id: string, node: Node) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         draft.nodes[id] = node
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const updateNode = useCallback(
     (id: string, patch: Partial<Node>) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const existing = draft.nodes[id]
         if (!existing) throw new Error(`Node '${id}' not found`)
         const merged = { ...existing, ...patch }
@@ -308,40 +331,40 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
         draft.nodes[id] = merged as Node
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const updateNodePosition = useCallback(
     (id: string, position: Position) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const node = draft.nodes[id]
         if (!node) return
         node.position = position
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const batchUpdatePositions = useCallback(
     (positions: Map<string, { x: number; y: number }>) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         for (const [id, pos] of positions) {
           const node = draft.nodes[id]
           if (node) node.position = pos
         }
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const removeNode = useCallback(
     (id: string) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         Reflect.deleteProperty(draft.nodes, id)
         purgeNodeReferences(draft.nodes, id)
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   // -----------------------------------------------------------------------
@@ -350,24 +373,24 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
 
   const connectNodes = useCallback(
     (source: string, target: string, config: ConnectionConfig) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const sourceNode = draft.nodes[source]
         if (!sourceNode) throw new Error(`Source node '${source}' not found`)
         applyConnection(sourceNode, target, config)
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const disconnectNodes = useCallback(
     (source: string, target: string) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const sourceNode = draft.nodes[source]
         if (!sourceNode) throw new Error(`Source node '${source}' not found`)
         removeConnection(sourceNode, target)
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   // -----------------------------------------------------------------------
@@ -376,27 +399,27 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
 
   const addLane = useCallback(
     (id: string, lane: Lane) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         draft.lanes[id] = lane
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const updateLane = useCallback(
     (id: string, patch: Partial<Lane>) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const existing = draft.lanes[id]
         if (!existing) throw new Error(`Lane '${id}' not found`)
         draft.lanes[id] = { ...existing, ...patch }
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const resizeLane = useCallback(
     (id: string, newHeight: number, oldEffectiveHeight: number) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         const lane = draft.lanes[id]
         if (!lane) throw new Error(`Lane '${id}' not found`)
         draft.lanes[id] = { ...lane, height: newHeight }
@@ -417,21 +440,21 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
         }
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const removeLane = useCallback(
     (id: string) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         Reflect.deleteProperty(draft.lanes, id)
       })
     },
-    [commit],
+    [commitDoc],
   )
 
   const reorderLanes = useCallback(
     (orderedIds: string[]) => {
-      commit((draft) => {
+      commitDoc((draft) => {
         for (let i = 0; i < orderedIds.length; i++) {
           const id = orderedIds[i]
           if (!id) continue
@@ -442,7 +465,42 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
         }
       })
     },
-    [commit],
+    [commitDoc],
+  )
+
+  // -----------------------------------------------------------------------
+  // Rules data mutations
+  // -----------------------------------------------------------------------
+
+  const updateRulesData = useCallback(
+    (filePath: string, data: RulesData) => {
+      setDocState((currentDoc) => {
+        // Push current composite snapshot onto past
+        const snapshot: EditorSnapshot = {
+          doc: currentDoc,
+          rulesData: rulesDataRef.current,
+        }
+        pastRef.current = [...pastRef.current, snapshot]
+        if (pastRef.current.length > maxHistory) {
+          pastRef.current = pastRef.current.slice(pastRef.current.length - maxHistory)
+        }
+        futureRef.current = []
+
+        // Update rules data (clone to prevent external mutation)
+        const newRulesData = { ...rulesDataRef.current, [filePath]: structuredClone(data) }
+        rulesDataRef.current = newRulesData
+        setRulesDataState(newRulesData)
+
+        setCanUndo(true)
+        setCanRedo(false)
+
+        onRulesDataChange?.(filePath, data)
+
+        // Doc is unchanged, return same reference
+        return currentDoc
+      })
+    },
+    [maxHistory, onRulesDataChange],
   )
 
   // -----------------------------------------------------------------------
@@ -450,30 +508,50 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
   // -----------------------------------------------------------------------
 
   const undo = useCallback(() => {
-    setDocState((current) => {
+    setDocState((currentDoc) => {
       const prev = pastRef.current[pastRef.current.length - 1]
-      if (!prev) return current
+      if (!prev) return currentDoc
 
+      // Push current state onto future
+      const currentSnapshot: EditorSnapshot = {
+        doc: currentDoc,
+        rulesData: rulesDataRef.current,
+      }
       pastRef.current = pastRef.current.slice(0, -1)
-      futureRef.current = [...futureRef.current, current]
+      futureRef.current = [...futureRef.current, currentSnapshot]
+
+      // Restore rules data
+      rulesDataRef.current = prev.rulesData
+      setRulesDataState(prev.rulesData)
+
       setCanUndo(pastRef.current.length > 0)
       setCanRedo(true)
-      onChange?.(prev)
-      return prev
+      onChange?.(prev.doc)
+      return prev.doc
     })
   }, [onChange])
 
   const redo = useCallback(() => {
-    setDocState((current) => {
+    setDocState((currentDoc) => {
       const next = futureRef.current[futureRef.current.length - 1]
-      if (!next) return current
+      if (!next) return currentDoc
 
+      // Push current state onto past
+      const currentSnapshot: EditorSnapshot = {
+        doc: currentDoc,
+        rulesData: rulesDataRef.current,
+      }
       futureRef.current = futureRef.current.slice(0, -1)
-      pastRef.current = [...pastRef.current, current]
+      pastRef.current = [...pastRef.current, currentSnapshot]
+
+      // Restore rules data
+      rulesDataRef.current = next.rulesData
+      setRulesDataState(next.rulesData)
+
       setCanUndo(true)
       setCanRedo(futureRef.current.length > 0)
-      onChange?.(next)
-      return next
+      onChange?.(next.doc)
+      return next.doc
     })
   }, [onChange])
 
@@ -505,5 +583,7 @@ export function useFlowprintState(options: UseFlowprintStateOptions): UseFlowpri
     canUndo,
     canRedo,
     setDoc,
+    rulesData,
+    updateRulesData,
   }
 }

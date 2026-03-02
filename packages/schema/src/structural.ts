@@ -191,6 +191,19 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
         break
       }
 
+      case 'trigger': {
+        checkRef(
+          nodeId,
+          'next',
+          node.next as string | undefined,
+          nodeIds,
+          errors,
+          hasOutgoing,
+          hasIncoming,
+        )
+        break
+      }
+
       case 'terminal': {
         // Terminal nodes have no outgoing edges by design
         break
@@ -222,6 +235,18 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
     const incoming = hasIncoming.has(nodeId)
     const outgoing = hasOutgoing.has(nodeId)
+
+    // Trigger nodes are roots — they must not have incoming edges
+    if (type === 'trigger') {
+      if (incoming) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: `Trigger node "${nodeId}" must not have incoming edges (triggers are flow roots)`,
+          severity: 'error',
+        })
+      }
+      continue
+    }
 
     const isOrphan = type === 'terminal' ? !incoming && nodeIds.size > 1 : !incoming && !outgoing
 

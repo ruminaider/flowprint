@@ -49,6 +49,14 @@ export type { CodeSearchProviderOptions } from './symbols/CodeSearchProvider'
 export { useSymbolSearch } from './symbols/useSymbolSearch'
 export type { UseSymbolSearchOptions, UseSymbolSearchReturn } from './symbols/useSymbolSearch'
 
+// Decision tables
+export { DecisionTable } from './components/DecisionTable'
+export type { DecisionTableProps } from './components/DecisionTable'
+export { EditableDecisionTable } from './components/EditableDecisionTable'
+export type { EditableDecisionTableProps } from './components/EditableDecisionTable'
+export { ConditionBuilder } from './components/ConditionBuilder'
+export type { ConditionBuilderProps } from './components/ConditionBuilder'
+
 // Rules data context
 export { RulesDataProvider, useRulesData } from './contexts/RulesDataContext'
 export type { RulesDataMap, RulesDataEntry } from './contexts/RulesDataContext'

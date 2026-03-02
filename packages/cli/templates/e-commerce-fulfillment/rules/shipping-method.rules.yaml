@@ -1,0 +1,49 @@
+schema: flowprint-rules/1.0
+name: shipping_method
+description: Select shipping carrier and method based on weight, destination, and service level
+hit_policy: first
+inputs:
+  - package.weight_lbs
+  - order.shipping_region
+  - order.service_level
+  - order.is_international
+rules:
+  # Heavy items require freight carrier
+  - when:
+      package.weight_lbs:
+        gte: 150
+    then:
+      carrier: freight_partner
+      method: ltl_freight
+      estimated_days: 10
+
+  # International express
+  - when:
+      order.is_international: true
+      order.service_level: express
+    then:
+      carrier: dhl
+      method: international_express
+      estimated_days: 3
+
+  # International standard
+  - when:
+      order.is_international: true
+    then:
+      carrier: usps
+      method: international_priority
+      estimated_days: 10
+
+  # Domestic express
+  - when:
+      order.service_level: express
+    then:
+      carrier: fedex
+      method: overnight
+      estimated_days: 1
+
+  # Default domestic standard
+  - then:
+      carrier: ups
+      method: ground
+      estimated_days: 5

@@ -9,6 +9,7 @@ export type {
   WaitNode,
   ErrorNode,
   TerminalNode,
+  TriggerNode,
   EntryPoint,
   ErrorHandler,
   RulesRef,
@@ -27,7 +28,10 @@ export { validate, validateYaml, SUPPORTED_VERSIONS, NODE_TYPES } from './valida
 export {
   validateRules,
   validateRulesYaml,
+  validateRulesTest,
+  validateRulesTestYaml,
   SUPPORTED_RULES_VERSIONS,
+  SUPPORTED_RULES_TEST_VERSIONS,
   HIT_POLICIES,
   OPERATORS,
 } from './rules.js'
@@ -43,6 +47,7 @@ export {
   isWaitNode,
   isErrorNode,
   isTerminalNode,
+  isTriggerNode,
 } from './guards.js'
 
 // Serialization

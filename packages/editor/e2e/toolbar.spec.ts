@@ -26,8 +26,8 @@ test.describe('Toolbar', () => {
     await expect(selectBtn).not.toHaveClass(/fp-toolbar__button--active/)
   })
 
-  test('all 6 node type buttons are present', async ({ page }) => {
-    for (const name of ['Action', 'Switch', 'Parallel', 'Wait', 'Error', 'Terminal']) {
+  test('all 7 node type buttons are present', async ({ page }) => {
+    for (const name of ['Action', 'Switch', 'Parallel', 'Wait', 'Error', 'Terminal', 'Trigger']) {
       await expect(page.getByRole('button', { name })).toBeVisible()
     }
   })

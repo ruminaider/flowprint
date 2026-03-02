@@ -1,0 +1,45 @@
+schema: flowprint-rules/1.0
+name: auto_adjudication
+description: Determine if a claim qualifies for automatic approval without manual review
+hit_policy: first
+inputs:
+  - claim.amount
+  - claim.category
+  - claim.has_prior_claims_12m
+  - claimant.account_standing
+rules:
+  # Low-value auto claims from good-standing members with no recent claims
+  - when:
+      claim.amount:
+        lt: 1000
+      claim.category: auto
+      claim.has_prior_claims_12m: false
+      claimant.account_standing: good
+    then:
+      decision: auto_approve
+      reason: low_value_auto_good_standing
+
+  # Low-value health claims with clean history
+  - when:
+      claim.amount:
+        lt: 500
+      claim.category: health
+      claim.has_prior_claims_12m: false
+    then:
+      decision: auto_approve
+      reason: low_value_health_clean_history
+
+  # Low-value property claims under deductible threshold
+  - when:
+      claim.amount:
+        lt: 750
+      claim.category: property
+      claimant.account_standing: good
+    then:
+      decision: auto_approve
+      reason: low_value_property_good_standing
+
+  # Everything else requires manual review
+  - then:
+      decision: requires_review
+      reason: does_not_qualify_for_auto

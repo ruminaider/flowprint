@@ -140,3 +140,38 @@ const withRulesSwitchDoc: FlowprintDocument = {
 export const WithRulesSwitch: StoryObj = {
   render: () => <ControlledEditor initialDoc={withRulesSwitchDoc} />,
 }
+
+const withTriggerDoc: FlowprintDocument = {
+  schema: 'flowprint/1.0',
+  name: 'trigger-flow',
+  version: '1.0.0',
+  lanes: {
+    main: { label: 'Main', visibility: 'external', order: 0 },
+  },
+  nodes: {
+    on_schedule: {
+      type: 'trigger',
+      lane: 'main',
+      label: 'Daily Check',
+      trigger_type: 'schedule',
+      schedule: { cron: '0 9 * * MON-FRI' },
+      next: 'process_data',
+    } as FlowprintDocument['nodes'][string],
+    process_data: {
+      type: 'action',
+      lane: 'main',
+      label: 'Process Data',
+      next: 'done',
+    },
+    done: {
+      type: 'terminal',
+      lane: 'main',
+      label: 'Done',
+      outcome: 'success',
+    },
+  },
+}
+
+export const WithTrigger: StoryObj = {
+  render: () => <ControlledEditor initialDoc={withTriggerDoc} />,
+}

@@ -92,6 +92,8 @@
   --fp-node-red-subtle: rgba(239, 68, 68, 0.10);
   --fp-node-green: #22c55e;
   --fp-node-green-subtle: rgba(34, 197, 94, 0.10);
+  --fp-node-blue: #3b82f6;
+  --fp-node-blue-subtle: rgba(59, 130, 246, 0.10);
 }
 
 /* ── Dark Theme ──────────────────────────────── */
@@ -137,4 +139,6 @@
   --fp-node-red-subtle: rgba(255, 54, 43, 0.15);
   --fp-node-green: #3FDC77;
   --fp-node-green-subtle: rgba(63, 220, 119, 0.12);
+  --fp-node-blue: #60a5fa;
+  --fp-node-blue-subtle: rgba(96, 165, 250, 0.15);
 }

@@ -1,0 +1,70 @@
+schema: flowprint-rules/1.0
+name: subscription_pricing
+description: >-
+  Resolve the base price for a subscription based on plan tier and
+  billing period. Annual plans receive a built-in discount over monthly.
+hit_policy: first
+inputs:
+  - subscription.plan_tier
+  - subscription.billing_period
+rules:
+  # Enterprise annual
+  - when:
+      subscription.plan_tier: enterprise
+      subscription.billing_period: annual
+    then:
+      base_price: 899.00
+      currency: USD
+      label: Enterprise annual
+
+  # Enterprise monthly
+  - when:
+      subscription.plan_tier: enterprise
+      subscription.billing_period: monthly
+    then:
+      base_price: 99.00
+      currency: USD
+      label: Enterprise monthly
+
+  # Professional annual
+  - when:
+      subscription.plan_tier: professional
+      subscription.billing_period: annual
+    then:
+      base_price: 468.00
+      currency: USD
+      label: Professional annual
+
+  # Professional monthly
+  - when:
+      subscription.plan_tier: professional
+      subscription.billing_period: monthly
+    then:
+      base_price: 49.00
+      currency: USD
+      label: Professional monthly
+
+  # Starter annual
+  - when:
+      subscription.plan_tier: starter
+      subscription.billing_period: annual
+    then:
+      base_price: 228.00
+      currency: USD
+      label: Starter annual
+
+  # Starter monthly
+  - when:
+      subscription.plan_tier: starter
+      subscription.billing_period: monthly
+    then:
+      base_price: 24.00
+      currency: USD
+      label: Starter monthly
+
+  # Fallback for unknown plans
+  - when: {}
+    then:
+      base_price: 0
+      currency: USD
+      label: Unknown plan

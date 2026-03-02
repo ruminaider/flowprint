@@ -1,0 +1,130 @@
+schema: flowprint/1.0
+name: ci_cd_pipeline
+version: 1.0.0
+description: CI/CD pipeline with parallel test stages, quality gate decision, and multi-environment deployment. Covers code push through production release across developer, CI system, and deployment lanes.
+metadata:
+  owner: platform-engineering
+  domain: devops
+lanes:
+  developer:
+    label: Developer
+    visibility: external
+    order: 0
+  ci_system:
+    label: CI System
+    visibility: internal
+    order: 1
+  deployment:
+    label: Deployment
+    visibility: internal
+    order: 2
+nodes:
+  push_code:
+    type: action
+    lane: developer
+    label: Push Code
+    description: Developer pushes commit or opens pull request triggering the pipeline
+    next: install_dependencies
+  install_dependencies:
+    type: action
+    lane: ci_system
+    label: Install Dependencies
+    description: Install project dependencies and cache node_modules for subsequent steps
+    next: build_project
+  build_project:
+    type: action
+    lane: ci_system
+    label: Build Project
+    description: Compile TypeScript, bundle assets, and generate build artifacts
+    next: run_tests
+    error:
+      catch: handle_build_failure
+  run_tests:
+    type: parallel
+    lane: ci_system
+    label: Run Tests
+    description: Execute all test suites concurrently to minimize pipeline duration
+    branches:
+      - run_unit_tests
+      - run_integration_tests
+      - run_e2e_tests
+    join: quality_gate
+  run_unit_tests:
+    type: action
+    lane: ci_system
+    label: Run Unit Tests
+    description: Execute unit test suite with coverage collection
+    next: quality_gate
+  run_integration_tests:
+    type: action
+    lane: ci_system
+    label: Run Integration Tests
+    description: Run integration tests against test database and mock services
+    next: quality_gate
+  run_e2e_tests:
+    type: action
+    lane: ci_system
+    label: Run E2E Tests
+    description: Run Playwright end-to-end tests against preview deployment
+    next: quality_gate
+  quality_gate:
+    type: switch
+    lane: ci_system
+    label: Quality Gate
+    description: Evaluate test results, coverage, and lint status against thresholds
+    cases:
+      - when: All checks pass
+        next: deploy_staging
+      - when: Checks fail
+        next: reject_pipeline
+  reject_pipeline:
+    type: action
+    lane: ci_system
+    label: Reject Pipeline
+    description: Post failure summary to pull request and notify author
+    next: pipeline_failed
+  deploy_staging:
+    type: action
+    lane: deployment
+    label: Deploy to Staging
+    description: Deploy build artifacts to staging environment and run smoke tests
+    next: await_approval
+    error:
+      catch: handle_deploy_failure
+  await_approval:
+    type: wait
+    lane: developer
+    label: Await Production Approval
+    description: Wait for team lead or release manager to approve production deployment
+    event: await_approval_signal
+    next: deploy_production
+  deploy_production:
+    type: action
+    lane: deployment
+    label: Deploy to Production
+    description: Roll out to production using blue-green deployment strategy
+    next: pipeline_complete
+    error:
+      catch: handle_deploy_failure
+  handle_build_failure:
+    type: error
+    lane: ci_system
+    label: Handle Build Failure
+    description: Capture build logs, notify developer, and mark pipeline as failed
+    next: pipeline_failed
+  handle_deploy_failure:
+    type: error
+    lane: deployment
+    label: Handle Deploy Failure
+    description: Rollback deployment, capture logs, and alert on-call engineer
+    next: pipeline_failed
+  pipeline_complete:
+    type: terminal
+    lane: deployment
+    label: Pipeline Complete
+    outcome: success
+  pipeline_failed:
+    type: terminal
+    lane: ci_system
+    label: Pipeline Failed
+    outcome: failure

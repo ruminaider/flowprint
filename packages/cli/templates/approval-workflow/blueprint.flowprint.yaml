@@ -1,0 +1,57 @@
+schema: flowprint/1.0
+name: approval_workflow
+version: 1.0.0
+description: Approval workflow with submit, review, and conditional routing based on approval decision
+lanes:
+  requester:
+    label: Requester
+    visibility: external
+    order: 0
+  reviewer:
+    label: Reviewer
+    visibility: external
+    order: 1
+  system:
+    label: System
+    visibility: internal
+    order: 2
+nodes:
+  submit_request:
+    type: action
+    lane: requester
+    label: Submit Request
+    description: Requester submits a new approval request with supporting details
+    next: review_request
+  review_request:
+    type: action
+    lane: reviewer
+    label: Review Request
+    description: Reviewer examines the request and records an approval decision
+    next: check_approval
+  check_approval:
+    type: switch
+    lane: reviewer
+    label: Check Approval Decision
+    description: Route based on the reviewer's decision
+    cases:
+      - when: Approved
+        next: process_approval
+      - when: Rejected
+        next: notify_rejection
+  process_approval:
+    type: action
+    lane: system
+    label: Process Approval
+    description: Execute the approved action and update downstream systems
+    next: done
+  notify_rejection:
+    type: action
+    lane: system
+    label: Notify Rejection
+    description: Send rejection notification to the requester with reviewer comments
+    next: done
+  done:
+    type: terminal
+    lane: system
+    label: Complete
+    outcome: success

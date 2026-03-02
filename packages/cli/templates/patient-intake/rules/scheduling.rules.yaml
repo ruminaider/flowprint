@@ -1,0 +1,39 @@
+schema: flowprint-rules/1.0
+name: scheduling
+description: Determine scheduling priority and time window based on triage result
+hit_policy: first
+inputs:
+  - triage.priority
+  - patient.is_returning
+  - appointment.type
+rules:
+  # Urgent cases get same-day slots
+  - when:
+      triage.priority: urgent
+    then:
+      scheduling_window: same_day
+      max_wait_minutes: 30
+      overbooking_allowed: true
+
+  # Returning patients with follow-ups
+  - when:
+      patient.is_returning: true
+      appointment.type: follow_up
+    then:
+      scheduling_window: within_48h
+      max_wait_minutes: 60
+      overbooking_allowed: false
+
+  # New patient initial visits
+  - when:
+      patient.is_returning: false
+    then:
+      scheduling_window: within_7d
+      max_wait_minutes: 90
+      overbooking_allowed: false
+
+  # Default routine
+  - then:
+      scheduling_window: within_7d
+      max_wait_minutes: 120
+      overbooking_allowed: false

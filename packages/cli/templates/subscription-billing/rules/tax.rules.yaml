@@ -1,0 +1,55 @@
+schema: flowprint-rules/1.0
+name: subscription_tax
+description: >-
+  Calculate sales tax rate based on customer jurisdiction and product
+  category. SaaS products are tax-exempt in some states.
+hit_policy: first
+inputs:
+  - customer.state
+  - product.category
+rules:
+  # Tax-exempt states for SaaS
+  - when:
+      customer.state:
+        in: [DE, MT, NH, OR]
+      product.category: saas
+    then:
+      tax_rate: 0
+      label: SaaS-exempt state
+
+  # States with no general sales tax
+  - when:
+      customer.state:
+        in: [DE, MT, NH, OR]
+    then:
+      tax_rate: 0
+      label: No sales tax state
+
+  # High-tax states
+  - when:
+      customer.state:
+        in: [CA, NY, NJ]
+    then:
+      tax_rate: 0.08875
+      label: High tax jurisdiction
+
+  # Texas
+  - when:
+      customer.state: TX
+    then:
+      tax_rate: 0.0825
+      label: Texas sales tax
+
+  # Washington (SaaS-specific digital goods tax)
+  - when:
+      customer.state: WA
+      product.category: saas
+    then:
+      tax_rate: 0.065
+      label: Washington digital goods tax
+
+  # Default rate for other states
+  - when: {}
+    then:
+      tax_rate: 0.06
+      label: Default sales tax

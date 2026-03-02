@@ -1,0 +1,44 @@
+schema: flowprint-rules/1.0
+name: inventory_allocation
+description: Select fulfillment warehouse based on stock levels and proximity to destination
+hit_policy: first
+inputs:
+  - item.stock_level
+  - item.warehouse_region
+  - order.shipping_region
+  - item.is_hazmat
+rules:
+  # Hazmat items must ship from certified warehouse
+  - when:
+      item.is_hazmat: true
+      item.stock_level:
+        gte: 1
+    then:
+      warehouse: hazmat_certified
+      availability: in_stock
+
+  # Same-region warehouse has stock
+  - when:
+      item.warehouse_region:
+        eq: order.shipping_region
+      item.stock_level:
+        gte: 1
+    then:
+      warehouse: regional_match
+      availability: in_stock
+
+  # Any warehouse has stock
+  - when:
+      item.stock_level:
+        gte: 1
+    then:
+      warehouse: nearest_available
+      availability: in_stock
+
+  # No stock anywhere
+  - when:
+      item.stock_level:
+        eq: 0
+    then:
+      warehouse: none
+      availability: out_of_stock

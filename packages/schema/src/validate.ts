@@ -15,7 +15,7 @@ export const SUPPORTED_VERSIONS = ['flowprint/1.0'] as const
 /**
  * All valid node types.
  */
-export const NODE_TYPES = ['action', 'switch', 'parallel', 'wait', 'error', 'terminal'] as const
+export const NODE_TYPES = ['action', 'switch', 'parallel', 'wait', 'error', 'terminal', 'trigger'] as const
 
 /**
  * Validate a parsed Flowprint document against the JSON Schema and
@@ -141,7 +141,7 @@ function formatAjvError(err: {
     case 'minItems':
       return `Array must have at least ${String(err.params?.limit)} item(s)`
     case 'oneOf':
-      return 'Node must match exactly one node type (action, switch, parallel, wait, error, terminal)'
+      return 'Node must match exactly one node type (action, switch, parallel, wait, error, terminal, trigger)'
     default:
       return base
   }

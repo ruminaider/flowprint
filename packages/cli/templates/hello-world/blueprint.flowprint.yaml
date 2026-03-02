@@ -1,0 +1,25 @@
+schema: flowprint/1.0
+name: hello_world
+version: 1.0.0
+description: Simplest possible blueprint demonstrating a single action followed by a terminal node
+lanes:
+  frontstage:
+    label: Frontstage
+    visibility: external
+    order: 0
+  backstage:
+    label: Backstage
+    visibility: internal
+    order: 1
+nodes:
+  greet_user:
+    type: action
+    lane: frontstage
+    label: Greet User
+    description: Accept an incoming request and respond with a greeting
+    next: done
+  done:
+    type: terminal
+    lane: backstage
+    label: Complete
+    outcome: success

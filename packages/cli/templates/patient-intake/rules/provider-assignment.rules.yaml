@@ -1,0 +1,43 @@
+schema: flowprint-rules/1.0
+name: provider_assignment
+description: Match patients to providers based on specialty, availability, and language
+hit_policy: first
+inputs:
+  - patient.chief_complaint_category
+  - patient.preferred_language
+  - patient.age
+  - provider.specialty
+rules:
+  # Pediatric patients go to pediatrics
+  - when:
+      patient.age:
+        lt: 18
+    then:
+      required_specialty: pediatrics
+      fallback_specialty: family_medicine
+
+  # Cardiac complaints
+  - when:
+      patient.chief_complaint_category: cardiac
+    then:
+      required_specialty: cardiology
+      fallback_specialty: internal_medicine
+
+  # Musculoskeletal complaints
+  - when:
+      patient.chief_complaint_category: musculoskeletal
+    then:
+      required_specialty: orthopedics
+      fallback_specialty: family_medicine
+
+  # Mental health complaints
+  - when:
+      patient.chief_complaint_category: mental_health
+    then:
+      required_specialty: psychiatry
+      fallback_specialty: family_medicine
+
+  # General / default
+  - then:
+      required_specialty: family_medicine
+      fallback_specialty: internal_medicine

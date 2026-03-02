@@ -1,0 +1,52 @@
+schema: flowprint-rules/1.0
+name: quality_gate
+description: >-
+  Evaluate pipeline quality metrics against pass/fail thresholds
+  for coverage, test results, and code quality.
+hit_policy: all
+inputs:
+  - tests.unit_pass_rate
+  - tests.integration_pass_rate
+  - tests.e2e_pass_rate
+  - coverage.line_percent
+  - lint.error_count
+rules:
+  # All unit tests must pass
+  - when:
+      tests.unit_pass_rate:
+        lt: 100
+    then:
+      gate: fail
+      reason: unit_tests_failing
+
+  # Integration tests must have >= 95% pass rate
+  - when:
+      tests.integration_pass_rate:
+        lt: 95
+    then:
+      gate: fail
+      reason: integration_tests_below_threshold
+
+  # E2E tests must have >= 90% pass rate
+  - when:
+      tests.e2e_pass_rate:
+        lt: 90
+    then:
+      gate: fail
+      reason: e2e_tests_below_threshold
+
+  # Line coverage must be at least 80%
+  - when:
+      coverage.line_percent:
+        lt: 80
+    then:
+      gate: fail
+      reason: coverage_below_minimum
+
+  # No lint errors allowed
+  - when:
+      lint.error_count:
+        gte: 1
+    then:
+      gate: fail
+      reason: lint_errors_present

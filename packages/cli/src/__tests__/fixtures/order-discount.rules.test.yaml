@@ -1,0 +1,17 @@
+schema: flowprint-rules-test/1.0
+tests:
+  - name: large order gets 25% discount
+    input:
+      order_total: 250
+    expected_output:
+      discount: 25
+  - name: medium order gets 10% discount
+    input:
+      order_total: 150
+    expected_output:
+      discount: 10
+  - name: small order gets no discount
+    input:
+      order_total: 50
+    expected_output:
+      discount: 0

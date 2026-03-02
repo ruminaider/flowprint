@@ -6,6 +6,7 @@ import { diffCommand } from './commands/diff.js'
 import { initCommand } from './commands/init.js'
 import { generateCommand } from './commands/generate.js'
 import { runCommand } from './commands/run.js'
+import { testCommand } from './commands/test.js'
 
 const program = new Command()
 
@@ -25,5 +26,6 @@ program.addCommand(diffCommand)
 program.addCommand(initCommand)
 program.addCommand(generateCommand)
 program.addCommand(runCommand)
+program.addCommand(testCommand)
 
 program.parse()

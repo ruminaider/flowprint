@@ -126,6 +126,23 @@ describe('getEdges', () => {
     expect(getEdges(doc)).toEqual([])
   })
 
+  it('extracts normal edge from trigger.next', () => {
+    const doc = makeDoc({
+      t: {
+        type: 'trigger',
+        lane: 'main',
+        label: 'Trigger',
+        trigger_type: 'schedule',
+        next: 'a',
+        schedule: { cron: '0 9 * * *' },
+      } as FlowprintDocument['nodes'][string],
+      a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
+      b: { type: 'terminal', lane: 'main', label: 'B', outcome: 'success' },
+    })
+    const edges = getEdges(doc)
+    expect(edges).toContainEqual({ source: 't', target: 'a', type: 'normal' })
+  })
+
   it('handles action with error.retry but no error.catch', () => {
     const doc = makeDoc({
       a: { type: 'action', lane: 'main', label: 'A', next: 'b', error: { retry: { limit: 3 } } },
@@ -179,6 +196,22 @@ describe('findRoots', () => {
       b: { type: 'action', lane: 'main', label: 'B', next: 'a' },
     })
     expect(findRoots(doc)).toEqual([])
+  })
+
+  it('identifies trigger node as root', () => {
+    const doc = makeDoc({
+      t: {
+        type: 'trigger',
+        lane: 'main',
+        label: 'Trigger',
+        trigger_type: 'webhook',
+        next: 'a',
+        webhook: { method: 'POST' },
+      } as FlowprintDocument['nodes'][string],
+      a: { type: 'action', lane: 'main', label: 'A', next: 'done' },
+      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+    })
+    expect(findRoots(doc)).toEqual(['t'])
   })
 
   it('finds root in a switch graph', () => {
@@ -283,6 +316,28 @@ describe('topoSort', () => {
     expect(result).toHaveLength(1)
     expect(result[0]?.id).toBe('only')
     expect(result[0]?.order).toBe(0)
+  })
+
+  it('sorts trigger node at layer 0', () => {
+    const doc = makeDoc({
+      t: {
+        type: 'trigger',
+        lane: 'main',
+        label: 'Trigger',
+        trigger_type: 'event',
+        next: 'a',
+        event: { source: 'stripe', type: 'payment.completed' },
+      } as FlowprintDocument['nodes'][string],
+      a: { type: 'action', lane: 'main', label: 'A', next: 'done' },
+      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
+    })
+    const result = topoSort(doc)
+    const triggerNode = result.find((n) => n.id === 't')
+    const actionNode = result.find((n) => n.id === 'a')
+    const terminalNode = result.find((n) => n.id === 'done')
+    expect(triggerNode?.order).toBe(0)
+    expect(actionNode?.order).toBe(1)
+    expect(terminalNode?.order).toBe(2)
   })
 
   it('handles switch with multiple branches at different depths', () => {

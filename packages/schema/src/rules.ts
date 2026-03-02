@@ -1,15 +1,22 @@
 import Ajv from 'ajv'
 import { parse } from 'yaml'
 import rulesSchema from '../flowprint-rules.schema.json' with { type: 'json' }
+import rulesTestSchema from '../flowprint-rules-test.schema.json' with { type: 'json' }
 import type { ValidationResult, ValidationError } from './types.js'
 
 const ajv = new Ajv({ allErrors: true, allowUnionTypes: true })
 const rulesValidator = ajv.compile(rulesSchema)
+const rulesTestValidator = ajv.compile(rulesTestSchema)
 
 /**
  * Supported rules schema versions.
  */
 export const SUPPORTED_RULES_VERSIONS = ['flowprint-rules/1.0'] as const
+
+/**
+ * Supported rules test schema versions.
+ */
+export const SUPPORTED_RULES_TEST_VERSIONS = ['flowprint-rules-test/1.0'] as const
 
 /**
  * All valid hit policies.
@@ -87,6 +94,57 @@ export function validateRulesYaml(yamlString: string): ValidationResult {
   }
 
   return validateRules(doc)
+}
+
+/**
+ * Validate a parsed rules test document against the rules test JSON Schema.
+ *
+ * @param doc - The parsed rules test document
+ * @returns Validation result with all errors found
+ */
+export function validateRulesTest(doc: unknown): ValidationResult {
+  const errors: ValidationError[] = []
+
+  const valid = rulesTestValidator(doc)
+  const schemaErrors = rulesTestValidator.errors ? [...rulesTestValidator.errors] : []
+  if (!valid) {
+    for (const err of schemaErrors) {
+      errors.push({
+        path: err.instancePath || '/',
+        message: formatRulesError(err),
+        severity: 'error',
+      })
+    }
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+/**
+ * Parse a YAML string and validate the resulting rules test document.
+ *
+ * @param yamlString - Raw YAML content to parse and validate
+ * @returns Validation result
+ */
+export function validateRulesTestYaml(yamlString: string): ValidationResult {
+  let doc: unknown
+  try {
+    doc = parse(yamlString)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to parse YAML'
+    return {
+      valid: false,
+      errors: [
+        {
+          path: '/',
+          message: `YAML parse error: ${message}`,
+          severity: 'error',
+        },
+      ],
+    }
+  }
+
+  return validateRulesTest(doc)
 }
 
 /**

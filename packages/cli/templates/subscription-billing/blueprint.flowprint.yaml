@@ -1,0 +1,100 @@
+schema: flowprint/1.0
+name: subscription_billing
+version: 1.0.0
+description: Subscription billing workflow that resolves pricing tiers, applies discounts, calculates tax, processes payment, and handles failures with retry and dunning
+lanes:
+  customer:
+    label: Customer
+    visibility: external
+    order: 0
+  billing:
+    label: Billing Engine
+    visibility: internal
+    order: 1
+  finance:
+    label: Finance & Compliance
+    visibility: internal
+    order: 2
+nodes:
+  initiate_billing:
+    type: action
+    lane: customer
+    label: Initiate Billing Cycle
+    description: Triggered by the subscription renewal schedule; loads account and plan details
+    next: resolve_pricing
+  resolve_pricing:
+    type: action
+    lane: billing
+    label: Resolve Pricing
+    description: Determine the base price for the subscription tier and billing period
+    rules:
+      file: rules/pricing.rules.yaml
+    next: apply_discounts
+  apply_discounts:
+    type: action
+    lane: billing
+    label: Apply Discounts
+    description: Evaluate and apply any eligible discounts based on tenure, promotions, or bundling
+    rules:
+      file: rules/discount.rules.yaml
+    next: calculate_tax
+  calculate_tax:
+    type: action
+    lane: finance
+    label: Calculate Tax
+    description: Compute applicable sales tax based on customer jurisdiction and product category
+    rules:
+      file: rules/tax.rules.yaml
+    next: generate_invoice
+  generate_invoice:
+    type: action
+    lane: billing
+    label: Generate Invoice
+    description: Create an itemized invoice with base price, discounts, tax, and total
+    next: process_payment
+  process_payment:
+    type: action
+    lane: billing
+    label: Process Payment
+    description: Charge the customer's payment method on file
+    next: check_payment_result
+    error:
+      catch: handle_payment_failure
+  check_payment_result:
+    type: switch
+    lane: billing
+    label: Check Payment Result
+    description: Route based on the payment processing outcome
+    cases:
+      - when: Payment Succeeded
+        next: send_receipt
+      - when: Payment Declined
+        next: handle_payment_failure
+  send_receipt:
+    type: action
+    lane: customer
+    label: Send Receipt
+    description: Email the customer a payment receipt and updated subscription confirmation
+    next: billing_complete
+  handle_payment_failure:
+    type: error
+    lane: billing
+    label: Handle Payment Failure
+    description: Log the failure, schedule a retry, and enter the dunning workflow if retries are exhausted
+    next: notify_customer
+  notify_customer:
+    type: action
+    lane: customer
+    label: Notify Customer
+    description: Alert the customer about the billing issue and provide payment update instructions
+    next: billing_incomplete
+  billing_complete:
+    type: terminal
+    lane: customer
+    label: Billing Complete
+    outcome: success
+  billing_incomplete:
+    type: terminal
+    lane: customer
+    label: Billing Incomplete
+    outcome: failure

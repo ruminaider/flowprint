@@ -1,0 +1,53 @@
+schema: flowprint-rules/1.0
+name: return_eligibility
+description: Determine return eligibility based on return window, item condition, and category
+hit_policy: first
+inputs:
+  - return.days_since_delivery
+  - return.item_condition
+  - item.category
+  - item.is_final_sale
+rules:
+  # Final sale items cannot be returned
+  - when:
+      item.is_final_sale: true
+    then:
+      eligible: false
+      reason: final_sale_item
+
+  # Past 30-day return window
+  - when:
+      return.days_since_delivery:
+        gte: 30
+    then:
+      eligible: false
+      reason: return_window_expired
+
+  # Damaged or defective items always eligible within 90 days
+  - when:
+      return.item_condition:
+        in: [damaged, defective]
+      return.days_since_delivery:
+        lt: 90
+    then:
+      eligible: true
+      refund_type: full
+      reason: warranty_claim
+
+  # Electronics have shorter 15-day window
+  - when:
+      item.category: electronics
+      return.days_since_delivery:
+        gte: 15
+    then:
+      eligible: false
+      reason: electronics_window_expired
+
+  # Standard return within window
+  - when:
+      return.days_since_delivery:
+        lt: 30
+    then:
+      eligible: true
+      refund_type: original_payment
+      reason: standard_return

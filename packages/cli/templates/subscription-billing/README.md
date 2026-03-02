@@ -1,0 +1,3 @@
+# Subscription Billing
+
+An advanced billing workflow that processes subscription renewals end-to-end: resolve pricing tiers, apply tenure and promotional discounts, calculate jurisdiction-specific tax, generate an invoice, and process payment. Payment failures are handled through an error node that feeds into customer notification. The `rules/` directory contains three decision tables -- `pricing.rules.yaml` for plan/period pricing, `discount.rules.yaml` for loyalty and promo discounts, and `tax.rules.yaml` for state-level tax calculation. Use this template for SaaS billing, membership renewals, or any recurring payment workflow.

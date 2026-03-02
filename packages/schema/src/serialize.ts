@@ -10,6 +10,7 @@ const TOP_LEVEL_KEY_ORDER = [
   'version',
   'description',
   'metadata',
+  'secrets',
   'workflow',
   'lanes',
   'nodes',
@@ -23,6 +24,7 @@ const NODE_KEY_PREFIX = [
   'lane',
   'label',
   'description',
+  'notes',
   'metadata',
   'position',
   'entry_points',
@@ -39,6 +41,7 @@ const NODE_TYPE_FIELDS: Record<string, readonly string[]> = {
   wait: ['event', 'event_type', 'event_type_import', 'timeout', 'next', 'timeout_next'],
   error: ['next'],
   terminal: ['outcome'],
+  trigger: ['trigger_type', 'schedule', 'webhook', 'event', 'manual', 'next'],
 }
 
 /**
@@ -72,6 +75,8 @@ export function serialize(doc: FlowprintDocument): string {
       rootMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else if (key === 'workflow' && typeof value === 'object') {
       rootMap.add(new Pair(key, serializeWorkflow(value as Record<string, unknown>)))
+    } else if (key === 'secrets' && typeof value === 'object') {
+      rootMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else {
       rootMap.add(new Pair(key, createScalar(value)))
     }
@@ -151,6 +156,12 @@ function serializeNode(node: Node): YAMLMap {
       nodeMap.add(new Pair(key, posMap))
     } else if (key === 'metadata' && typeof value === 'object') {
       nodeMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
+    } else if (
+      (key === 'schedule' || key === 'webhook' || key === 'event' || key === 'manual') &&
+      typeof value === 'object' &&
+      value !== null
+    ) {
+      nodeMap.add(new Pair(key, serializeTriggerConfig(value as Record<string, unknown>)))
     } else {
       nodeMap.add(new Pair(key, createScalar(value)))
     }
@@ -285,6 +296,36 @@ function serializeTemporalRetry(retry: Record<string, unknown>): YAMLMap {
       map.add(new Pair(key, createScalar(value)))
     }
   }
+  return map
+}
+
+/**
+ * Serialize a trigger config object (schedule, webhook, event, manual).
+ * Handles nested objects and arrays (e.g., manual.form_fields).
+ */
+function serializeTriggerConfig(obj: Record<string, unknown>): YAMLMap {
+  const map = new YAMLMap()
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) continue
+
+    if (Array.isArray(value)) {
+      const seq = new YAMLSeq()
+      for (const item of value) {
+        if (typeof item === 'object' && item !== null) {
+          seq.add(serializeOrderedMap(item as Record<string, unknown>))
+        } else {
+          seq.add(createScalar(item))
+        }
+      }
+      map.add(new Pair(key, seq))
+    } else if (typeof value === 'object' && value !== null) {
+      map.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
+    } else {
+      map.add(new Pair(key, createScalar(value)))
+    }
+  }
+
   return map
 }
 

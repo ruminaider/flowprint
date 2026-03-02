@@ -1,0 +1,185 @@
+schema: flowprint/1.0
+name: e_commerce_fulfillment
+version: 1.0.0
+description: Full e-commerce order fulfillment covering payment, fraud detection, inventory allocation, pick-and-pack, shipping, delivery tracking, return handling, and loyalty rewards across customer, sales, warehouse, shipping, and finance lanes.
+metadata:
+  owner: commerce-platform
+  domain: e-commerce
+lanes:
+  customer:
+    label: Customer
+    visibility: external
+    order: 0
+  sales:
+    label: Sales
+    visibility: external
+    order: 1
+  warehouse:
+    label: Warehouse
+    visibility: internal
+    order: 2
+  shipping:
+    label: Shipping
+    visibility: internal
+    order: 3
+  finance:
+    label: Finance
+    visibility: internal
+    order: 4
+nodes:
+  receive_order:
+    type: action
+    lane: customer
+    label: Receive Order
+    description: Customer places order through storefront or mobile app
+    next: validate_payment
+  validate_payment:
+    type: action
+    lane: finance
+    label: Validate Payment
+    description: Authorize payment method and place hold on funds
+    next: check_fraud
+    error:
+      catch: handle_payment_error
+  check_fraud:
+    type: switch
+    lane: finance
+    label: Check Fraud
+    description: Run fraud detection rules against order and payment details
+    cases:
+      - when: Approved
+        next: confirm_order
+      - when: Flagged for review
+        next: manual_fraud_review
+      - when: Rejected
+        next: reject_order
+  manual_fraud_review:
+    type: wait
+    lane: finance
+    label: Manual Fraud Review
+    description: Hold order for manual review by fraud analyst
+    event: manual_fraud_review_signal
+    next: confirm_order
+  reject_order:
+    type: action
+    lane: sales
+    label: Reject Order
+    description: Cancel order, release payment hold, and notify customer
+    next: order_cancelled
+  confirm_order:
+    type: action
+    lane: sales
+    label: Confirm Order
+    description: Send order confirmation email and create fulfillment record
+    next: check_inventory
+  check_inventory:
+    type: switch
+    lane: warehouse
+    label: Check Inventory
+    description: Verify item availability and select fulfillment warehouse
+    cases:
+      - when: In stock
+        next: pick_and_pack
+      - when: Out of stock
+        next: backorder_items
+      - when: Partial stock
+        next: split_shipment
+  backorder_items:
+    type: wait
+    lane: warehouse
+    label: Backorder Items
+    description: Place items on backorder and wait for restocking
+    event: backorder_items_signal
+    next: pick_and_pack
+  split_shipment:
+    type: parallel
+    lane: warehouse
+    label: Split Shipment
+    description: Split order into available and backordered shipments
+    branches:
+      - pick_and_pack
+      - backorder_items
+    join: select_carrier
+  pick_and_pack:
+    type: action
+    lane: warehouse
+    label: Pick and Pack
+    description: Pick items from shelves, verify quantities, and pack for shipment
+    next: select_carrier
+  select_carrier:
+    type: switch
+    lane: shipping
+    label: Select Carrier
+    description: Choose shipping carrier based on weight, destination, and service level
+    cases:
+      - when: Standard shipping
+        next: ship_order
+      - when: Express shipping
+        next: ship_order
+      - when: Freight
+        next: ship_order
+  ship_order:
+    type: action
+    lane: shipping
+    label: Ship Order
+    description: Generate shipping label, hand off to carrier, and record tracking number
+    next: track_delivery
+  track_delivery:
+    type: wait
+    lane: shipping
+    label: Track Delivery
+    description: Monitor shipment status and await delivery confirmation
+    event: track_delivery_signal
+    next: capture_payment
+  capture_payment:
+    type: action
+    lane: finance
+    label: Capture Payment
+    description: Capture authorized payment and generate invoice
+    next: award_loyalty_points
+  award_loyalty_points:
+    type: action
+    lane: finance
+    label: Award Loyalty Points
+    description: Calculate and credit loyalty points based on order total and membership tier
+    rules:
+      file: rules/loyalty-rewards.rules.yaml
+    next: check_return_request
+  check_return_request:
+    type: switch
+    lane: customer
+    label: Check Return Request
+    description: Determine if customer initiates a return within the eligibility window
+    cases:
+      - when: Return requested
+        next: process_return
+      - when: No return
+        next: order_complete
+  process_return:
+    type: action
+    lane: warehouse
+    label: Process Return
+    description: Receive returned items, inspect condition, and restock or dispose
+    next: issue_refund
+  issue_refund:
+    type: action
+    lane: finance
+    label: Issue Refund
+    description: Process refund to original payment method and adjust loyalty points
+    next: order_complete
+  handle_payment_error:
+    type: error
+    lane: finance
+    label: Handle Payment Error
+    description: Notify customer of payment failure and request alternate payment method
+    next: order_cancelled
+  order_complete:
+    type: terminal
+    lane: customer
+    label: Order Complete
+    outcome: success
+  order_cancelled:
+    type: terminal
+    lane: customer
+    label: Order Cancelled
+    outcome: failure

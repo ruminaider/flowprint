@@ -1,0 +1,3 @@
+name: parallel-pipeline
+description: Parallel processing pipeline with fan-out, concurrent branches, and aggregation
+complexity: intermediate

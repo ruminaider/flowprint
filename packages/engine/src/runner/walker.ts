@@ -6,6 +6,7 @@ import type {
   WaitNode,
   ErrorNode,
   TerminalNode,
+  TriggerNode,
 } from '@ruminaider/flowprint-schema'
 import {
   findRoots,
@@ -15,6 +16,7 @@ import {
   isWaitNode,
   isErrorNode,
   isTerminalNode,
+  isTriggerNode,
 } from '@ruminaider/flowprint-schema'
 import type { RunOptions, ExecutionContext, StepResult, ExecutionTrace } from './types.js'
 import { evaluateExpression } from './evaluator.js'
@@ -94,6 +96,8 @@ export async function runGraph(
         currentNodeId = executeWait(currentNodeId, node, context, options, steps)
       } else if (isErrorNode(node)) {
         currentNodeId = await executeErrorHandler(currentNodeId, node, context, options, steps)
+      } else if (isTriggerNode(node)) {
+        currentNodeId = executeTrigger(currentNodeId, node, steps)
       } else if (isTerminalNode(node)) {
         executeTerminal(currentNodeId, node, steps)
         currentNodeId = undefined
@@ -492,6 +496,21 @@ async function executeErrorHandler(
   })
 
   return node.next
+}
+
+function executeTrigger(
+  nodeId: string,
+  node: TriggerNode,
+  steps: StepResult[],
+): string | undefined {
+  steps.push({
+    node_id: nodeId,
+    type: 'trigger',
+    status: 'fired',
+    next: node.next as string | undefined,
+  })
+
+  return node.next as string | undefined
 }
 
 function executeTerminal(nodeId: string, node: TerminalNode, steps: StepResult[]): void {

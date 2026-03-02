@@ -1,0 +1,54 @@
+schema: flowprint-rules/1.0
+name: insurance_verification
+description: Verify insurance coverage type and determine patient financial responsibility
+hit_policy: first
+inputs:
+  - insurance.plan_type
+  - insurance.status
+  - insurance.copay_amount
+  - visit.service_type
+rules:
+  # Inactive or expired plans
+  - when:
+      insurance.status:
+        in: [inactive, expired, terminated]
+    then:
+      coverage: none
+      patient_responsibility: full
+
+  # HMO with referral-required services
+  - when:
+      insurance.plan_type: hmo
+      visit.service_type:
+        in: [specialist, imaging, surgery]
+    then:
+      coverage: partial
+      requires_referral: true
+      patient_responsibility: copay
+
+  # PPO covers most services directly
+  - when:
+      insurance.plan_type: ppo
+      insurance.status: active
+    then:
+      coverage: full
+      requires_referral: false
+      patient_responsibility: copay
+
+  # Medicare/Medicaid
+  - when:
+      insurance.plan_type:
+        in: [medicare, medicaid]
+      insurance.status: active
+    then:
+      coverage: full
+      requires_referral: false
+      patient_responsibility: none
+
+  # Active plan, general coverage
+  - when:
+      insurance.status: active
+    then:
+      coverage: partial
+      requires_referral: false
+      patient_responsibility: copay

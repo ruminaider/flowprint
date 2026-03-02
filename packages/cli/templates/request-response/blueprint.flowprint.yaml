@@ -1,0 +1,37 @@
+schema: flowprint/1.0
+name: request_response
+version: 1.0.0
+description: Basic request/response pattern with receive, process, and respond phases
+lanes:
+  api_gateway:
+    label: API Gateway
+    visibility: external
+    order: 0
+  backend:
+    label: Backend Service
+    visibility: internal
+    order: 1
+nodes:
+  receive_request:
+    type: action
+    lane: api_gateway
+    label: Receive Request
+    description: Accept and validate the incoming API request
+    next: process_request
+  process_request:
+    type: action
+    lane: backend
+    label: Process Request
+    description: Execute the core business logic for the request
+    next: send_response
+  send_response:
+    type: action
+    lane: api_gateway
+    label: Send Response
+    description: Format and return the response to the caller
+    next: done
+  done:
+    type: terminal
+    lane: api_gateway
+    label: Complete
+    outcome: success

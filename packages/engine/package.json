@@ -13,6 +13,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./browser": {
+      "import": {
+        "types": "./dist/rules/evaluator-browser.d.ts",
+        "default": "./dist/rules/evaluator-browser.js"
+      },
+      "require": {
+        "types": "./dist/rules/evaluator-browser.d.cts",
+        "default": "./dist/rules/evaluator-browser.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",

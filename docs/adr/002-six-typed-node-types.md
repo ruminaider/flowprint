@@ -1,8 +1,8 @@
-# ADR-002: Six Typed Node Types
+# ADR-002: Seven Typed Node Types
 
 ## Status
 
-Accepted
+Accepted (amended 2026-03-02 to add trigger node)
 
 ## Date
 
@@ -18,7 +18,7 @@ We also needed every node type to carry clear runtime semantics, since blueprint
 
 ## Decision
 
-We define exactly six node types, each mapping to a distinct runtime semantic:
+We define exactly seven node types, each mapping to a distinct runtime semantic:
 
 1. **action** — Performs a unit of work (API call, database operation, computation). The fundamental building block. Has a `next` field pointing to the following node.
 
@@ -32,20 +32,23 @@ We define exactly six node types, each mapping to a distinct runtime semantic:
 
 6. **terminal** — Marks the end of a flow path. No `next` field. Carries a `status` (completed, failed, cancelled) to indicate the outcome.
 
-Expressiveness beyond these six types is achieved through composition: an action inside an error node with a parallel node gives you "concurrent work with error handling" without needing a dedicated composite element type.
+7. **trigger** — Defines how a workflow starts. Specifies the entry condition (schedule, webhook, event, or manual) and points to the first action node via `next`. Uses the standard `next` field (not a special `starts` field) to reuse existing edge infrastructure; the editor visually distinguishes trigger edges with dashed lines based on source node type. Trigger nodes have no incoming edges and don't execute logic — they declare the workflow's activation mechanism. Making triggers visible as nodes (rather than metadata) follows Flowprint's visualization-first principle: business stakeholders see the complete flow from "what starts it" through "what it does" to "how it ends."
+
+Expressiveness beyond these seven types is achieved through composition: an action inside an error node with a parallel node gives you "concurrent work with error handling" without needing a dedicated composite element type.
 
 ## Consequences
 
 ### Positive
 
 - The full vocabulary can be learned in a single sitting. New team members can read and author blueprints without BPMN training.
-- Each node type maps directly to a runtime concept (function call, if/else, Promise.all, sleep/wait, try/catch, return), making code generation straightforward.
-- Schema validation is simpler: six discriminated union variants with well-defined fields, rather than dozens of element types with overlapping capabilities.
-- The editor UI stays manageable — six palette items, six property panels, six rendering strategies.
+- Each node type maps directly to a runtime concept (function call, if/else, Promise.all, sleep/wait, try/catch, return, event listener), making code generation straightforward.
+- Schema validation is simpler: seven discriminated union variants with well-defined fields, rather than dozens of element types with overlapping capabilities.
+- The editor UI stays manageable — seven palette items, seven property panels, seven rendering strategies.
+- The trigger node makes workflow entry points explicit and visible, helping business stakeholders understand the complete flow at a glance.
 
 ### Negative
 
 - Some patterns that BPMN handles with a single element require composition in Flowprint. For example, a "timer boundary event" in BPMN requires an error node wrapping an action with a wait-based catch handler.
 - Teams coming from BPMN may initially look for familiar elements (exclusive gateways, intermediate events, sub-processes) and need to learn the Flowprint equivalents.
-- If future requirements demand semantics that don't fit any of the six types (e.g., a "loop" node for iteration), we face a decision between adding a seventh type — breaking the simplicity principle — or expressing it as a pattern using existing types.
+- Seven types is still small but no longer fits the "exactly six" mental model. Future additions should be considered very carefully to avoid vocabulary creep.
 - The small type set means each type carries more responsibility; changes to a single node type's schema can have broad impact across the codebase.

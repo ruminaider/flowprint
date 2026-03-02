@@ -1,0 +1,7 @@
+schema: flowprint-rules-test/1.0
+tests:
+  - name: intentionally wrong expectation
+    input:
+      order_total: 250
+    expected_output:
+      discount: 99

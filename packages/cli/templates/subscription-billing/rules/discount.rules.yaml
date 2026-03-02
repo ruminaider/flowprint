@@ -1,0 +1,54 @@
+schema: flowprint-rules/1.0
+name: subscription_discount
+description: >-
+  Apply discounts based on customer tenure and active promotions.
+  Longest-tenured customers with active promos get the best rates.
+  Rules are evaluated first-match, so order matters.
+hit_policy: first
+inputs:
+  - customer.tenure_months
+  - customer.has_active_promo
+  - customer.promo_code
+rules:
+  # Active promo codes take priority
+  - when:
+      customer.has_active_promo: true
+      customer.promo_code: LAUNCH50
+    then:
+      discount_percent: 50
+      label: Launch promotion
+
+  - when:
+      customer.has_active_promo: true
+      customer.promo_code: PARTNER25
+    then:
+      discount_percent: 25
+      label: Partner promotion
+
+  # Long-tenured customers get loyalty discounts
+  - when:
+      customer.tenure_months:
+        gte: 36
+    then:
+      discount_percent: 15
+      label: 3-year loyalty discount
+
+  - when:
+      customer.tenure_months:
+        gte: 24
+    then:
+      discount_percent: 10
+      label: 2-year loyalty discount
+
+  - when:
+      customer.tenure_months:
+        gte: 12
+    then:
+      discount_percent: 5
+      label: 1-year loyalty discount
+
+  # No discount
+  - when: {}
+    then:
+      discount_percent: 0
+      label: No discount

@@ -6,6 +6,7 @@ import type {
   WaitNode,
   ErrorNode,
   TerminalNode,
+  TriggerNode,
 } from './types.js'
 
 /**
@@ -48,4 +49,11 @@ export function isErrorNode(node: Node): node is ErrorNode {
  */
 export function isTerminalNode(node: Node): node is TerminalNode {
   return node.type === 'terminal'
+}
+
+/**
+ * Type guard: checks if a node is a TriggerNode.
+ */
+export function isTriggerNode(node: Node): node is TriggerNode {
+  return node.type === 'trigger'
 }

@@ -1,0 +1,37 @@
+schema: flowprint-rules/1.0
+name: settlement_calculation
+description: Calculate settlement payout based on assessed damages, policy limits, and deductibles
+hit_policy: first
+inputs:
+  - claim.assessed_amount
+  - policy.deductible
+  - policy.coverage_limit
+  - claim.liability_percent
+  - claim.category
+rules:
+  - when:
+      claim.category: liability
+      claim.liability_percent:
+        lt: 100
+    then:
+      formula: (assessed_amount - deductible) * (liability_percent / 100)
+      cap: coverage_limit
+      include_legal_fees: true
+  - when:
+      claim.assessed_amount:
+        gte: 100000
+    then:
+      formula: coverage_limit
+      cap: coverage_limit
+      include_legal_fees: false
+  - when:
+      claim.assessed_amount:
+        gte: 500
+    then:
+      formula: assessed_amount - deductible
+      cap: coverage_limit
+      include_legal_fees: false
+  - then:
+      formula: "0"
+      cap: 0
+      include_legal_fees: false

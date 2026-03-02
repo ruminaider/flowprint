@@ -16,7 +16,8 @@
     "flowprint": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "engines": {
     "node": ">=22.0.0"

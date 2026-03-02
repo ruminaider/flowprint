@@ -1,0 +1,48 @@
+schema: flowprint-rules/1.0
+name: claim_classification
+description: Classify claims into auto, health, property, or liability categories
+hit_policy: first
+inputs:
+  - claim.incident_type
+  - claim.policy_type
+  - claim.involves_third_party
+rules:
+  # Vehicle-related incidents
+  - when:
+      claim.incident_type:
+        in: [collision, theft_vehicle, vandalism_vehicle, weather_vehicle]
+      claim.policy_type: auto
+    then:
+      category: auto
+      complexity: standard
+
+  # Medical claims
+  - when:
+      claim.incident_type:
+        in: [injury, illness, hospitalization, prescription]
+      claim.policy_type: health
+    then:
+      category: health
+      complexity: standard
+
+  # Property damage
+  - when:
+      claim.incident_type:
+        in: [fire, flood, theft_property, storm_damage, vandalism_property]
+      claim.policy_type:
+        in: [homeowners, renters, commercial_property]
+    then:
+      category: property
+      complexity: standard
+
+  # Third-party liability
+  - when:
+      claim.involves_third_party: true
+    then:
+      category: liability
+      complexity: complex
+
+  # Default classification
+  - then:
+      category: property
+      complexity: standard

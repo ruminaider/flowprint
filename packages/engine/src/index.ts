@@ -20,7 +20,7 @@ export {
 export type { RunOptions, ExecutionTrace, StepResult, ExecutionContext } from './runner/index.js'
 
 // Rules
-export { loadRulesFile, evaluateRules } from './rules/index.js'
+export { loadRulesFile, evaluateRules, runRulesTests } from './rules/index.js'
 export type {
   RulesDocument,
   HitPolicy,
@@ -30,6 +30,8 @@ export type {
   Condition,
   OperatorCondition,
   RulesEvaluationResult,
+  RulesTestCase,
+  RulesTestResult,
 } from './rules/index.js'
 
 // Codegen

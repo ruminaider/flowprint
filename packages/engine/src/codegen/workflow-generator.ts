@@ -7,6 +7,7 @@ import {
   isWaitNode,
   isTerminalNode,
   isErrorNode,
+  isTriggerNode,
 } from '@ruminaider/flowprint-schema'
 import type { GeneratedFile } from './types.js'
 import { FILE_HEADER, indent, camelCase, pascalCase } from './utils.js'
@@ -275,6 +276,8 @@ function generateNodeCode(
     if (node.entry_points && node.entry_points.length > 0) {
       lines.push(`const ${varName} = await defaultActivities.${varName}()`)
     }
+  } else if (isTriggerNode(node)) {
+    lines.push(`// Trigger: ${node.label} (${node.trigger_type ?? 'manual'})`)
   }
 
   return lines

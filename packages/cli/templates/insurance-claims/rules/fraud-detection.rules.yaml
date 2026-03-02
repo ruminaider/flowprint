@@ -1,0 +1,50 @@
+schema: flowprint-rules/1.0
+name: fraud_detection
+description: Flag suspicious claims based on behavioral and statistical patterns
+hit_policy: first
+inputs:
+  - claim.amount
+  - claim.days_since_policy_start
+  - claimant.claims_last_24m
+  - claim.incident_reported_delay_days
+  - claim.has_witnesses
+rules:
+  # Claim filed very soon after policy inception
+  - when:
+      claim.days_since_policy_start:
+        lt: 30
+      claim.amount:
+        gte: 5000
+    then:
+      risk: suspicious
+      flag: early_inception_high_value
+
+  # Excessive claim frequency
+  - when:
+      claimant.claims_last_24m:
+        gte: 4
+    then:
+      risk: suspicious
+      flag: high_frequency_claimant
+
+  # Long delay between incident and report
+  - when:
+      claim.incident_reported_delay_days:
+        gte: 30
+    then:
+      risk: suspicious
+      flag: late_reporting
+
+  # High-value claim with no witnesses
+  - when:
+      claim.amount:
+        gte: 10000
+      claim.has_witnesses: false
+    then:
+      risk: suspicious
+      flag: high_value_no_witnesses
+
+  # Default: clear
+  - then:
+      risk: clear
+      flag: none

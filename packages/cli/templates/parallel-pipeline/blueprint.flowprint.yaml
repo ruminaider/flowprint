@@ -1,0 +1,59 @@
+schema: flowprint/1.0
+name: parallel_pipeline
+version: 1.0.0
+description: Parallel processing pipeline that fans out to three concurrent branches and aggregates results
+lanes:
+  orchestration:
+    label: Orchestration
+    visibility: external
+    order: 0
+  processing:
+    label: Processing
+    visibility: internal
+    order: 1
+nodes:
+  receive_data:
+    type: action
+    lane: orchestration
+    label: Receive Data
+    description: Accept incoming data payload and prepare it for parallel processing
+    next: fan_out
+  fan_out:
+    type: parallel
+    lane: orchestration
+    label: Fan Out
+    description: Split the workload into three concurrent processing branches
+    branches:
+      - enrich_data
+      - validate_data
+      - transform_data
+    join: aggregate_results
+  enrich_data:
+    type: action
+    lane: processing
+    label: Enrich Data
+    description: Augment input data with external reference information
+    next: aggregate_results
+  validate_data:
+    type: action
+    lane: processing
+    label: Validate Data
+    description: Run validation rules and flag any data quality issues
+    next: aggregate_results
+  transform_data:
+    type: action
+    lane: processing
+    label: Transform Data
+    description: Normalize and reshape data into the target format
+    next: aggregate_results
+  aggregate_results:
+    type: action
+    lane: orchestration
+    label: Aggregate Results
+    description: Combine outputs from all branches into a single unified result
+    next: done
+  done:
+    type: terminal
+    lane: orchestration
+    label: Complete
+    outcome: success

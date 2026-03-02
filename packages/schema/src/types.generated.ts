@@ -5,7 +5,51 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type Node = ActionNode | SwitchNode | ParallelNode | WaitNode | ErrorNode | TerminalNode;
+export type Node = ActionNode | SwitchNode | ParallelNode | WaitNode | ErrorNode | TerminalNode | TriggerNode;
+export type TriggerNode = {
+  [k: string]: unknown;
+} & {
+  type: "trigger";
+  lane: string;
+  label: string;
+  description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
+  metadata?: {
+    [k: string]: string;
+  };
+  position?: Position;
+  trigger_type: "schedule" | "webhook" | "event" | "manual";
+  /**
+   * Node ID that this trigger initiates
+   */
+  next: string;
+  schedule?: {
+    cron?: string;
+    timezone?: string;
+  };
+  webhook?: {
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+    path?: string;
+    headers?: {
+      [k: string]: string;
+    };
+  };
+  event?: {
+    source?: string;
+    type?: string;
+    filter?: string;
+  };
+  manual?: {
+    form_fields?: {
+      name?: string;
+      type?: "string" | "number" | "boolean";
+      required?: boolean;
+    }[];
+  };
+};
 
 /**
  * A service blueprint definition mapping business processes to code entry points
@@ -32,6 +76,17 @@ export interface FlowprintServiceBlueprint {
    */
   metadata?: {
     [k: string]: string;
+  };
+  /**
+   * External secrets this workflow needs at runtime (names and descriptions only, never values)
+   */
+  secrets?: {
+    [k: string]: {
+      /**
+       * Human-readable description of what this secret is for
+       */
+      description: string;
+    };
   };
   /**
    * Workflow-level execution configuration
@@ -90,6 +145,10 @@ export interface ActionNode {
   lane: string;
   label: string;
   description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };
@@ -207,6 +266,10 @@ export interface SwitchNode {
   lane: string;
   label: string;
   description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };
@@ -224,6 +287,10 @@ export interface ParallelNode {
   lane: string;
   label: string;
   description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };
@@ -238,6 +305,10 @@ export interface WaitNode {
   lane: string;
   label: string;
   description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };
@@ -270,6 +341,10 @@ export interface ErrorNode {
   lane: string;
   label: string;
   description?: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };
@@ -281,6 +356,10 @@ export interface TerminalNode {
   type: "terminal";
   lane: string;
   label: string;
+  /**
+   * Markdown notes for documentation and design rationale
+   */
+  notes?: string;
   metadata?: {
     [k: string]: string;
   };

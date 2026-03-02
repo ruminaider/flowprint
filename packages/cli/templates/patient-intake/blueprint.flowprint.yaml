@@ -1,0 +1,133 @@
+schema: flowprint/1.0
+name: patient_intake
+version: 1.0.0
+description: Healthcare patient intake workflow covering arrival, registration, insurance verification, clinical triage, provider assignment, and appointment scheduling across patient, reception, clinical, and insurance lanes.
+metadata:
+  owner: clinical-ops
+  domain: healthcare
+lanes:
+  patient:
+    label: Patient
+    visibility: external
+    order: 0
+  reception:
+    label: Reception
+    visibility: external
+    order: 1
+  clinical:
+    label: Clinical
+    visibility: internal
+    order: 2
+  insurance:
+    label: Insurance
+    visibility: internal
+    order: 3
+nodes:
+  patient_arrives:
+    type: action
+    lane: patient
+    label: Patient Arrives
+    description: Patient checks in at the front desk or via self-service kiosk
+    next: verify_identity
+  verify_identity:
+    type: action
+    lane: reception
+    label: Verify Identity
+    description: Confirm patient identity using photo ID and date of birth
+    next: check_existing_record
+  check_existing_record:
+    type: switch
+    lane: reception
+    label: Check Existing Record
+    description: Determine if the patient has an existing record in the system
+    cases:
+      - when: Existing patient
+        next: update_demographics
+      - when: New patient
+        next: create_patient_record
+  create_patient_record:
+    type: action
+    lane: reception
+    label: Create Patient Record
+    description: Register new patient with demographics, contact info, and emergency contacts
+    next: collect_insurance_info
+  update_demographics:
+    type: action
+    lane: reception
+    label: Update Demographics
+    description: Confirm and update address, phone, and emergency contact on file
+    next: collect_insurance_info
+  collect_insurance_info:
+    type: action
+    lane: reception
+    label: Collect Insurance Info
+    description: Capture insurance card details, member ID, and group number
+    next: verify_insurance_coverage
+  verify_insurance_coverage:
+    type: switch
+    lane: insurance
+    label: Verify Insurance Coverage
+    description: Check active coverage, co-pay amounts, and referral requirements
+    cases:
+      - when: Fully covered
+        next: triage_assessment
+      - when: Partial coverage
+        next: collect_copay
+      - when: No coverage
+        next: discuss_self_pay
+  collect_copay:
+    type: action
+    lane: reception
+    label: Collect Co-pay
+    description: Process co-pay or co-insurance payment at the front desk
+    next: triage_assessment
+  discuss_self_pay:
+    type: action
+    lane: reception
+    label: Discuss Self-Pay Options
+    description: Present self-pay rates, payment plans, and financial assistance programs
+    next: triage_assessment
+  triage_assessment:
+    type: switch
+    lane: clinical
+    label: Triage Assessment
+    description: Nurse evaluates vitals, chief complaint, and symptom severity
+    cases:
+      - when: Emergency
+        next: escalate_emergency
+      - when: Urgent
+        next: assign_provider
+      - when: Routine
+        next: assign_provider
+  escalate_emergency:
+    type: action
+    lane: clinical
+    label: Escalate to Emergency
+    description: Transfer patient to emergency department and notify on-call physician
+    next: intake_failed
+  assign_provider:
+    type: action
+    lane: clinical
+    label: Assign Provider
+    description: Match patient to available provider based on specialty and availability
+    rules:
+      file: rules/provider-assignment.rules.yaml
+    next: schedule_appointment
+  schedule_appointment:
+    type: action
+    lane: reception
+    label: Schedule Appointment
+    description: Book appointment slot based on urgency, provider availability, and patient preference
+    rules:
+      file: rules/scheduling.rules.yaml
+    next: intake_complete
+  intake_complete:
+    type: terminal
+    lane: patient
+    label: Intake Complete
+    outcome: success
+  intake_failed:
+    type: terminal
+    lane: patient
+    label: Intake Failed
+    outcome: failure

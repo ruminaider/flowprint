@@ -1,0 +1,49 @@
+schema: flowprint-rules/1.0
+name: reserve_setting
+description: Set financial reserves based on claim type and estimated value
+hit_policy: first
+inputs:
+  - claim.category
+  - claim.estimated_amount
+  - claim.complexity
+rules:
+  # Complex liability claims get highest reserves
+  - when:
+      claim.category: liability
+      claim.complexity: complex
+    then:
+      reserve_multiplier: 2.0
+      min_reserve: 25000
+      review_interval_days: 14
+
+  # High-value property claims
+  - when:
+      claim.category: property
+      claim.estimated_amount:
+        gte: 50000
+    then:
+      reserve_multiplier: 1.5
+      min_reserve: 10000
+      review_interval_days: 30
+
+  # Standard auto claims
+  - when:
+      claim.category: auto
+    then:
+      reserve_multiplier: 1.25
+      min_reserve: 2000
+      review_interval_days: 30
+
+  # Health claims
+  - when:
+      claim.category: health
+    then:
+      reserve_multiplier: 1.1
+      min_reserve: 1000
+      review_interval_days: 45
+
+  # Default reserves
+  - then:
+      reserve_multiplier: 1.25
+      min_reserve: 5000
+      review_interval_days: 30

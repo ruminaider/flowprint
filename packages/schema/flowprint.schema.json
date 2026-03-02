@@ -33,6 +33,22 @@
       },
       "description": "Custom key-value metadata (e.g. owner, domain, tags)"
     },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description"],
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable description of what this secret is for"
+          }
+        }
+      },
+      "description": "External secrets this workflow needs at runtime (names and descriptions only, never values)"
+    },
     "workflow": {
       "type": "object",
       "additionalProperties": false,
@@ -157,7 +173,8 @@
         { "$ref": "#/definitions/ParallelNode" },
         { "$ref": "#/definitions/WaitNode" },
         { "$ref": "#/definitions/ErrorNode" },
-        { "$ref": "#/definitions/TerminalNode" }
+        { "$ref": "#/definitions/TerminalNode" },
+        { "$ref": "#/definitions/TriggerNode" }
       ]
     },
     "ActionNode": {
@@ -179,6 +196,10 @@
         },
         "description": {
           "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
         },
         "metadata": {
           "type": "object",
@@ -242,6 +263,10 @@
         "description": {
           "type": "string"
         },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -304,6 +329,10 @@
         "description": {
           "type": "string"
         },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -354,6 +383,10 @@
         },
         "description": {
           "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
         },
         "metadata": {
           "type": "object",
@@ -421,6 +454,10 @@
         "description": {
           "type": "string"
         },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -459,6 +496,10 @@
           "type": "string",
           "minLength": 1
         },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -474,6 +515,180 @@
           "description": "Whether this terminal represents a successful or failed outcome"
         }
       }
+    },
+    "TriggerNode": {
+      "type": "object",
+      "required": ["type", "lane", "label", "trigger_type", "next"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "trigger"
+        },
+        "lane": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Markdown notes for documentation and design rationale"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "position": {
+          "$ref": "#/definitions/Position"
+        },
+        "trigger_type": {
+          "type": "string",
+          "enum": ["schedule", "webhook", "event", "manual"]
+        },
+        "next": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Node ID that this trigger initiates"
+        },
+        "schedule": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cron": {
+              "type": "string",
+              "minLength": 1
+            },
+            "timezone": {
+              "type": "string"
+            }
+          }
+        },
+        "webhook": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "type": "string",
+              "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+            },
+            "path": {
+              "type": "string"
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "event": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "filter": {
+              "type": "string"
+            }
+          }
+        },
+        "manual": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "form_fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["string", "number", "boolean"]
+                  },
+                  "required": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "trigger_type": { "const": "schedule" } },
+            "required": ["trigger_type"]
+          },
+          "then": {
+            "required": ["schedule"],
+            "properties": {
+              "webhook": false,
+              "event": false,
+              "manual": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "trigger_type": { "const": "webhook" } },
+            "required": ["trigger_type"]
+          },
+          "then": {
+            "required": ["webhook"],
+            "properties": {
+              "schedule": false,
+              "event": false,
+              "manual": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "trigger_type": { "const": "event" } },
+            "required": ["trigger_type"]
+          },
+          "then": {
+            "required": ["event"],
+            "properties": {
+              "schedule": false,
+              "webhook": false,
+              "manual": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "trigger_type": { "const": "manual" } },
+            "required": ["trigger_type"]
+          },
+          "then": {
+            "required": ["manual"],
+            "properties": {
+              "schedule": false,
+              "webhook": false,
+              "event": false
+            }
+          }
+        }
+      ]
     },
     "RulesRef": {
       "type": "object",

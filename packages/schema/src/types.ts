@@ -17,6 +17,7 @@ export type {
   WaitNode,
   ErrorNode,
   TerminalNode,
+  TriggerNode,
   EntryPoint,
   ErrorHandler,
   RulesRef,

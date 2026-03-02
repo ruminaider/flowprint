@@ -11,6 +11,7 @@ import type {
   TerminalNode,
 } from '@ruminaider/flowprint-schema'
 import { useFlowprintState } from './useFlowprintState'
+import type { RulesData } from '../components/decision-table/shared'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -1127,5 +1128,182 @@ describe('immutability', () => {
     const doc2 = result.current.doc
 
     expect(doc1).not.toBe(doc2)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Rules data (decision table undo/redo integration)
+// ---------------------------------------------------------------------------
+
+function makeRulesData(overrides?: Partial<RulesData>): RulesData {
+  return {
+    hit_policy: 'first',
+    rules: [
+      { when: { status: 'gold' }, then: { discount: 20 } },
+      { when: { status: 'silver' }, then: { discount: 10 } },
+    ],
+    ...overrides,
+  }
+}
+
+describe('updateRulesData', () => {
+  it('stores rules data keyed by file path', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    const data = makeRulesData()
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', data)
+    })
+
+    expect(result.current.rulesData['pricing.rules.yaml']).toEqual(data)
+  })
+
+  it('does not mutate the original data object', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    const data = makeRulesData()
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', data)
+    })
+
+    // Mutate original
+    data.rules.push({ when: { status: 'bronze' }, then: { discount: 5 } })
+
+    expect(result.current.rulesData['pricing.rules.yaml']!.rules).toHaveLength(2)
+  })
+
+  it('records rules data change in undo stack', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', makeRulesData())
+    })
+
+    expect(result.current.canUndo).toBe(true)
+  })
+
+  it('undo restores previous rules data state', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', makeRulesData())
+    })
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeDefined()
+
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeUndefined()
+  })
+
+  it('redo restores rules data after undo', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    const data = makeRulesData()
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', data)
+    })
+    act(() => {
+      result.current.undo()
+    })
+    act(() => {
+      result.current.redo()
+    })
+
+    expect(result.current.rulesData['pricing.rules.yaml']).toEqual(data)
+  })
+
+  it('interleaved graph and rules changes undo in correct order', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    // 1. Add a node
+    act(() => {
+      result.current.addNode('step1', actionNode())
+    })
+    // 2. Set rules data
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', makeRulesData())
+    })
+    // 3. Add another node
+    act(() => {
+      result.current.addNode('step2', actionNode({ label: 'Second' }))
+    })
+
+    // State: step1 + step2 exist, rules data exists
+    expect(result.current.doc.nodes.step1).toBeDefined()
+    expect(result.current.doc.nodes.step2).toBeDefined()
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeDefined()
+
+    // Undo #1: removes step2
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.doc.nodes.step2).toBeUndefined()
+    expect(result.current.doc.nodes.step1).toBeDefined()
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeDefined()
+
+    // Undo #2: removes rules data
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.doc.nodes.step1).toBeDefined()
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeUndefined()
+
+    // Undo #3: removes step1
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.doc.nodes.step1).toBeUndefined()
+    expect(result.current.rulesData['pricing.rules.yaml']).toBeUndefined()
+  })
+
+  it('updates existing rules data for the same file path', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', makeRulesData())
+    })
+
+    const updated = makeRulesData({ hit_policy: 'collect' })
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', updated)
+    })
+
+    expect(result.current.rulesData['pricing.rules.yaml']!.hit_policy).toBe('collect')
+
+    // Undo restores first version
+    act(() => {
+      result.current.undo()
+    })
+    expect(result.current.rulesData['pricing.rules.yaml']!.hit_policy).toBe('first')
+  })
+
+  it('tracks multiple rules files independently', () => {
+    const { result } = renderHook(() => useFlowprintState({ initialDoc: makeDoc() }))
+
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', makeRulesData())
+    })
+    act(() => {
+      result.current.updateRulesData('routing.rules.yaml', makeRulesData({ hit_policy: 'all' }))
+    })
+
+    expect(result.current.rulesData['pricing.rules.yaml']!.hit_policy).toBe('first')
+    expect(result.current.rulesData['routing.rules.yaml']!.hit_policy).toBe('all')
+  })
+
+  it('fires onRulesDataChange callback', () => {
+    const onRulesDataChange = vi.fn()
+    const { result } = renderHook(() =>
+      useFlowprintState({ initialDoc: makeDoc(), onRulesDataChange }),
+    )
+
+    const data = makeRulesData()
+    act(() => {
+      result.current.updateRulesData('pricing.rules.yaml', data)
+    })
+
+    expect(onRulesDataChange).toHaveBeenCalledTimes(1)
+    expect(onRulesDataChange).toHaveBeenCalledWith('pricing.rules.yaml', data)
   })
 })

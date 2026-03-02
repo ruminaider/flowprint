@@ -1,0 +1,52 @@
+schema: flowprint-rules/1.0
+name: escalation
+description: Determine when to escalate claims to senior adjuster or legal review
+hit_policy: first
+inputs:
+  - claim.amount
+  - claim.category
+  - claim.involves_litigation
+  - claim.involves_third_party
+  - claim.complexity
+rules:
+  # Active litigation always goes to legal
+  - when:
+      claim.involves_litigation: true
+    then:
+      escalation: legal
+      reason: active_litigation
+      priority: high
+
+  # Liability claims with third parties over threshold
+  - when:
+      claim.category: liability
+      claim.involves_third_party: true
+      claim.amount:
+        gte: 25000
+    then:
+      escalation: legal
+      reason: high_value_liability
+      priority: high
+
+  # High-value claims go to senior adjuster
+  - when:
+      claim.amount:
+        gte: 50000
+    then:
+      escalation: senior_adjuster
+      reason: high_value_claim
+      priority: medium
+
+  # Complex claims go to senior adjuster
+  - when:
+      claim.complexity: complex
+    then:
+      escalation: senior_adjuster
+      reason: complex_claim
+      priority: medium
+
+  # Standard processing
+  - then:
+      escalation: none
+      reason: within_authority
+      priority: normal

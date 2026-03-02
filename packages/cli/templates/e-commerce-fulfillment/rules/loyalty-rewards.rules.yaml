@@ -1,0 +1,46 @@
+schema: flowprint-rules/1.0
+name: loyalty_rewards
+description: Calculate loyalty points based on order total and membership tier
+hit_policy: first
+inputs:
+  - order.total_amount
+  - customer.loyalty_tier
+  - order.is_subscription
+rules:
+  # Platinum members earn 3x points
+  - when:
+      customer.loyalty_tier: platinum
+    then:
+      points_multiplier: 3
+      points_per_dollar: 3
+      bonus_points: 100
+
+  # Gold members earn 2x points
+  - when:
+      customer.loyalty_tier: gold
+    then:
+      points_multiplier: 2
+      points_per_dollar: 2
+      bonus_points: 50
+
+  # Subscription orders earn 1.5x points
+  - when:
+      order.is_subscription: true
+    then:
+      points_multiplier: 1.5
+      points_per_dollar: 1.5
+      bonus_points: 25
+
+  # Silver members
+  - when:
+      customer.loyalty_tier: silver
+    then:
+      points_multiplier: 1.25
+      points_per_dollar: 1.25
+      bonus_points: 0
+
+  # Standard rate
+  - then:
+      points_multiplier: 1
+      points_per_dollar: 1
+      bonus_points: 0

@@ -1,0 +1,51 @@
+schema: flowprint-rules/1.0
+name: payment_validation
+description: Fraud detection rules based on order amount, billing/shipping mismatch, and velocity
+hit_policy: first
+inputs:
+  - order.total_amount
+  - order.billing_country
+  - order.shipping_country
+  - customer.account_age_days
+  - customer.orders_last_24h
+rules:
+  # New account with high-value order
+  - when:
+      customer.account_age_days:
+        lt: 7
+      order.total_amount:
+        gte: 500
+    then:
+      decision: flagged
+      reason: new_account_high_value
+
+  # Billing and shipping country mismatch
+  - when:
+      order.billing_country:
+        not_eq: order.shipping_country
+      order.total_amount:
+        gte: 200
+    then:
+      decision: flagged
+      reason: country_mismatch
+
+  # Velocity check: too many orders in short period
+  - when:
+      customer.orders_last_24h:
+        gte: 5
+    then:
+      decision: rejected
+      reason: velocity_limit_exceeded
+
+  # Very high value orders always flagged
+  - when:
+      order.total_amount:
+        gte: 2000
+    then:
+      decision: flagged
+      reason: high_value_order
+
+  # Default: approve
+  - then:
+      decision: approved
+      reason: passed_all_checks

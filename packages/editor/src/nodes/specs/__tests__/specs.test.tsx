@@ -8,12 +8,13 @@ import {
   waitSpec,
   errorSpec,
   terminalSpec,
+  triggerSpec,
 } from '../index'
 
-const ALL_TYPES = ['action', 'switch', 'parallel', 'wait', 'error', 'terminal']
+const ALL_TYPES = ['action', 'switch', 'parallel', 'wait', 'error', 'terminal', 'trigger']
 
 describe('Node specs registration', () => {
-  it('registers all 6 specs in the registry', () => {
+  it('registers all 7 specs in the registry', () => {
     const specs = getAllNodeSpecs()
     const registeredTypes = specs.map((s) => s.type)
     for (const type of ALL_TYPES) {
@@ -21,8 +22,8 @@ describe('Node specs registration', () => {
     }
   })
 
-  it('nodeTypes map has all 6 entries', () => {
-    expect(Object.keys(nodeTypes)).toHaveLength(6)
+  it('nodeTypes map has all 7 entries', () => {
+    expect(Object.keys(nodeTypes)).toHaveLength(7)
     for (const type of ALL_TYPES) {
       expect(nodeTypes[type]).toBeDefined()
       expect(typeof nodeTypes[type]).toBe('function')
@@ -38,6 +39,7 @@ describe('Node spec defaultData', () => {
     waitSpec,
     errorSpec,
     terminalSpec,
+    triggerSpec,
   ]
 
   it.each(specs)(
@@ -110,6 +112,17 @@ describe('Node spec defaultData', () => {
       outcome: 'success',
     })
   })
+
+  it('trigger defaultData has expected fields', () => {
+    const data = triggerSpec.defaultData()
+    expect(data).toEqual({
+      type: 'trigger',
+      lane: '',
+      label: 'New Trigger',
+      trigger_type: 'manual',
+      next: undefined,
+    })
+  })
 })
 
 describe('Node spec validate', () => {
@@ -120,6 +133,7 @@ describe('Node spec validate', () => {
     waitSpec,
     errorSpec,
     terminalSpec,
+    triggerSpec,
   ]
 
   it.each(specs)('$type spec validate returns empty array', (spec) => {

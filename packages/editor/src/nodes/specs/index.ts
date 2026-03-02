@@ -7,6 +7,7 @@ import { parallelSpec } from './parallel'
 import { waitSpec } from './wait'
 import { errorSpec } from './error'
 import { terminalSpec } from './terminal'
+import { triggerSpec } from './trigger'
 
 const allSpecs = [
   actionSpec,
@@ -15,6 +16,7 @@ const allSpecs = [
   waitSpec,
   errorSpec,
   terminalSpec,
+  triggerSpec,
 ]
 
 for (const spec of allSpecs) {
@@ -28,6 +30,7 @@ export const nodeTypes: Record<string, ComponentType<NodeProps>> = {
   wait: waitSpec.renderNode,
   error: errorSpec.renderNode,
   terminal: terminalSpec.renderNode,
+  trigger: triggerSpec.renderNode,
 }
 
 export {
@@ -37,4 +40,5 @@ export {
   waitSpec,
   errorSpec,
   terminalSpec,
+  triggerSpec,
 }

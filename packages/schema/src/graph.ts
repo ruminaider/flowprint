@@ -66,6 +66,13 @@ export function getEdges(doc: FlowprintDocument): Edge[] {
         break
       }
 
+      case 'trigger': {
+        if (node.next) {
+          edges.push({ source: nodeId, target: node.next as string, type: 'normal' })
+        }
+        break
+      }
+
       case 'terminal': {
         // Terminal nodes have no outgoing edges
         break

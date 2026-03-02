@@ -1,0 +1,52 @@
+schema: flowprint-rules/1.0
+name: triage
+description: Prioritize patients by symptom severity and chief complaint
+hit_policy: first
+inputs:
+  - vitals.heart_rate
+  - vitals.blood_pressure_systolic
+  - vitals.temperature_f
+  - chief_complaint.severity_score
+rules:
+  # Critical vitals override everything
+  - when:
+      vitals.heart_rate:
+        gte: 150
+    then:
+      priority: emergency
+      escalate: true
+
+  - when:
+      vitals.blood_pressure_systolic:
+        gte: 180
+    then:
+      priority: emergency
+      escalate: true
+
+  - when:
+      vitals.temperature_f:
+        gte: 104
+    then:
+      priority: emergency
+      escalate: true
+
+  # High severity symptoms
+  - when:
+      chief_complaint.severity_score:
+        gte: 8
+    then:
+      priority: urgent
+      escalate: false
+
+  # Moderate severity
+  - when:
+      chief_complaint.severity_score:
+        between: [4, 7]
+    then:
+      priority: routine
+      escalate: false
+
+  # Default low severity
+  - then:
+      priority: routine
+      escalate: false

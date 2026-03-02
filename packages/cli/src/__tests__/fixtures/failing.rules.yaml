@@ -1,0 +1,19 @@
+schema: flowprint-rules/1.0
+name: order-discount
+description: Discount rules for order processing
+hit_policy: first
+inputs:
+  - order_total
+rules:
+  - when:
+      order_total:
+        gte: 200
+    then:
+      discount: 25
+  - when:
+      order_total:
+        gte: 100
+    then:
+      discount: 10
+  - then:
+      discount: 0

@@ -1,0 +1,3 @@
+name: patient-intake
+description: Healthcare patient intake workflow with triage, insurance verification, and provider assignment
+complexity: advanced

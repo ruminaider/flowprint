@@ -1,0 +1,52 @@
+schema: flowprint-rules/1.0
+name: order_routing
+description: >-
+  Route orders to fulfillment paths based on order amount and customer tier.
+  High-value orders from premium customers get express handling, low-value
+  orders go standard, and everything else is flagged for review.
+hit_policy: first
+inputs:
+  - order.total_amount
+  - customer.tier
+rules:
+  # Premium customers with large orders get express fulfillment
+  - when:
+      order.total_amount:
+        gte: 500
+      customer.tier:
+        in: [gold, platinum]
+    then:
+      route: express
+      label: High-value premium express
+
+  # Any order over $1000 gets express regardless of tier
+  - when:
+      order.total_amount:
+        gte: 1000
+    then:
+      route: express
+      label: High-value express
+
+  # Small orders go through standard fulfillment
+  - when:
+      order.total_amount:
+        lt: 100
+    then:
+      route: standard
+      label: Standard fulfillment
+
+  # Mid-range orders from known customers go standard
+  - when:
+      order.total_amount:
+        gte: 100
+      customer.tier:
+        in: [silver, gold, platinum]
+    then:
+      route: standard
+      label: Known customer standard
+
+  # Everything else needs manual review
+  - when: {}
+    then:
+      route: manual_review
+      label: Requires manual review

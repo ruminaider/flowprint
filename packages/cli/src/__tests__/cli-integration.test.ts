@@ -187,6 +187,42 @@ describe('CLI integration', () => {
     })
   })
 
+  describe('flowprint test', () => {
+    it('should run passing test file and exit 0', () => {
+      const { stdout, exitCode } = run([
+        'test',
+        `${FIXTURES}/order-discount.rules.test.yaml`,
+      ])
+      expect(exitCode).toBe(0)
+      expect(stdout).toContain('PASS')
+      expect(stdout).toContain('large order gets 25% discount')
+      expect(stdout).toContain('3 passed')
+    })
+
+    it('should run failing test file and exit 1', () => {
+      const { stdout, exitCode } = run([
+        'test',
+        `${FIXTURES}/failing.rules.test.yaml`,
+      ])
+      expect(exitCode).toBe(1)
+      expect(stdout).toContain('FAIL')
+      expect(stdout).toContain('intentionally wrong expectation')
+      expect(stdout).toContain('1 failed')
+    })
+
+    it('should exit 2 when no test files match', () => {
+      const { exitCode } = run(['test', 'no-match-*.rules.test.yaml'])
+      expect(exitCode).toBe(2)
+    })
+
+    it('should show help with test naming convention', () => {
+      const { stdout, exitCode } = run(['test', '--help'])
+      expect(exitCode).toBe(0)
+      expect(stdout).toContain('foo.rules.test.yaml')
+      expect(stdout).toContain('foo.rules.yaml')
+    })
+  })
+
   describe('flowprint generate', () => {
     const testGenDir = resolve(ROOT, 'test-gen-output')
 

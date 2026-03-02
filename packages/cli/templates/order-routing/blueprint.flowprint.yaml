@@ -1,0 +1,73 @@
+schema: flowprint/1.0
+name: order_routing
+version: 1.0.0
+description: Order routing workflow that classifies incoming orders by amount and routes them to the appropriate fulfillment path
+lanes:
+  intake:
+    label: Order Intake
+    visibility: external
+    order: 0
+  routing:
+    label: Routing
+    visibility: internal
+    order: 1
+  fulfillment:
+    label: Fulfillment
+    visibility: internal
+    order: 2
+nodes:
+  receive_order:
+    type: action
+    lane: intake
+    label: Receive Order
+    description: Accept and validate the incoming order payload
+    next: classify_order
+  classify_order:
+    type: action
+    lane: routing
+    label: Classify Order
+    description: Evaluate order attributes against routing rules to determine the fulfillment path
+    rules:
+      file: rules/routing.rules.yaml
+    next: route_order
+  route_order:
+    type: switch
+    lane: routing
+    label: Route Order
+    description: Direct the order to the appropriate fulfillment handler based on classification
+    cases:
+      - when: Express
+        next: fulfill_express
+      - when: Standard
+        next: fulfill_standard
+      - when: Manual Review
+        next: flag_for_review
+  fulfill_express:
+    type: action
+    lane: fulfillment
+    label: Fulfill Express
+    description: Process high-priority orders through the expedited fulfillment pipeline
+    next: confirm_order
+  fulfill_standard:
+    type: action
+    lane: fulfillment
+    label: Fulfill Standard
+    description: Process orders through the standard fulfillment pipeline
+    next: confirm_order
+  flag_for_review:
+    type: action
+    lane: fulfillment
+    label: Flag for Review
+    description: Queue the order for manual review due to unusual attributes or high value
+    next: confirm_order
+  confirm_order:
+    type: action
+    lane: intake
+    label: Confirm Order
+    description: Send order confirmation to the customer with fulfillment details
+    next: done
+  done:
+    type: terminal
+    lane: intake
+    label: Complete
+    outcome: success
