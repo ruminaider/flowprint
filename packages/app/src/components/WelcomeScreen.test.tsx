@@ -12,106 +12,90 @@ const recentFiles: RecentFile[] = [
   { name: 'auth.flowprint.yaml', path: null, lastOpened: Date.now() - 7200000 },
 ]
 
+const defaultProps = {
+  recentFiles: [] as RecentFile[],
+  onOpenFile: vi.fn(),
+  onNewBlueprint: vi.fn(),
+  onOpenRecent: vi.fn(),
+  onLoadTemplate: vi.fn(),
+  isDark: true,
+}
+
 describe('WelcomeScreen', () => {
-  it('renders title and subtitle', () => {
-    render(
-      <WelcomeScreen
-        recentFiles={[]}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('Flowprint')).toBeTruthy()
-    expect(screen.getByText('Visual service blueprint editor')).toBeTruthy()
+  it('renders hero title', () => {
+    render(<WelcomeScreen {...defaultProps} />)
+    expect(screen.getByText(/Design workflows/)).toBeTruthy()
   })
 
-  it('shows "Open File" and "New Blueprint" buttons', () => {
-    render(
-      <WelcomeScreen
-        recentFiles={[]}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('Open File')).toBeTruthy()
-    expect(screen.getByText('New Blueprint')).toBeTruthy()
-  })
-
-  it('calls onOpenFile when clicking "Open File"', () => {
-    const onOpenFile = vi.fn()
-    render(
-      <WelcomeScreen
-        recentFiles={[]}
-        onOpenFile={onOpenFile}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={vi.fn()}
-      />,
-    )
-
-    fireEvent.click(screen.getByText('Open File'))
-    expect(onOpenFile).toHaveBeenCalledOnce()
+  it('shows "New Blueprint" and "Open YAML" action buttons', () => {
+    const { container } = render(<WelcomeScreen {...defaultProps} />)
+    const buttons = container.querySelectorAll('main button')
+    const texts = Array.from(buttons).map((b) => b.textContent)
+    expect(texts.some((t) => t?.includes('NEW BLUEPRINT'))).toBe(true)
+    expect(texts.some((t) => t?.includes('OPEN YAML'))).toBe(true)
   })
 
   it('calls onNewBlueprint when clicking "New Blueprint"', () => {
     const onNewBlueprint = vi.fn()
-    render(
-      <WelcomeScreen
-        recentFiles={[]}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={onNewBlueprint}
-        onOpenRecent={vi.fn()}
-      />,
+    const { container } = render(
+      <WelcomeScreen {...defaultProps} onNewBlueprint={onNewBlueprint} />,
     )
-
-    fireEvent.click(screen.getByText('New Blueprint'))
+    const btn = Array.from(container.querySelectorAll('main button')).find((b) =>
+      b.textContent?.includes('NEW BLUEPRINT'),
+    )
+    fireEvent.click(btn!)
     expect(onNewBlueprint).toHaveBeenCalledOnce()
   })
 
-  it('renders recent files list with file names', () => {
-    render(
-      <WelcomeScreen
-        recentFiles={recentFiles}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={vi.fn()}
-      />,
+  it('calls onOpenFile when clicking "Open YAML"', () => {
+    const onOpenFile = vi.fn()
+    const { container } = render(<WelcomeScreen {...defaultProps} onOpenFile={onOpenFile} />)
+    const btn = Array.from(container.querySelectorAll('main button')).find((b) =>
+      b.textContent?.includes('OPEN YAML'),
     )
+    fireEvent.click(btn!)
+    expect(onOpenFile).toHaveBeenCalledOnce()
+  })
 
+  it('renders template cards', () => {
+    render(<WelcomeScreen {...defaultProps} />)
+    expect(screen.getByText('Hello World')).toBeTruthy()
+    expect(screen.getByText('Insurance Claims')).toBeTruthy()
+  })
+
+  it('renders 10 template cards', () => {
+    const { container } = render(<WelcomeScreen {...defaultProps} />)
+    const cards = container.querySelectorAll('[data-testid="template-card"]')
+    expect(cards).toHaveLength(10)
+  })
+
+  it('calls onLoadTemplate when clicking a template card', () => {
+    const onLoadTemplate = vi.fn()
+    render(<WelcomeScreen {...defaultProps} onLoadTemplate={onLoadTemplate} />)
+    fireEvent.click(screen.getByText('Hello World'))
+    expect(onLoadTemplate).toHaveBeenCalledOnce()
+    const doc = onLoadTemplate.mock.calls[0]![0]
+    expect(doc.schema).toBe('flowprint/1.0')
+    expect(doc.nodes).toBeTruthy()
+  })
+
+  it('renders recent files when provided', () => {
+    render(<WelcomeScreen {...defaultProps} recentFiles={recentFiles} />)
     expect(screen.getByText('checkout.flowprint.yaml')).toBeTruthy()
     expect(screen.getByText('auth.flowprint.yaml')).toBeTruthy()
   })
 
-  it('calls onOpenRecent with correct file when clicking a recent file', () => {
+  it('calls onOpenRecent when clicking a recent file', () => {
     const onOpenRecent = vi.fn()
-    render(
-      <WelcomeScreen
-        recentFiles={recentFiles}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={onOpenRecent}
-      />,
-    )
-
+    render(<WelcomeScreen {...defaultProps} recentFiles={recentFiles} onOpenRecent={onOpenRecent} />)
     fireEvent.click(screen.getByText('checkout.flowprint.yaml'))
     expect(onOpenRecent).toHaveBeenCalledOnce()
     expect(onOpenRecent).toHaveBeenCalledWith(recentFiles[0])
   })
 
-  it('shows "No recent files" when list is empty', () => {
-    render(
-      <WelcomeScreen
-        recentFiles={[]}
-        onOpenFile={vi.fn()}
-        onNewBlueprint={vi.fn()}
-        onOpenRecent={vi.fn()}
-      />,
-    )
-
-    expect(screen.getByText('No recent files')).toBeTruthy()
+  it('hides recent files section when empty', () => {
+    const { container } = render(<WelcomeScreen {...defaultProps} recentFiles={[]} />)
+    expect(container.querySelector('[data-testid="recent-files-section"]')).toBeNull()
   })
 })
 

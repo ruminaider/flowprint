@@ -38,6 +38,7 @@ export type {
 
 // Layout
 export { computeLayout, computeEdges, computeLaneBands, autoLayout } from './layout'
+export { LANE_COLORS, DARK_LANE_COLORS, LANE_COLOR_COUNT } from './layout'
 export type { LaneBand, LayoutResult } from './layout'
 
 // Symbol search

@@ -152,6 +152,8 @@ export function App() {
                 setWizardOpen(true)
               }}
               onOpenRecent={handleOpenRecent}
+              onLoadTemplate={handleCreate}
+              isDark={resolvedTheme === 'dark'}
             />
           </div>
         </>
