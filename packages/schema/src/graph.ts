@@ -111,7 +111,7 @@ export function findRoots(doc: FlowprintDocument): string[] {
  * Returns `OrderedNode[]` where `order` is the topological layer
  * (0 = root nodes, 1 = their immediate successors, etc.).
  *
- * Handles multi-root graphs. Throws if the graph contains cycles.
+ * Handles multi-root graphs and cycles (via greedy cycle-breaking).
  */
 export function topoSort(doc: FlowprintDocument): OrderedNode[] {
   const nodeIds = Object.keys(doc.nodes)
@@ -165,9 +165,52 @@ export function topoSort(doc: FlowprintDocument): OrderedNode[] {
     layer++
   }
 
-  // If not all nodes were processed, the graph has cycles
-  if (result.length !== nodeIds.length) {
-    throw new Error('Graph contains cycles — cannot perform topological sort')
+  // Cycle-tolerant extension: if unprocessed nodes remain, break cycles
+  // by forcing the unvisited node with lowest remaining in-degree into the
+  // next layer, then continue Kahn's. This produces identical results for
+  // acyclic graphs and reasonable column placement for cyclic ones.
+  while (result.length < nodeIds.length) {
+    const visited = new Set(result.map((r) => r.id))
+    let bestNode: string | undefined
+    let bestDegree = Infinity
+
+    for (const nodeId of nodeIds) {
+      if (visited.has(nodeId)) continue
+      const degree = inDegree.get(nodeId) ?? 0
+      if (degree < bestDegree || (degree === bestDegree && nodeId < (bestNode ?? ''))) {
+        bestDegree = degree
+        bestNode = nodeId
+      }
+    }
+
+    if (!bestNode) break
+
+    queue = [bestNode]
+
+    while (queue.length > 0) {
+      const nextQueue: string[] = []
+
+      for (const nodeId of queue) {
+        if (result.some((r) => r.id === nodeId)) continue
+        const node = doc.nodes[nodeId]
+        if (node) {
+          result.push({ id: nodeId, node, order: layer })
+        }
+
+        const neighbors = adjacency.get(nodeId) ?? []
+        for (const neighbor of neighbors) {
+          if (result.some((r) => r.id === neighbor)) continue
+          const current = inDegree.get(neighbor) ?? 0
+          inDegree.set(neighbor, current - 1)
+          if (current - 1 <= 0) {
+            nextQueue.push(neighbor)
+          }
+        }
+      }
+
+      queue = nextQueue
+      layer++
+    }
   }
 
   return result

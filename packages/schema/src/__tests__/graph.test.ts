@@ -300,12 +300,68 @@ describe('topoSort', () => {
     expect(result[0]?.node).toBe(nodeA)
   })
 
-  it('throws on cyclic graph', () => {
+  it('handles cyclic graph without throwing', () => {
     const doc = makeDoc({
       a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
       b: { type: 'action', lane: 'main', label: 'B', next: 'a' },
     })
-    expect(() => topoSort(doc)).toThrow(/cycle/i)
+    const result = topoSort(doc)
+    expect(result).toHaveLength(2)
+    const ids = result.map((r) => r.id)
+    expect(ids).toContain('a')
+    expect(ids).toContain('b')
+  })
+
+  it('assigns reasonable layers for cycle with tail', () => {
+    const doc = makeDoc({
+      root: { type: 'action', lane: 'main', label: 'Root', next: 'a' },
+      a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
+      b: { type: 'action', lane: 'main', label: 'B', next: 'c' },
+      c: { type: 'action', lane: 'main', label: 'C', next: 'a' },
+    })
+    const result = topoSort(doc)
+    expect(result).toHaveLength(4)
+    const rootNode = result.find((r) => r.id === 'root')
+    expect(rootNode?.order).toBe(0)
+    const cycleNodes = result.filter((r) => r.id !== 'root')
+    for (const n of cycleNodes) {
+      expect(n.order).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('handles self-loop', () => {
+    const doc = makeDoc({
+      a: { type: 'action', lane: 'main', label: 'A', next: 'a' },
+    })
+    const result = topoSort(doc)
+    expect(result).toHaveLength(1)
+    expect(result[0]?.id).toBe('a')
+    expect(result[0]?.order).toBe(0)
+  })
+
+  it('handles graph with both cyclic and acyclic parts', () => {
+    const doc = makeDoc({
+      start: {
+        type: 'switch',
+        lane: 'main',
+        label: 'Start',
+        cases: [
+          { when: 'loop', next: 'a' },
+          { when: 'exit', next: 'end' },
+        ],
+      },
+      a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
+      b: { type: 'action', lane: 'main', label: 'B', next: 'a' },
+      end: { type: 'terminal', lane: 'main', label: 'End', outcome: 'success' },
+    })
+    const result = topoSort(doc)
+    expect(result).toHaveLength(4)
+    const startNode = result.find((r) => r.id === 'start')
+    const endNode = result.find((r) => r.id === 'end')
+    expect(startNode?.order).toBe(0)
+    expect(endNode?.order).toBe(1)
+    const cycleIds = result.filter((r) => ['a', 'b'].includes(r.id))
+    expect(cycleIds).toHaveLength(2)
   })
 
   it('handles a single node', () => {
