@@ -127,7 +127,7 @@ export function App() {
         flexDirection: 'column',
         height: '100vh',
         width: '100vw',
-        background: 'var(--fp-bg-canvas, #0A0A0F)',
+        background: 'var(--bg-page)',
       }}
     >
       <UnsavedChangesGuard dirty={fileManager.dirty} />
