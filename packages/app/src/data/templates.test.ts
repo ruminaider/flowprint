@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getTemplates, loadTemplate } from './templates'
+import { topoSort } from '@ruminaider/flowprint-schema'
 
 describe('getTemplates', () => {
   it('returns all 10 templates', () => {
@@ -42,5 +43,18 @@ describe('loadTemplate', () => {
 
   it('throws for unknown template id', () => {
     expect(() => loadTemplate('nonexistent')).toThrow()
+  })
+
+  it('topoSort succeeds for all templates including cyclic ones', () => {
+    for (const t of getTemplates()) {
+      const doc = loadTemplate(t.id)
+      const result = topoSort(doc)
+      const nodeCount = Object.keys(doc.nodes).length
+      expect(result).toHaveLength(nodeCount)
+      const resultIds = new Set(result.map((r) => r.id))
+      for (const nodeId of Object.keys(doc.nodes)) {
+        expect(resultIds.has(nodeId)).toBe(true)
+      }
+    }
   })
 })
