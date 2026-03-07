@@ -144,16 +144,21 @@ export async function simulateGraph(
       for (let i = 0; i < (node.cases?.length ?? 0); i++) {
         const c = node.cases?.[i]
         if (!c) continue
-        const result = interpretExpression(c.when, scope)
-        if (result) {
-          return {
-            node_id: nodeId,
-            type: 'switch',
-            status: 'matched',
-            matched_case: i,
-            next: c.next,
-            expressionEvaluation: { expression: c.when, result },
+        try {
+          const result = interpretExpression(c.when, scope)
+          if (result) {
+            return {
+              node_id: nodeId,
+              type: 'switch',
+              status: 'matched',
+              matched_case: i,
+              next: c.next,
+              expressionEvaluation: { expression: c.when, result },
+            }
           }
+        } catch {
+          // Label-style `when` values (e.g. "Approved") are not valid
+          // expressions — treat as non-matching and continue to next case
         }
       }
       if (node.default) {

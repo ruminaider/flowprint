@@ -91,29 +91,42 @@
 @keyframes fp-sim-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 var(--fp-sim-glow);
+    box-shadow: 0 0 0 2px var(--fp-sim-glow);
   }
   50% {
-    box-shadow: 0 0 0 4px var(--fp-sim-glow);
+    box-shadow:
+      0 0 0 6px var(--fp-sim-glow),
+      0 0 20px var(--fp-sim-glow);
   }
 }
 
 .fp-node--sim-active {
-  --fp-sim-glow: rgba(166, 227, 161, 0.4);
+  --fp-sim-glow: rgba(166, 227, 161, 0.5);
+  background: rgba(166, 227, 161, 0.15);
   border-color: #a6e3a1;
-  box-shadow: 0 0 0 2px rgba(166, 227, 161, 0.3);
+  border-width: 2px;
+  box-shadow:
+    0 0 0 3px rgba(166, 227, 161, 0.3),
+    0 0 12px rgba(166, 227, 161, 0.2);
   animation: fp-sim-pulse 1.5s ease-in-out infinite;
 }
 
 .fp-node--sim-visited {
+  background: rgba(180, 190, 254, 0.1);
   border-color: #b4befe;
-  box-shadow: 0 0 0 1px rgba(180, 190, 254, 0.25);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px rgba(180, 190, 254, 0.2);
+  opacity: 0.8;
 }
 
 .fp-node--sim-error {
-  --fp-sim-glow: rgba(243, 139, 168, 0.4);
+  --fp-sim-glow: rgba(243, 139, 168, 0.5);
+  background: rgba(243, 139, 168, 0.15);
   border-color: #f38ba8;
-  box-shadow: 0 0 0 2px rgba(243, 139, 168, 0.3);
+  border-width: 2px;
+  box-shadow:
+    0 0 0 3px rgba(243, 139, 168, 0.3),
+    0 0 12px rgba(243, 139, 168, 0.2);
   animation: fp-sim-pulse 1.5s ease-in-out infinite;
 }
 

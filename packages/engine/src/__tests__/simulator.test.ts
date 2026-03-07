@@ -490,7 +490,7 @@ describe('simulateGraph', () => {
       expect(trace.error).toContain('not found in document')
     })
 
-    it('expression interpretation throws on invalid reference', async () => {
+    it('invalid expression in switch case falls through to default', async () => {
       const doc = makeDoc({
         check: {
           type: 'switch',
@@ -504,9 +504,12 @@ describe('simulateGraph', () => {
 
       const trace = await simulateGraph(doc, makeOptions())
 
-      // Expression throws → walkGraph catches → error trace
-      expect(trace.status).toBe('error')
-      expect(trace.error).toContain('Undefined identifier')
+      // Invalid expressions are caught per-case and treated as non-matching,
+      // allowing label-style `when` values and graceful fallthrough to default
+      expect(trace.status).toBe('success')
+      const switchStep = trace.steps.find((s) => s.node_id === 'check')
+      expect(switchStep).toBeDefined()
+      expect(switchStep?.status).toBe('default')
     })
   })
 

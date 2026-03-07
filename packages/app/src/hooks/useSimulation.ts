@@ -122,6 +122,10 @@ export function useSimulation(
       // Review #8: .catch() handler for unhandled rejections
       simulateGraph(doc, options).then(
         (result) => {
+          if (result.error) {
+            setError(result.error)
+            return
+          }
           setTrace(result)
           setCurrentStep(0)
         },
