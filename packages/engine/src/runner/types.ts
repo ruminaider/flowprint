@@ -1,3 +1,5 @@
+import type { BaseStep, BaseTrace } from '../walker/types.js'
+
 export interface RunOptions {
   input: unknown
   projectRoot: string
@@ -11,21 +13,10 @@ export interface ExecutionContext {
   results: Map<string, unknown> // nodeId -> output
 }
 
-export interface StepResult {
-  node_id: string
-  type: string
-  status: string
+export interface StepResult extends BaseStep {
   duration_ms?: number
-  matched_case?: number
-  next?: string
-  outcome?: string
-  error?: string
 }
 
-export interface ExecutionTrace {
-  status: 'success' | 'failure' | 'error'
+export interface ExecutionTrace extends BaseTrace<StepResult> {
   duration_ms: number
-  steps: StepResult[]
-  output?: unknown
-  error?: string
 }

@@ -54,6 +54,8 @@ import type { ThemeMode } from '../hooks/useTheme'
 import type { SymbolSearchProvider } from '../symbols/types'
 import { RulesDataProvider } from '../contexts/RulesDataContext'
 import type { RulesDataMap } from '../contexts/RulesDataContext'
+import { SimulationProvider } from '../contexts/SimulationContext'
+import type { NodeHighlightMap } from '../contexts/SimulationContext'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,9 +74,11 @@ export interface FlowprintEditorProps {
   showYamlPreview?: boolean
   showExportButton?: boolean
   rulesDataMap?: RulesDataMap
+  nodeHighlights?: NodeHighlightMap
 }
 
 const emptyRulesDataMap: RulesDataMap = {}
+const emptyHighlights: NodeHighlightMap = {}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -204,6 +208,7 @@ export function FlowprintEditor({
   readOnly = false,
   theme = 'system',
   rulesDataMap,
+  nodeHighlights,
 }: FlowprintEditorProps) {
   const resolvedTheme = useTheme(theme)
   const state = useFlowprintState({ initialDoc: value, onChange })
@@ -546,6 +551,7 @@ export function FlowprintEditor({
   return (
     <ErrorBoundary doc={state.doc}>
       <RulesDataProvider value={rulesDataMap ?? emptyRulesDataMap}>
+      <SimulationProvider value={nodeHighlights ?? emptyHighlights}>
       <ReactFlowProvider>
         <div
           className={`fp-editor${className ? ` ${className}` : ''}`}
@@ -695,6 +701,7 @@ export function FlowprintEditor({
           )}
         </div>
       </ReactFlowProvider>
+      </SimulationProvider>
       </RulesDataProvider>
     </ErrorBoundary>
   )

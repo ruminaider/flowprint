@@ -7,11 +7,13 @@ import { Header } from './components/Header'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { NewBlueprintWizard } from './components/NewBlueprintWizard'
 import { SettingsDialog } from './components/SettingsDialog'
+import { SimulationPanel } from './components/SimulationPanel'
 import { UnsavedChangesGuard } from './components/UnsavedChangesGuard'
 import { useFileManager } from './hooks/useFileManager'
 import { useProjectDirectory } from './hooks/useProjectDirectory'
 import { useRecentFiles } from './hooks/useRecentFiles'
 import { useSettings } from './hooks/useSettings'
+import { useSimulation } from './hooks/useSimulation'
 import type { AppSettings } from './hooks/useSettings'
 import type { RecentFile } from './hooks/useRecentFiles'
 
@@ -19,6 +21,7 @@ export function App() {
   const [doc, setDoc] = useState<FlowprintDocument | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [showSimPanel, setShowSimPanel] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rulesDataMap, setRulesDataMap] = useState<RulesDataMap>({})
 
@@ -30,6 +33,20 @@ export function App() {
   const { provider: symbolSearch } = useSymbolSearch({
     codeSearchUrl: settings.codeSearchUrl || undefined,
   })
+
+  const simulation = useSimulation(doc, rulesDataMap)
+
+  // Review #5: gate on doc !== null only, not on rules presence
+  const canSimulate = doc !== null
+
+  const handleSimulate = useCallback(() => {
+    if (simulation.isActive) {
+      simulation.stop()
+      setShowSimPanel(false)
+    } else {
+      setShowSimPanel(true)
+    }
+  }, [simulation])
 
   const handleDocLoaded = useCallback(
     (loaded: FlowprintDocument, fileName: string) => {
@@ -112,11 +129,13 @@ export function App() {
         return
       }
     }
+    simulation.stop()
+    setShowSimPanel(false)
     setDoc(null)
     fileManager.setDirty(false)
     setRulesDataMap({})
     setError(null)
-  }, [fileManager])
+  }, [fileManager, simulation])
 
   return (
     <div
@@ -198,6 +217,9 @@ export function App() {
             onSettings={() => {
               setSettingsOpen(true)
             }}
+            onSimulate={handleSimulate}
+            isSimulating={simulation.isActive || showSimPanel}
+            canSimulate={canSimulate}
             onClose={handleClose}
           />
           <div style={{ flex: 1, minHeight: 0 }}>
@@ -207,11 +229,23 @@ export function App() {
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
               rulesDataMap={rulesDataMap}
+              nodeHighlights={simulation.nodeHighlights}
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}
             />
           </div>
+          {showSimPanel && (
+            <SimulationPanel
+              simulation={{
+                ...simulation,
+                stop: () => {
+                  simulation.stop()
+                  setShowSimPanel(false)
+                },
+              }}
+            />
+          )}
         </>
       )}
 

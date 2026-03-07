@@ -11,6 +11,9 @@ export interface HeaderProps {
   supportsOpenProject?: boolean
   onSave: () => void
   onSaveAs: () => void
+  onSimulate?: () => void
+  isSimulating?: boolean
+  canSimulate?: boolean
   onSettings: () => void
   onClose?: () => void
 }
@@ -43,8 +46,8 @@ function HeaderButton({
     <button
       type="button"
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => { setHovered(true) }}
+      onMouseLeave={() => { setHovered(false) }}
       style={{
         ...btnStyle,
         background: hovered ? '#252434' : '#1C1B25',
@@ -65,6 +68,9 @@ export function Header({
   supportsOpenProject,
   onSave,
   onSaveAs,
+  onSimulate,
+  isSimulating,
+  canSimulate,
   onSettings,
   onClose,
 }: HeaderProps) {
@@ -109,6 +115,28 @@ export function Header({
         )}
         <HeaderButton onClick={onSave}>Save</HeaderButton>
         <HeaderButton onClick={onSaveAs}>Save As</HeaderButton>
+        {canSimulate && onSimulate && (
+          <button
+            type="button"
+            onClick={onSimulate}
+            onMouseEnter={(e) => {
+              ;(e.target as HTMLElement).style.background = isSimulating ? '#94e2a0' : '#252434'
+            }}
+            onMouseLeave={(e) => {
+              ;(e.target as HTMLElement).style.background = isSimulating
+                ? '#a6e3a1'
+                : '#1C1B25'
+            }}
+            style={{
+              ...btnStyle,
+              background: isSimulating ? '#a6e3a1' : '#1C1B25',
+              color: isSimulating ? '#1e1e2e' : '#E8E7F4',
+              borderColor: isSimulating ? '#a6e3a1' : '#2E2D3D',
+            }}
+          >
+            {isSimulating ? 'Simulating' : 'Simulate'}
+          </button>
+        )}
         <HeaderButton onClick={onSettings}>Settings</HeaderButton>
         <HeaderButton onClick={onCycleTheme}>
           Theme: {THEME_LABELS[themeMode]}

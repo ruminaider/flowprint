@@ -22,6 +22,7 @@ export type { RunOptions, ExecutionTrace, StepResult, ExecutionContext } from '.
 // Rules
 export { loadRulesFile, evaluateRules, runRulesTests } from './rules/index.js'
 export type {
+  ExpressionEvaluator,
   RulesDocument,
   HitPolicy,
   InputDef,
@@ -33,6 +34,23 @@ export type {
   RulesTestCase,
   RulesTestResult,
 } from './rules/index.js'
+
+// Walker (shared skeleton)
+export { walkGraph } from './walker/index.js'
+export type { BaseStep, BaseTrace, WalkHandlers, WalkContext, WalkOptions } from './walker/index.js'
+
+// Simulator
+export { simulateGraph } from './simulator/index.js'
+export type {
+  SimulationOptions,
+  SimulationStep,
+  SimulationTrace,
+  RulesEvaluationDetail,
+  ExpressionEvaluationDetail,
+} from './simulator/index.js'
+
+// Expression interpreter (also available from ./browser)
+export { interpretExpression } from './expressions/index.js'
 
 // Codegen
 export { generateCode } from './codegen/index.js'

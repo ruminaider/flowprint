@@ -16,12 +16,12 @@
     },
     "./browser": {
       "import": {
-        "types": "./dist/rules/evaluator-browser.d.ts",
-        "default": "./dist/rules/evaluator-browser.js"
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.js"
       },
       "require": {
-        "types": "./dist/rules/evaluator-browser.d.cts",
-        "default": "./dist/rules/evaluator-browser.cjs"
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs"
       }
     }
   },

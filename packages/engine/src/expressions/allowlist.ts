@@ -29,3 +29,6 @@ export const ALLOWED_MATH_MEMBERS = new Set([
   'PI',
   'E',
 ])
+
+/** Property names blocked from dot-path resolution to prevent prototype chain traversal. */
+export const BLOCKED_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype'])

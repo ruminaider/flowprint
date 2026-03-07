@@ -8,13 +8,21 @@ vi.mock('../../runner/loader.js', () => ({
   loadEntryPoint: vi.fn(),
 }))
 
-vi.mock('../../rules/evaluator.js', () => ({
+vi.mock('../../rules/loader.js', () => ({
   loadRulesFile: vi.fn(),
-  evaluateRules: vi.fn(),
 }))
 
+vi.mock('../../rules/core.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../rules/core.js')>()
+  return {
+    ...actual,
+    evaluateRules: vi.fn(),
+  }
+})
+
 import { loadEntryPoint } from '../../runner/loader.js'
-import { loadRulesFile, evaluateRules } from '../../rules/evaluator.js'
+import { loadRulesFile } from '../../rules/loader.js'
+import { evaluateRules } from '../../rules/core.js'
 
 const mockedLoadEntryPoint = vi.mocked(loadEntryPoint)
 const mockedLoadRulesFile = vi.mocked(loadRulesFile)

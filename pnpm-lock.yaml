@@ -62,6 +62,9 @@ importers:
       '@ruminaider/flowprint-editor':
         specifier: workspace:*
         version: link:../editor
+      '@ruminaider/flowprint-engine':
+        specifier: workspace:*
+        version: link:../engine
       '@ruminaider/flowprint-schema':
         specifier: workspace:*
         version: link:../schema
