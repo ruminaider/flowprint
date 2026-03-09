@@ -128,13 +128,14 @@
     fp-sim-pulse 1.5s ease-in-out 0.3s infinite;
 }
 
-/* Delay the active glow until the edge particle arrives */
+/* Delay the active glow until the edge particle arrives.
+ * animation-fill-mode:both holds the 0% (normal) look during the delay,
+ * then transitions to 100% (active glow) over 0.3s. */
 @keyframes fp-sim-delayed-entrance {
   0% {
-    background: transparent;
+    background: var(--fp-bg-node);
     border-color: var(--fp-border-default);
     box-shadow: none;
-    opacity: 1;
   }
   100% {
     background: rgba(166, 227, 161, 0.15);
@@ -142,7 +143,6 @@
     box-shadow:
       0 0 0 3px rgba(166, 227, 161, 0.3),
       0 0 12px rgba(166, 227, 161, 0.2);
-    opacity: 1;
   }
 }
 
