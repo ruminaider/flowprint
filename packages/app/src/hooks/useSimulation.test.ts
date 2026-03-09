@@ -35,6 +35,18 @@ const mockTrace = {
   ],
 }
 
+const threeNodeDoc: FlowprintDocument = {
+  schema: 'flowprint/1.0',
+  name: 'test-3',
+  version: '0.1.0',
+  lanes: { main: { label: 'Main' } },
+  nodes: {
+    a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
+    b: { type: 'action', lane: 'main', label: 'B', next: 'c' },
+    c: { type: 'terminal', lane: 'main', label: 'C', outcome: 'success' },
+  },
+}
+
 const threeStepTrace = {
   status: 'success' as const,
   duration_ms: 15,
@@ -354,5 +366,127 @@ describe('useSimulation', () => {
 
     expect(mockSimulateGraph).not.toHaveBeenCalled()
     expect(result.current.isActive).toBe(false)
+  })
+
+  it('playbackSpeed defaults to 1 and can be changed', () => {
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+    expect(result.current.playbackSpeed).toBe(1)
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    expect(result.current.playbackSpeed).toBe(4)
+  })
+
+  it('stop() resets playbackSpeed to 1', async () => {
+    mockSimulateGraph.mockResolvedValue(mockTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    expect(result.current.playbackSpeed).toBe(4)
+
+    act(() => {
+      result.current.stop()
+    })
+    expect(result.current.playbackSpeed).toBe(1)
+  })
+
+  it('auto-play speed scales with playbackSpeed', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    act(() => {
+      result.current.setPlaybackSpeed(2)
+      result.current.setAutoPlay(true)
+    })
+
+    // At 2x speed, interval = 1500/2 = 750ms
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(750)
+    })
+    expect(result.current.currentStep).toBe(1)
+  })
+
+  it('edgeHighlights computed correctly at each step', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Step 0 (node a): no incoming edge (first node)
+    expect(result.current.edgeHighlights).toEqual({})
+
+    // Step 1 (node b): incoming edge a->b is traversing
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.edgeHighlights).toHaveProperty('e-a-b-0', 'traversing')
+
+    // Step 2 (node c): incoming edge b->c is traversing
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.edgeHighlights).toHaveProperty('e-b-c-1', 'traversing')
+    // a->b is no longer highlighted
+    expect(result.current.edgeHighlights).not.toHaveProperty('e-a-b-0')
+  })
+
+  it('simulationAnimation tracks forward/backward steps', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Initial state after start(): isForwardStep is false (no animation until user steps)
+    expect(result.current.simulationAnimation.isForwardStep).toBe(false)
+
+    // Step forward: 1 > 0 = true
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.simulationAnimation.isForwardStep).toBe(true)
+
+    // Step back: 0 > 1 = false
+    act(() => {
+      result.current.stepBack()
+    })
+    expect(result.current.simulationAnimation.isForwardStep).toBe(false)
+  })
+
+  it('particleDurationMs scales with playbackSpeed', async () => {
+    mockSimulateGraph.mockResolvedValue(mockTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // At 1x: max(400, 1200/1) = 1200
+    expect(result.current.simulationAnimation.particleDurationMs).toBe(1200)
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    // At 4x: max(400, 1200/4) = 400
+    expect(result.current.simulationAnimation.particleDurationMs).toBe(400)
   })
 })

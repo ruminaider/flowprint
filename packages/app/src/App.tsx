@@ -9,6 +9,8 @@ import { WelcomeScreen } from './components/WelcomeScreen'
 import { NewBlueprintWizard } from './components/NewBlueprintWizard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SimulationPanel } from './components/SimulationPanel'
+import { getScenarios } from './data/template-scenarios'
+import type { TemplateScenario } from './data/template-scenarios'
 import { UnsavedChangesGuard } from './components/UnsavedChangesGuard'
 import { useFileManager } from './hooks/useFileManager'
 import { useProjectDirectory } from './hooks/useProjectDirectory'
@@ -36,6 +38,14 @@ export function App() {
   })
 
   const simulation = useSimulation(doc, rulesDataMap)
+  const scenarios = doc ? getScenarios(doc.name) : []
+
+  const handleSelectScenario = useCallback(
+    (scenario: TemplateScenario | null) => {
+      setRulesDataMap(scenario?.rulesData ?? {})
+    },
+    [],
+  )
 
   // Review #5: gate on doc !== null only, not on rules presence
   const canSimulate = doc !== null
@@ -231,6 +241,8 @@ export function App() {
               symbolSearch={symbolSearch ?? undefined}
               rulesDataMap={rulesDataMap}
               nodeHighlights={simulation.nodeHighlights}
+              edgeHighlights={simulation.edgeHighlights}
+              simulationAnimation={simulation.simulationAnimation}
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}
@@ -245,6 +257,8 @@ export function App() {
                   setShowSimPanel(false)
                 },
               }}
+              scenarios={scenarios}
+              onSelectScenario={handleSelectScenario}
             />
           )}
         </>

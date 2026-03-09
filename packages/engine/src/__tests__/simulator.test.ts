@@ -200,8 +200,9 @@ describe('simulateGraph', () => {
 
       const trace = await simulateGraph(doc, makeOptions())
 
-      expect(trace.steps[0]?.status).toBe('error')
-      expect(trace.steps[0]?.error).toContain('not found in rulesData')
+      // Missing rules are skipped gracefully — node completes with empty output
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.steps).toHaveLength(2) // proceeds to 'done' terminal
     })
   })
 
@@ -245,6 +246,102 @@ describe('simulateGraph', () => {
       const trace = await simulateGraph(doc, makeOptions({ input: { x: 5 } }))
 
       expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'low'])
+      expect(trace.steps[0]?.status).toBe('default')
+    })
+  })
+
+  describe('switch fixture data', () => {
+    it('matches fixture string against case.when labels', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'Approved', next: 'approve' },
+            { when: 'Rejected', next: 'reject' },
+          ],
+          default: 'fallback',
+        },
+        approve: { type: 'terminal', lane: 'default', label: 'Approve', outcome: 'success' },
+        reject: { type: 'terminal', lane: 'default', label: 'Reject', outcome: 'failure' },
+        fallback: { type: 'terminal', lane: 'default', label: 'Fallback', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        fixtures: { check: 'Approved' },
+      }))
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'approve'])
+      expect(trace.steps[0]?.status).toBe('matched')
+      expect(trace.steps[0]?.matched_case).toBe(0)
+      expect(trace.steps[0]?.stepOutput).toEqual({ nodeId: 'check', value: 'Approved' })
+    })
+
+    it('routes to default when fixture is "default"', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [{ when: 'Express', next: 'fast' }],
+          default: 'slow',
+        },
+        fast: { type: 'terminal', lane: 'default', label: 'Fast', outcome: 'success' },
+        slow: { type: 'terminal', lane: 'default', label: 'Slow', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        fixtures: { check: 'default' },
+      }))
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'slow'])
+      expect(trace.steps[0]?.status).toBe('default')
+    })
+
+    it('falls through to expression evaluation when fixture does not match any label', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'input.amount > 100', next: 'high' },
+          ],
+          default: 'low',
+        },
+        high: { type: 'terminal', lane: 'default', label: 'High', outcome: 'success' },
+        low: { type: 'terminal', lane: 'default', label: 'Low', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        input: { amount: 200 },
+        fixtures: { check: 'NoMatch' },
+      }))
+
+      // Fixture "NoMatch" doesn't match any case label, so falls through to expression eval
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'high'])
+    })
+
+    it('does not interfere when no fixture provided', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'Approved', next: 'approve' },
+          ],
+          default: 'fallback',
+        },
+        approve: { type: 'terminal', lane: 'default', label: 'Approve', outcome: 'success' },
+        fallback: { type: 'terminal', lane: 'default', label: 'Fallback', outcome: 'success' },
+      })
+
+      // Label-style when values are not valid expressions, so falls through to default
+      const trace = await simulateGraph(doc, makeOptions())
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'fallback'])
       expect(trace.steps[0]?.status).toBe('default')
     })
   })

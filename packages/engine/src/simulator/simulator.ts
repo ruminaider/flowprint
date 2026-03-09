@@ -59,11 +59,17 @@ export async function simulateGraph(
     }
     const rulesDoc = options.rulesData[rulesRef.file]
     if (!rulesDoc) {
+      // Missing rules: continue simulation with empty output instead of halting.
+      // This allows templates to be simulated without providing rules files.
+      ctx.results.set(nodeId, {})
       return {
-        node_id: nodeId,
-        type: 'action',
-        status: 'error',
-        error: `Rules file "${rulesRef.file}" not found in rulesData`,
+        detail: {
+          file: rulesRef.file,
+          hitPolicy: 'none',
+          matchedCount: 0,
+          output: {},
+        },
+        output: {},
       }
     }
     const execCtx: ExecutionContext = { input: options.input, results: ctx.results }
@@ -109,6 +115,37 @@ export async function simulateGraph(
     },
 
     onSwitch(nodeId, node, ctx) {
+      // Switch fixture support: match fixture string against case labels
+      const switchFixture = options.fixtures?.[nodeId]
+      if (switchFixture != null && typeof switchFixture === 'string') {
+        for (let i = 0; i < (node.cases?.length ?? 0); i++) {
+          const c = node.cases?.[i]
+          if (!c) continue
+          if (c.when === switchFixture) {
+            ctx.results.set(nodeId, switchFixture)
+            return {
+              node_id: nodeId,
+              type: 'switch',
+              status: 'matched',
+              matched_case: i,
+              next: c.next,
+              stepOutput: { nodeId, value: switchFixture },
+            }
+          }
+        }
+        if (switchFixture === 'default' && node.default) {
+          ctx.results.set(nodeId, switchFixture)
+          return {
+            node_id: nodeId,
+            type: 'switch',
+            status: 'default',
+            next: node.default,
+            stepOutput: { nodeId, value: switchFixture },
+          }
+        }
+        // No label match → fall through to normal rules/expression evaluation
+      }
+
       if (node.rules) {
         const rulesResult = evaluateNodeRules(nodeId, node.rules, ctx)
         if ('node_id' in rulesResult) {
