@@ -128,6 +128,30 @@
     fp-sim-pulse 1.5s ease-in-out 0.3s infinite;
 }
 
+/* Delay the active glow until the edge particle arrives */
+@keyframes fp-sim-delayed-entrance {
+  0% {
+    background: transparent;
+    border-color: var(--fp-border-default);
+    box-shadow: none;
+    opacity: 1;
+  }
+  100% {
+    background: rgba(166, 227, 161, 0.15);
+    border-color: #a6e3a1;
+    box-shadow:
+      0 0 0 3px rgba(166, 227, 161, 0.3),
+      0 0 12px rgba(166, 227, 161, 0.2);
+    opacity: 1;
+  }
+}
+
+.fp-node--sim-active.fp-node--sim-active-delayed {
+  animation:
+    fp-sim-delayed-entrance 0.3s ease-out var(--fp-sim-particle-dur, 0ms) both,
+    fp-sim-pulse 1.5s ease-in-out calc(var(--fp-sim-particle-dur, 0ms) + 0.3s) infinite;
+}
+
 .fp-node--sim-visited {
   background: rgba(180, 190, 254, 0.1);
   border-color: #b4befe;

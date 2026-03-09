@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import { MoreHorizontal } from 'lucide-react'
-import { useNodeHighlight } from '../contexts/SimulationContext'
+import { useNodeHighlight, useSimulationAnimation } from '../contexts/SimulationContext'
 
 export interface NodeShellProps {
   nodeId: string
@@ -31,6 +31,10 @@ export function NodeShell({
   children,
 }: NodeShellProps) {
   const simState = useNodeHighlight(nodeId)
+  const simAnimation = useSimulationAnimation()
+
+  // When stepping forward, delay the "active" glow until the particle arrives
+  const isDelayedActive = simState === 'active' && simAnimation.isForwardStep
 
   const classNames = [
     'fp-node',
@@ -38,6 +42,7 @@ export function NodeShell({
     isUnassigned && 'fp-node--unassigned',
     hasError && 'fp-node--error',
     simState === 'active' && 'fp-node--sim-active',
+    isDelayedActive && 'fp-node--sim-active-delayed',
     simState === 'visited' && 'fp-node--sim-visited',
     simState === 'error' && 'fp-node--sim-error',
   ]
@@ -52,6 +57,9 @@ export function NodeShell({
       style={{
         '--node-accent': `var(${colorVar})`,
         '--node-accent-subtle': `var(${colorVar}-subtle)`,
+        ...(isDelayedActive && {
+          '--fp-sim-particle-dur': `${String(simAnimation.particleDurationMs)}ms`,
+        }),
       } as React.CSSProperties}
     >
       <Handle type="target" position={Position.Left} />
