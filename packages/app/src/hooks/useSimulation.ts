@@ -270,12 +270,21 @@ export function useSimulation(
     playbackSpeedRef.current = speed
   }, [])
 
-  // Review #22: chained setTimeout instead of setInterval for auto-play
+  // Review #22: chained setTimeout instead of setInterval for auto-play.
+  // Step interval must wait for: particle traversal + glow settle + visible glow time.
+  // Without this, at 2x+ the next step fires before the particle finishes or the
+  // node glow appears, making edges look like they don't animate.
   useEffect(() => {
     if (!isAutoPlaying || !trace) return
 
     let timeoutId: ReturnType<typeof setTimeout>
     const stepsLength = trace.steps.length
+
+    function stepInterval(speed: number): number {
+      const particleDur = Math.max(400, 1200 / speed)
+      const glowSettleMs = 500 // 300ms CSS transition + 200ms visible glow
+      return particleDur + glowSettleMs
+    }
 
     function tick() {
       setIsForwardStep(true)
@@ -287,12 +296,12 @@ export function useSimulation(
           return prev
         }
         // Schedule next tick — reads current speed via ref
-        timeoutId = setTimeout(tick, 1500 / playbackSpeedRef.current)
+        timeoutId = setTimeout(tick, stepInterval(playbackSpeedRef.current))
         return next
       })
     }
 
-    timeoutId = setTimeout(tick, 1500 / playbackSpeedRef.current)
+    timeoutId = setTimeout(tick, stepInterval(playbackSpeedRef.current))
 
     return () => {
       clearTimeout(timeoutId)

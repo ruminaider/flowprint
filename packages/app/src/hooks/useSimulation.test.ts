@@ -316,15 +316,15 @@ describe('useSimulation', () => {
     expect(result.current.isAutoPlaying).toBe(true)
     expect(result.current.currentStep).toBe(0)
 
-    // Advance one tick
+    // Advance one tick (at 1x: particle 1200ms + 500ms settle = 1700ms)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
 
     // Advance another tick
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(2)
   })
@@ -344,13 +344,13 @@ describe('useSimulation', () => {
 
     // First tick: step 0 → 1 (last step)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
 
     // Second tick: should stop
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
     expect(result.current.isAutoPlaying).toBe(false)
@@ -412,9 +412,9 @@ describe('useSimulation', () => {
       result.current.setAutoPlay(true)
     })
 
-    // At 2x speed, interval = 1500/2 = 750ms
+    // At 2x speed, interval = particle(600ms) + settle(500ms) = 1100ms
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(750)
+      await vi.advanceTimersByTimeAsync(1100)
     })
     expect(result.current.currentStep).toBe(1)
   })
