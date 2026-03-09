@@ -235,7 +235,7 @@ const TEMPLATE_SCENARIOS: Record<string, TemplateScenario[]> = {
       fixtures: {
         push_code: { sha: 'def5678', branch: 'feature/broken' },
         install_dependencies: { cached: false, packages: 142 },
-        build_project: { success: false, error: 'TypeScript compilation failed' },
+        build_project: { _error: true, error: 'TypeScript compilation failed' },
       },
     },
     {
@@ -765,9 +765,10 @@ const TEMPLATE_SCENARIOS: Record<string, TemplateScenario[]> = {
       },
     },
     {
-      id: 'counter-offer',
-      name: 'Counter-Offer Negotiation',
-      description: 'A property claim where the claimant counter-offers, leading to re-evaluation',
+      id: 'senior-review',
+      name: 'Senior Review with Acceptance',
+      description:
+        'A high-value property claim escalated to senior adjuster, settled and accepted',
       input: {
         claim: { type: 'property', amount: 75000, incident: 'Storm damage', date: '2025-03-01' },
         claimant: { id: 'CLT-003', name: 'Carol', policyNumber: 'POL-P300' },
@@ -783,8 +784,9 @@ const TEMPLATE_SCENARIOS: Record<string, TemplateScenario[]> = {
         senior_adjuster_review: { reviewed: true, recommendation: 65000 },
         calculate_settlement: { amount: 62000 },
         present_offer: { amount: 62000 },
-        await_claimant_response: { response: 'counter', requestedAmount: 70000 },
-        check_claimant_decision: 'Counter-offer',
+        await_claimant_response: { response: 'accept' },
+        check_claimant_decision: 'Accepted',
+        process_payment: { paid: true, amount: 62000, method: 'direct deposit' },
       },
       rulesData: {
         'rules/escalation.rules.yaml': {

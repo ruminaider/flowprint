@@ -610,6 +610,71 @@ describe('simulateGraph', () => {
     })
   })
 
+  describe('error.catch routing', () => {
+    const makeErrorDoc = (withCatch: boolean) =>
+      makeDoc({
+        risky: {
+          type: 'action',
+          lane: 'default',
+          label: 'Risky',
+          entry_points: [{ file: 'a.ts', symbol: 'fn' }],
+          next: 'done',
+          ...(withCatch ? { error: { catch: 'handler' } } : {}),
+        },
+        handler: {
+          type: 'error',
+          lane: 'default',
+          label: 'Handle Error',
+          next: 'failed',
+        },
+        failed: { type: 'terminal', lane: 'default', label: 'Failed', outcome: 'failure' },
+        done: { type: 'terminal', lane: 'default', label: 'Done', outcome: 'success' },
+      })
+
+    it('_error string routes to catch target', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: '_error' } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'handler', 'failed'])
+      expect(trace.steps[0]?.status).toBe('error-caught')
+      expect(trace.status).toBe('failure')
+    })
+
+    it('{ _error: true } object routes to catch target', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: { _error: true, msg: 'boom' } } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'handler', 'failed'])
+      expect(trace.steps[0]?.status).toBe('error-caught')
+    })
+
+    it('normal fixture routes to next', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: { ok: true } } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'done'])
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.status).toBe('success')
+    })
+
+    it('_error without error.catch routes to next', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(false),
+        makeOptions({ fixtures: { risky: '_error' } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'done'])
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.status).toBe('success')
+    })
+  })
+
   describe('failure terminal', () => {
     it('reports failure status when terminal has outcome=failure', async () => {
       const doc = makeDoc({

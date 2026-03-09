@@ -105,11 +105,22 @@ export async function simulateGraph(
       // Entry-point action — use fixture or undefined
       const fixture = options.fixtures?.[nodeId]
       ctx.results.set(nodeId, fixture)
+
+      // Check if fixture signals an error and node has error.catch
+      const isErrorFixture =
+        fixture === '_error' ||
+        (typeof fixture === 'object' &&
+          fixture !== null &&
+          '_error' in (fixture as Record<string, unknown>) &&
+          (fixture as Record<string, unknown>)._error === true)
+      const catchTarget = node.error?.catch
+      const next = isErrorFixture && catchTarget ? catchTarget : node.next
+
       return {
         node_id: nodeId,
         type: 'action',
-        status: 'completed',
-        next: node.next,
+        status: isErrorFixture && catchTarget ? 'error-caught' : 'completed',
+        next,
         stepOutput: { nodeId, value: fixture },
       }
     },
