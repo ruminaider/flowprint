@@ -56,17 +56,6 @@ const whatIfPathB = {
   labels: ['File Claim', 'Submit Evidence', 'Review Claim', 'Assess Damage', 'Fraud Check'],
 }
 
-// All IDs per SVG for reset
-const allWtNodeIds = ['wt-node-checkin', 'wt-node-verify', 'wt-node-assess', 'wt-node-priority', 'wt-node-emergprep', 'wt-node-review', 'wt-node-schedule', 'wt-node-end']
-const allWtEdgeIds = ['wt-edge-checkin-verify', 'wt-edge-verify-assess', 'wt-edge-assess-priority', 'wt-edge-priority-urgent-v', 'wt-edge-priority-routine-h', 'wt-edge-priority-routine-v', 'wt-edge-emergprep-review', 'wt-edge-review-end', 'wt-edge-sched-end-h']
-
-const allSbNodeIds = ['sb-node-submit', 'sb-node-upload', 'sb-node-credit', 'sb-node-risk', 'sb-node-offer', 'sb-node-disburse', 'sb-node-reject', 'sb-node-manual', 'sb-node-end']
-const allSbEdgeIds = ['sb-edge-submit-upload', 'sb-edge-upload-credit', 'sb-edge-credit-risk', 'sb-edge-risk-approved-v', 'sb-edge-risk-denied-h', 'sb-edge-risk-denied-v', 'sb-edge-risk-review-h', 'sb-edge-risk-review-v', 'sb-edge-offer-disburse', 'sb-edge-disburse-end', 'sb-edge-reject-end-h', 'sb-edge-reject-end-v', 'sb-edge-manual-risk-v', 'sb-edge-manual-risk-h']
-const allSbTooltipIds = ['tt-sb-submit', 'tt-sb-upload', 'tt-sb-credit', 'tt-sb-risk', 'tt-sb-offer', 'tt-sb-disburse', 'tt-sb-reject', 'tt-sb-manual', 'tt-sb-end']
-
-const allWiNodeIds = ['wi-node-file', 'wi-node-evidence', 'wi-node-review', 'wi-node-assess', 'wi-node-payout', 'wi-node-issue', 'wi-node-end', 'wi-node-fraud']
-const allWiEdgeIds = ['wi-edge-file-evidence', 'wi-edge-evidence-review', 'wi-edge-review-assess', 'wi-edge-assess-approve-v', 'wi-edge-assess-investigate-h', 'wi-edge-assess-investigate-v', 'wi-edge-payout-issue', 'wi-edge-issue-end']
-
 const fileNames: Record<SimMode, string> = {
   walkthrough: 'patient-intake.flowprint',
   stepbystep: 'loan-application.flowprint',
