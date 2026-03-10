@@ -418,12 +418,11 @@ describe('simulateGraph', () => {
       }))
 
       expect(trace.status).toBe('success')
-      // Branch steps are pushed by onParallel, plus the parallel step itself, plus terminal
+      // Parallel hub emits "entered" before branches, then "completed" after
       const nodeIds = trace.steps.map((s) => s.node_id)
-      expect(nodeIds).toContain('b1')
-      expect(nodeIds).toContain('b2')
-      expect(nodeIds).toContain('par')
-      expect(nodeIds).toContain('done')
+      expect(nodeIds).toEqual(['par', 'b1', 'b2', 'par', 'done'])
+      expect(trace.steps[0]?.status).toBe('entered')
+      expect(trace.steps[3]?.status).toBe('completed')
     })
   })
 

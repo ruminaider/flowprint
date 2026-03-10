@@ -92,14 +92,18 @@ function buildTraceSnapshots(
     // This shows the signal arriving at the active node rather than
     // departing, which naturally means step 0 has no edge animation
     // and parallel branches find their edge from the hub node.
-    if (i > 0) {
+    // Skip edge animation for parallel "completed" steps — the hub was
+    // already visited via the "entered" step, so re-animating an edge
+    // into it would show the wrong visual.
+    const isParallelRevisit = step.type === 'parallel' && step.status === 'completed'
+    if (i > 0 && !isParallelRevisit) {
       const prevStep = steps[i - 1]
       if (prevStep) {
         // Strategy 1: direct edge from previous step
         let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
 
         // Strategy 2: edge via previous step's routing target
-        // (handles parallel hub skipping: build_project.next=run_tests → run_tests→run_unit_tests)
+        // (handles parallel hub → first branch: build_project.next=run_tests → run_tests→run_unit_tests)
         if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
           edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
         }
