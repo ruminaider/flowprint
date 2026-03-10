@@ -13,11 +13,6 @@ export function EdgeSimulationOverlay({ edgeId, edgePath }: EdgeSimulationOverla
   const pathId = `fp-sim-path-${uniqueId}`
   const filterId = `fp-sim-glow-${uniqueId}`
   const groupRef = useRef<SVGGElement>(null)
-  // Track which edge animation we've already started so re-renders
-  // don't restart the SMIL animation mid-flight.
-  const startedForRef = useRef<string | null>(null)
-  // Store rAF ID in a ref so re-renders don't cancel it via cleanup.
-  // Only cancelled on unmount.
   const rafRef = useRef<number>(0)
 
   // Cancel pending rAF only on unmount
@@ -27,19 +22,15 @@ export function EdgeSimulationOverlay({ edgeId, edgePath }: EdgeSimulationOverla
     }
   }, [])
 
+  // Trigger SMIL animations whenever this edge becomes 'traversing' on a new step.
+  // Deps include highlight + stepKey so the effect re-fires when:
+  //  - the edge transitions to 'traversing' (highlight changes)
+  //  - a new step arrives while still 'traversing' (stepKey changes)
   useEffect(() => {
+    if (highlight !== 'traversing' || !animation.isForwardStep) return
     const g = groupRef.current
-    if (!g) {
-      // Component returned null — reset so next mount triggers animation
-      startedForRef.current = null
-      return
-    }
-    // Already started for this edge — don't restart
-    if (startedForRef.current === edgeId) return
-    startedForRef.current = edgeId
+    if (!g) return
 
-    // The browser's SVG engine needs one frame to register newly inserted
-    // SMIL elements before beginElement() can activate them.
     rafRef.current = requestAnimationFrame(() => {
       const smilElements = g.querySelectorAll('animate, animateMotion')
       smilElements.forEach((el) => {
@@ -50,7 +41,7 @@ export function EdgeSimulationOverlay({ edgeId, edgePath }: EdgeSimulationOverla
         }
       })
     })
-  })
+  }, [highlight, animation.isForwardStep, animation.stepKey])
 
   if (!highlight) return null
 
@@ -66,8 +57,10 @@ export function EdgeSimulationOverlay({ edgeId, edgePath }: EdgeSimulationOverla
   const durSeconds = (animation.particleDurationMs / 1000).toFixed(2)
   const dur = `${durSeconds}s`
 
+  // key includes stepKey so React remounts this <g> on every step change,
+  // guaranteeing SMIL animations restart cleanly (both manual and autoplay).
   return (
-    <g ref={groupRef}>
+    <g ref={groupRef} key={`${edgeId}-${String(animation.stepKey)}`}>
       {/* SVG filter for energy bead glow */}
       <defs>
         <filter id={filterId} x="-200%" y="-200%" width="500%" height="500%">

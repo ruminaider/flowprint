@@ -86,12 +86,14 @@ function buildTraceSnapshots(
       const prev = steps[j]
       if (!prev) continue
       snapshot[prev.node_id] = prev.status === 'error' ? 'error' : 'visited'
+      if (prev.branchNodeIds) {
+        for (const branchId of prev.branchNodeIds) {
+          snapshot[branchId] = 'visited'
+        }
+      }
     }
 
     // Mark the incoming edge (previous → current) as traversing.
-    // This shows the signal arriving at the active node rather than
-    // departing, which naturally means step 0 has no edge animation
-    // and parallel branches find their edge from the hub node.
     // Skip edge animation for parallel "completed" steps — the hub was
     // already visited via the "entered" step, so re-animating an edge
     // into it would show the wrong visual.
@@ -106,13 +108,11 @@ function buildTraceSnapshots(
       let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
 
       // Strategy 2: edge via previous step's routing target
-      // (handles parallel hub → first branch: build_project.next=run_tests → run_tests→run_unit_tests)
       if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
         edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
       }
 
       // Strategy 3: find any edge targeting this node in the schema
-      // (handles 2nd+ parallel branches where prev step is a sibling branch)
       if (!edgeId) {
         for (const [key, eid] of edgeLookup.entries()) {
           if (key.endsWith(`->${step.node_id}`)) {
@@ -127,8 +127,21 @@ function buildTraceSnapshots(
       }
     }
 
+    // Fan-out edges for parallel branches (all animate simultaneously)
+    if (step.branchNodeIds) {
+      for (const branchId of step.branchNodeIds) {
+        const fanOutEdgeId = edgeLookup.get(`${step.node_id}->${branchId}`)
+        if (fanOutEdgeId) edgeSnapshot[fanOutEdgeId] = 'traversing'
+      }
+    }
+
     // Mark current node
     snapshot[step.node_id] = step.status === 'error' ? 'error' : 'active'
+    if (step.branchNodeIds) {
+      for (const branchId of step.branchNodeIds) {
+        snapshot[branchId] = 'active'
+      }
+    }
 
     highlights.push(snapshot)
     edgeHighlights.push(edgeSnapshot)
@@ -136,6 +149,11 @@ function buildTraceSnapshots(
     // Build cumulative context
     if (step.stepOutput) {
       cumulativeCtx[step.stepOutput.nodeId] = step.stepOutput.value
+    }
+    if (step.branchOutputs) {
+      for (const [branchId, value] of Object.entries(step.branchOutputs)) {
+        cumulativeCtx[branchId] = value
+      }
     }
     contexts.push({ ...cumulativeCtx })
   }
@@ -197,8 +215,9 @@ export function useSimulation(
     () => ({
       isForwardStep,
       particleDurationMs: Math.max(400, 1200 / playbackSpeed),
+      stepKey: currentStep,
     }),
-    [isForwardStep, playbackSpeed],
+    [isForwardStep, playbackSpeed, currentStep],
   )
 
   const start = useCallback(
@@ -276,43 +295,42 @@ export function useSimulation(
     playbackSpeedRef.current = speed
   }, [])
 
-  // Review #22: chained setTimeout instead of setInterval for auto-play.
-  // Step interval must wait for: particle traversal + glow settle + visible glow time.
-  // Without this, at 2x+ the next step fires before the particle finishes or the
-  // node glow appears, making edges look like they don't animate.
+  // Auto-play: automated step-through using the same stepForward() path as
+  // manual stepping. This guarantees identical animation behavior.
+  const stepForwardRef = useRef(stepForward)
+  stepForwardRef.current = stepForward
+  const currentStepRef = useRef(currentStep)
+  currentStepRef.current = currentStep
+
   useEffect(() => {
     if (!isAutoPlaying || !trace) return
 
     let timeoutId: ReturnType<typeof setTimeout>
     const stepsLength = trace.steps.length
 
-    function stepInterval(speed: number): number {
+    function stepInterval(): number {
+      const speed = playbackSpeedRef.current
       const particleDur = Math.max(400, 1200 / speed)
       const glowSettleMs = 500 // 300ms CSS transition + 200ms visible glow
       return particleDur + glowSettleMs
     }
 
     function tick() {
-      setIsForwardStep(true)
-      setCurrentStep((prev) => {
-        const next = prev + 1
-        if (next >= stepsLength) {
-          setIsAutoPlayingState(false)
-          autoPlayRef.current = false
-          return prev
-        }
-        // Schedule next tick — reads current speed via ref
-        timeoutId = setTimeout(tick, stepInterval(playbackSpeedRef.current))
-        return next
-      })
+      if (currentStepRef.current + 1 >= stepsLength) {
+        setIsAutoPlayingState(false)
+        autoPlayRef.current = false
+        return
+      }
+      stepForwardRef.current()
+      timeoutId = setTimeout(tick, stepInterval())
     }
 
-    timeoutId = setTimeout(tick, stepInterval(playbackSpeedRef.current))
+    timeoutId = setTimeout(tick, stepInterval())
 
     return () => {
       clearTimeout(timeoutId)
     }
-  }, [isAutoPlaying, trace, playbackSpeed])
+  }, [isAutoPlaying, trace])
 
   return {
     isActive,

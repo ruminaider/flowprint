@@ -216,38 +216,29 @@ export async function simulateGraph(
     },
 
     onParallel(nodeId, node, ctx) {
-      // Emit "entered" step so the hub node lights up before branches fan out.
-      // Without this, the signal visually skips the hub and jumps to branches.
       ctx.steps.push({
         node_id: nodeId,
         type: 'parallel',
         status: 'entered',
       })
 
-      // Visit all branches sequentially (traces each path with fixtures)
+      // Process branches for results/fixtures without pushing individual steps
+      const branchOutputs: Record<string, unknown> = {}
       for (const branchId of node.branches) {
         const fixture = options.fixtures?.[branchId]
         ctx.results.set(branchId, fixture)
-        ctx.steps.push({
-          node_id: branchId,
-          type: 'action',
-          status: 'completed',
-          stepOutput: { nodeId: branchId, value: fixture },
-        })
+        branchOutputs[branchId] = fixture
       }
-      const branchResults: Record<string, unknown> = {}
-      for (const branchId of node.branches) {
-        branchResults[branchId] = ctx.results.get(branchId)
-      }
-      ctx.results.set(nodeId, branchResults)
-      // The walk skeleton pushes this "completed" step after branches.
-      // Edge animation is skipped for this step since the hub was already visited.
+      ctx.results.set(nodeId, branchOutputs)
+
       return {
         node_id: nodeId,
         type: 'parallel',
         status: 'completed',
         next: node.join,
-        stepOutput: { nodeId, value: branchResults },
+        branchNodeIds: [...node.branches],
+        branchOutputs,
+        stepOutput: { nodeId, value: branchOutputs },
       }
     },
 

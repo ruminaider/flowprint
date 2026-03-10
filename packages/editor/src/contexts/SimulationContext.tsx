@@ -33,11 +33,13 @@ export function useEdgeHighlight(edgeId: string): EdgeHighlightState | undefined
 export interface SimulationAnimationConfig {
   isForwardStep: boolean
   particleDurationMs: number
+  stepKey: number
 }
 
 const defaultAnimationConfig: SimulationAnimationConfig = {
   isForwardStep: true,
   particleDurationMs: 600,
+  stepKey: 0,
 }
 
 const SimulationAnimationContext = createContext<SimulationAnimationConfig>(defaultAnimationConfig)

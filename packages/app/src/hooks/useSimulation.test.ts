@@ -260,6 +260,65 @@ describe('useSimulation', () => {
     })
   })
 
+  it('parallel branches highlighted simultaneously at completed step', async () => {
+    const parallelTrace = {
+      status: 'success' as const,
+      duration_ms: 10,
+      steps: [
+        { node_id: 'start', type: 'action', status: 'completed', next: 'par' },
+        { node_id: 'par', type: 'parallel', status: 'entered' },
+        {
+          node_id: 'par',
+          type: 'parallel',
+          status: 'completed',
+          next: 'join',
+          branchNodeIds: ['b1', 'b2', 'b3'],
+          branchOutputs: { b1: 'r1', b2: 'r2', b3: 'r3' },
+          stepOutput: { nodeId: 'par', value: { b1: 'r1', b2: 'r2', b3: 'r3' } },
+        },
+        { node_id: 'join', type: 'terminal', status: 'reached', outcome: 'success' },
+      ],
+    }
+    mockSimulateGraph.mockResolvedValue(parallelTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Step 0: start is active
+    expect(result.current.nodeHighlights).toEqual({ start: 'active' })
+
+    // Step 1: par entered — hub active, start visited
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'visited',
+      par: 'active',
+    })
+
+    // Step 2: par completed — hub + all branches active simultaneously
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'visited',
+      par: 'active',
+      b1: 'active',
+      b2: 'active',
+      b3: 'active',
+    })
+
+    // Step 3: join — hub + all branches visited, join active
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'visited',
+      par: 'visited',
+      b1: 'visited',
+      b2: 'visited',
+      b3: 'visited',
+      join: 'active',
+    })
+  })
+
   it('stop() clears all state', async () => {
     mockSimulateGraph.mockResolvedValue(mockTrace)
     const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))

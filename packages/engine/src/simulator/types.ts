@@ -24,6 +24,8 @@ export interface SimulationStep extends BaseStep {
   rulesEvaluation?: RulesEvaluationDetail
   expressionEvaluation?: ExpressionEvaluationDetail
   stepOutput?: { nodeId: string; value: unknown }
+  branchNodeIds?: string[]
+  branchOutputs?: Record<string, unknown>
 }
 
 export interface SimulationTrace extends BaseTrace<SimulationStep> {}

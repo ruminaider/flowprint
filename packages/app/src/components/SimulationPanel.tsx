@@ -106,13 +106,21 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function buildCumulativeContext(
-  steps: { stepOutput?: { nodeId: string; value: unknown } }[],
+  steps: {
+    stepOutput?: { nodeId: string; value: unknown }
+    branchOutputs?: Record<string, unknown>
+  }[],
   upToIndex: number,
 ): Record<string, unknown> {
   const ctx: Record<string, unknown> = {}
   for (let i = 0; i <= upToIndex; i++) {
-    const out = steps[i]?.stepOutput
-    if (out) ctx[out.nodeId] = out.value
+    const step = steps[i]
+    if (step?.stepOutput) ctx[step.stepOutput.nodeId] = step.stepOutput.value
+    if (step?.branchOutputs) {
+      for (const [branchId, value] of Object.entries(step.branchOutputs)) {
+        ctx[branchId] = value
+      }
+    }
   }
   return ctx
 }

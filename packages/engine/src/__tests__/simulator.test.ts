@@ -389,7 +389,7 @@ describe('simulateGraph', () => {
   })
 
   describe('parallel node', () => {
-    it('traces branches sequentially with fixtures', async () => {
+    it('collapses branches into grouped step with branchNodeIds', async () => {
       const doc = makeDoc({
         par: {
           type: 'parallel',
@@ -418,11 +418,12 @@ describe('simulateGraph', () => {
       }))
 
       expect(trace.status).toBe('success')
-      // Parallel hub emits "entered" before branches, then "completed" after
       const nodeIds = trace.steps.map((s) => s.node_id)
-      expect(nodeIds).toEqual(['par', 'b1', 'b2', 'par', 'done'])
+      expect(nodeIds).toEqual(['par', 'par', 'done'])
       expect(trace.steps[0]?.status).toBe('entered')
-      expect(trace.steps[3]?.status).toBe('completed')
+      expect(trace.steps[1]?.status).toBe('completed')
+      expect(trace.steps[1]?.branchNodeIds).toEqual(['b1', 'b2'])
+      expect(trace.steps[1]?.branchOutputs).toEqual({ b1: 'result1', b2: 'result2' })
     })
   })
 

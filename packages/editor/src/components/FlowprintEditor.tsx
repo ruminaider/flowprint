@@ -93,6 +93,7 @@ const emptyEdgeHighlights: EdgeHighlightMap = {}
 const defaultAnimationConfig: SimulationAnimationConfig = {
   isForwardStep: true,
   particleDurationMs: 600,
+  stepKey: 0,
 }
 
 // ---------------------------------------------------------------------------
