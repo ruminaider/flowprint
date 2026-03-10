@@ -95,33 +95,35 @@ function buildTraceSnapshots(
     // Skip edge animation for parallel "completed" steps — the hub was
     // already visited via the "entered" step, so re-animating an edge
     // into it would show the wrong visual.
+    // Also skip for the join target (step after parallel "completed") — the
+    // hub→join edge crosses over branch nodes, making the particle look wrong.
     const isParallelRevisit = step.type === 'parallel' && step.status === 'completed'
-    if (i > 0 && !isParallelRevisit) {
-      const prevStep = steps[i - 1]
-      if (prevStep) {
-        // Strategy 1: direct edge from previous step
-        let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
+    const prevStep = i > 0 ? steps[i - 1] : undefined
+    const isParallelJoin =
+      prevStep?.type === 'parallel' && prevStep?.status === 'completed'
+    if (i > 0 && !isParallelRevisit && !isParallelJoin && prevStep) {
+      // Strategy 1: direct edge from previous step
+      let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
 
-        // Strategy 2: edge via previous step's routing target
-        // (handles parallel hub → first branch: build_project.next=run_tests → run_tests→run_unit_tests)
-        if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
-          edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
-        }
+      // Strategy 2: edge via previous step's routing target
+      // (handles parallel hub → first branch: build_project.next=run_tests → run_tests→run_unit_tests)
+      if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
+        edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
+      }
 
-        // Strategy 3: find any edge targeting this node in the schema
-        // (handles 2nd+ parallel branches where prev step is a sibling branch)
-        if (!edgeId) {
-          for (const [key, eid] of edgeLookup.entries()) {
-            if (key.endsWith(`->${step.node_id}`)) {
-              edgeId = eid
-              break
-            }
+      // Strategy 3: find any edge targeting this node in the schema
+      // (handles 2nd+ parallel branches where prev step is a sibling branch)
+      if (!edgeId) {
+        for (const [key, eid] of edgeLookup.entries()) {
+          if (key.endsWith(`->${step.node_id}`)) {
+            edgeId = eid
+            break
           }
         }
+      }
 
-        if (edgeId) {
-          edgeSnapshot[edgeId] = 'traversing'
-        }
+      if (edgeId) {
+        edgeSnapshot[edgeId] = 'traversing'
       }
     }
 
