@@ -163,7 +163,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
 
     if (isDev) {
       stopAllAnimations()
-      setTimeout(() => startDevAnimation(), 0)
+      addTimer(() => startDevAnimation(), 0)
     } else {
       stopDevAnimation()
       startSimulation(currentModeRef.current)
@@ -347,9 +347,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
         resetAllSvgStates()
         setActiveSvg('walkthrough')
         // Need to re-run after reset
-        setTimeout(() => {
-          runWalkthrough()
-        }, 0)
+        addTimer(() => runWalkthrough(), 0)
       }
     }, totalDuration)
   }, [addTimer, spawnRipple, resetAllSvgStates])
@@ -447,7 +445,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     setStatusDotClass('paused')
     setStatusText('Step-by-step \u2022 click Next to begin')
     // Auto-advance to first step
-    setTimeout(() => stepForward(), 0)
+    addTimer(() => stepForward(), 0)
   }, [stepForward])
 
   // ══════════════════════════════════════════════════════
@@ -475,28 +473,32 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
       setInvestigateLabelOpacity(1)
     }, 300)
 
-    // Pulse the green glow
-    let pulseCount = 0
-    const pulseInterval = window.setInterval(() => {
-      if (pulseCount >= 3) {
-        clearInterval(pulseInterval)
-        setFraudNodeRectStyle({ stroke: 'rgba(255,146,67,0.3)' })
-        if (callback) callback()
-        return
-      }
-      const bright = pulseCount % 2 === 0
+    // Pulse the green glow with chained timers
+    addTimer(() => {
       setFraudNodeRectStyle({
         stroke: '#3FDC77',
-        filter: bright
-          ? 'drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))'
-          : 'drop-shadow(0 0 8px rgba(63, 220, 119, 0.3))',
+        filter: 'drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))',
         transition: 'all 0.6s ease',
       })
-      pulseCount++
+    }, 0)
+    addTimer(() => {
+      setFraudNodeRectStyle({
+        stroke: '#3FDC77',
+        filter: 'drop-shadow(0 0 8px rgba(63, 220, 119, 0.3))',
+        transition: 'all 0.6s ease',
+      })
     }, 400)
-
-    // Store interval for cleanup
-    animationTimers.current.push(pulseInterval as unknown as number)
+    addTimer(() => {
+      setFraudNodeRectStyle({
+        stroke: '#3FDC77',
+        filter: 'drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))',
+        transition: 'all 0.6s ease',
+      })
+    }, 800)
+    addTimer(() => {
+      setFraudNodeRectStyle({ stroke: 'rgba(255,146,67,0.3)' })
+      if (callback) callback()
+    }, 1200)
   }, [addTimer])
 
   const runScenarioBPath = useCallback((
@@ -641,7 +643,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
             if (currentViewRef.current === 'business' && currentModeRef.current === 'whatif') {
               resetAllSvgStates()
               setActiveSvg('whatif')
-              setTimeout(() => runWhatIf(), 0)
+              addTimer(() => runWhatIf(), 0)
             }
           }, 500)
         }
@@ -671,7 +673,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     addDevTimer(() => {
       if (currentViewRef.current === 'developer') {
         stopDevAnimation()
-        setTimeout(() => startDevAnimation(), 0)
+        addDevTimer(() => startDevAnimation(), 0)
       }
     }, 5500)
   }, [addDevTimer, stopDevAnimation])
@@ -685,7 +687,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     setActiveSvg(mode)
 
     // Use setTimeout(0) to ensure state updates from resetAllSvgStates have been applied
-    setTimeout(() => {
+    addTimer(() => {
       switch (mode) {
         case 'walkthrough':
           runWalkthrough()
@@ -707,8 +709,8 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     setShowDev(true)
     currentViewRef.current = 'developer'
     stopAllAnimations()
-    setTimeout(() => startDevAnimation(), 0)
-  }, [stopAllAnimations, startDevAnimation])
+    addTimer(() => startDevAnimation(), 0)
+  }, [stopAllAnimations, startDevAnimation, addTimer])
 
   const handleShowBusiness = useCallback(() => {
     setShowDev(false)

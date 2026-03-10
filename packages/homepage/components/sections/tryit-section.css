@@ -312,10 +312,15 @@
   transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-.cta-primary:hover {
+.cta-primary:hover:not(:disabled) {
   opacity: 0.9;
   box-shadow: 0 0 24px rgba(228, 70, 255, 0.35);
   transform: translateY(-1px);
+}
+
+.cta-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cta-secondary {

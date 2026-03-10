@@ -249,10 +249,15 @@ export function TryItSection() {
 
       {/* Get started CTAs */}
       <div className="tryit-ctas">
-        <a className="cta-primary" href="#">
+        <button className="cta-primary cta-disabled" disabled title="Coming soon">
           Open the Editor
-        </a>
-        <a className="cta-secondary" href="#">
+        </button>
+        <a
+          className="cta-secondary"
+          href="https://github.com/ruminaider/flowprint"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Read the Docs
         </a>
       </div>

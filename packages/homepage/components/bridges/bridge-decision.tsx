@@ -51,7 +51,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     Array<'normal' | 'match' | 'dim'>
   >(['normal', 'normal', 'normal', 'normal'])
 
-  const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const animationTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const currentCaseRef = useRef(0)
   const particleInRef = useRef<HTMLDivElement>(null)
   const particleOutRef = useRef<HTMLDivElement>(null)
@@ -92,6 +92,17 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     setRowStates(['normal', 'normal', 'normal', 'normal'])
     if (particleInRef.current) particleInRef.current.style.opacity = '0'
     if (particleOutRef.current) particleOutRef.current.style.opacity = '0'
+  }, [])
+
+  const addTimer = useCallback((fn: () => void, delay: number) => {
+    const t = setTimeout(fn, delay)
+    animationTimers.current.push(t)
+    return t
+  }, [])
+
+  const clearTimers = useCallback(() => {
+    animationTimers.current.forEach(t => clearTimeout(t))
+    animationTimers.current = []
   }, [])
 
   const animateParticle = useCallback((particle: HTMLDivElement | null) => {
@@ -162,7 +173,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     })
 
     // Phase 2: Arrow in activates + particle (600ms)
-    setTimeout(() => {
+    addTimer(() => {
       if (!animationActiveRef.current) return
       setArrowInActive(true)
       animateParticle(particleInRef.current)
@@ -172,7 +183,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     const scanDelay = 200
     const scanStart = 1200
     ;[0, 1, 2, 3].forEach((i) => {
-      setTimeout(() => {
+      addTimer(() => {
         if (!animationActiveRef.current) return
         setRowStates((prev) =>
           prev.map((_, j) => (j === i ? 'match' : 'normal'))
@@ -181,7 +192,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     })
 
     // Phase 4: Settle on the matched row (2200ms)
-    setTimeout(() => {
+    addTimer(() => {
       if (!animationActiveRef.current) return
       setRowStates(
         [0, 1, 2, 3].map((i) =>
@@ -191,50 +202,47 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     }, scanStart + 4 * scanDelay + 200)
 
     // Phase 5: Arrow out + particle (2800ms)
-    setTimeout(() => {
+    addTimer(() => {
       if (!animationActiveRef.current) return
       setArrowOutActive(true)
       animateParticle(particleOutRef.current)
     }, 2800)
 
     // Phase 6: Output appears (3200ms)
-    setTimeout(() => {
+    addTimer(() => {
       if (!animationActiveRef.current) return
       setOutputAnimateIn(true)
       setOutputActive(true)
     }, 3200)
 
     // Phase 7: Hold and reset (4800ms)
-    animationTimerRef.current = setTimeout(() => {
+    addTimer(() => {
       if (!animationActiveRef.current) return
       resetFlowState()
       // Brief pause, then next case
-      animationTimerRef.current = setTimeout(() => {
+      addTimer(() => {
         if (!animationActiveRef.current) return
         runFlowAnimation()
       }, 400)
     }, 4800)
-  }, [animateParticle, resetFlowState])
+  }, [addTimer, animateParticle, resetFlowState])
 
   const stopAnimation = useCallback(() => {
     animationActiveRef.current = false
-    if (animationTimerRef.current) {
-      clearTimeout(animationTimerRef.current)
-      animationTimerRef.current = null
-    }
+    clearTimers()
     resetFlowState()
-  }, [resetFlowState])
+  }, [clearTimers, resetFlowState])
 
   const startAnimation = useCallback(() => {
     stopAnimation()
     currentCaseRef.current = 0
     animationActiveRef.current = true
-    setTimeout(() => {
+    addTimer(() => {
       if (animationActiveRef.current) {
         runFlowAnimation()
       }
     }, 300)
-  }, [stopAnimation, runFlowAnimation])
+  }, [addTimer, stopAnimation, runFlowAnimation])
 
   // Start/stop animation based on perspective
   useEffect(() => {
