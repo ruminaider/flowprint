@@ -1,0 +1,78 @@
+/* Shared flow SVG styles — ported 1:1 from HTML prototypes */
+
+/* Node rectangles (action, switch) */
+.flow-svg .node-rect {
+  rx: 6;
+  ry: 6;
+  fill: #2a1a14;
+  stroke: #3d2a22;
+  stroke-width: 1.2;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+/* Node labels */
+.flow-svg .node-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: #f0e6df;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+/* Type badges (ACTION, SWITCH) */
+.flow-svg .node-type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Terminal circles */
+.flow-svg .node-circle {
+  fill: #2a1a14;
+  stroke: #3FDC77;
+  stroke-width: 1.2;
+}
+
+/* Edges */
+.flow-svg .edge {
+  fill: none;
+  stroke: #6b4d40;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.15s ease;
+}
+
+/* Edge labels */
+.flow-svg .edge-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 500;
+  fill: #6b5a4d;
+  opacity: 0.7;
+}
+
+/* Lane backgrounds */
+.flow-svg .lane-bg-rect {
+  fill: rgba(26, 15, 10, 0.5);
+  stroke: rgba(61, 42, 34, 0.3);
+  stroke-width: 0.5;
+}
+
+/* Lane labels */
+.flow-svg .lane-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: rgba(160, 139, 122, 0.5);
+}

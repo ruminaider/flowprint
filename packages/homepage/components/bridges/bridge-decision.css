@@ -1,0 +1,548 @@
+/* ══════════════════════════════════════════════════════
+   Bridge Decision — ported 1:1 from prototype-bridge-decision.html
+   ══════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════
+   CARD
+   ══════════════════════════════════════════════════════ */
+.bridge-decision .card {
+  position: relative;
+  width: 780px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 80px var(--accent-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════════════════════════════════════
+   HEADER
+   ══════════════════════════════════════════════════════ */
+.bridge-decision .header {
+  padding: 28px 32px 0;
+}
+
+.bridge-decision .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  transition: all 0.4s ease;
+}
+
+.bridge-decision .badge--business {
+  background: rgba(163, 116, 255, 0.12);
+  color: var(--node-type-switch);
+  border: 1px solid rgba(163, 116, 255, 0.2);
+}
+
+.bridge-decision .badge--developer {
+  background: rgba(228, 70, 255, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(228, 70, 255, 0.2);
+}
+
+.bridge-decision .badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: bridge-decision-pulse-dot 2s ease-in-out infinite;
+}
+
+.bridge-decision .badge--business .badge-dot {
+  background: var(--node-type-switch);
+}
+
+.bridge-decision .badge--developer .badge-dot {
+  background: var(--accent);
+}
+
+@keyframes bridge-decision-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.bridge-decision .title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.15;
+}
+
+.bridge-decision .description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 520px;
+}
+
+/* ══════════════════════════════════════════════════════
+   VIEWS CONTAINER
+   ══════════════════════════════════════════════════════ */
+.bridge-decision .views {
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+  transition: height 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.bridge-decision .view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0 32px 28px;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.bridge-decision .view--business {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bridge-decision .view--business.hidden {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.bridge-decision .view--developer {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.bridge-decision .view--developer.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ══════════════════════════════════════════════════════
+   BUSINESS VIEW — Decision Table Editor
+   ══════════════════════════════════════════════════════ */
+.bridge-decision .table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bridge-decision .hit-policy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid rgba(163, 116, 255, 0.15);
+  border-radius: 8px;
+}
+
+.bridge-decision .hit-policy-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.bridge-decision .hit-policy-select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--node-type-switch);
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.bridge-decision .hit-policy-options {
+  display: flex;
+  gap: 2px;
+}
+
+.bridge-decision .hit-option {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.bridge-decision .hit-option:hover {
+  color: var(--text-secondary);
+  background: rgba(163, 116, 255, 0.06);
+}
+
+.bridge-decision .hit-option.active {
+  color: var(--node-type-switch);
+  background: rgba(163, 116, 255, 0.1);
+  border-color: rgba(163, 116, 255, 0.2);
+}
+
+.bridge-decision .table-editor {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(163, 116, 255, 0.1);
+}
+
+.bridge-decision .table-editor th {
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--node-type-switch);
+  background: rgba(163, 116, 255, 0.08);
+  text-align: left;
+  border-bottom: 1px solid rgba(163, 116, 255, 0.12);
+}
+
+.bridge-decision .table-editor th.col-input {
+  color: var(--node-type-action);
+  background: rgba(255, 146, 67, 0.06);
+}
+
+.bridge-decision .table-editor th.col-output {
+  color: var(--node-type-terminal);
+  background: rgba(63, 220, 119, 0.06);
+}
+
+.bridge-decision .table-editor th .col-type {
+  display: block;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+  letter-spacing: 0.06em;
+}
+
+.bridge-decision .table-editor td {
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.bridge-decision .table-editor td:last-child {
+  border-right: none;
+}
+
+.bridge-decision .table-editor tr:last-child td {
+  border-bottom: none;
+}
+
+.bridge-decision .table-editor tbody tr {
+  background: var(--surface);
+  transition: background 0.2s;
+}
+
+.bridge-decision .table-editor tbody tr:nth-child(odd) {
+  background: rgba(26, 15, 10, 0.8);
+}
+
+.bridge-decision .table-editor tbody tr:nth-child(even) {
+  background: rgba(34, 21, 16, 0.6);
+}
+
+.bridge-decision .table-editor tbody tr:hover {
+  background: rgba(163, 116, 255, 0.06);
+}
+
+.bridge-decision .table-editor .row-num {
+  width: 36px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.bridge-decision .cell-value {
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.bridge-decision .cell-value--input {
+  color: var(--node-type-action);
+}
+
+.bridge-decision .cell-value--output {
+  color: var(--node-type-terminal);
+}
+
+.bridge-decision .cell-value--any {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.bridge-decision .table-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bridge-decision .table-note-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: rgba(163, 116, 255, 0.08);
+  color: var(--node-type-switch);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════
+   DEVELOPER VIEW — Horizontal Data Flow
+   ══════════════════════════════════════════════════════ */
+.bridge-decision .flow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 200px;
+  position: relative;
+}
+
+.bridge-decision .flow-json {
+  flex: 0 0 180px;
+  background: var(--code-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  position: relative;
+  z-index: 2;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.bridge-decision .flow-json--input {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.bridge-decision .flow-json--input.animate-in {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.bridge-decision .flow-json--output {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.bridge-decision .flow-json--output.animate-in {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.bridge-decision .flow-json--active {
+  border-color: rgba(228, 70, 255, 0.3);
+  box-shadow: 0 0 20px rgba(228, 70, 255, 0.1);
+}
+
+.bridge-decision .json-brace {
+  color: var(--text-muted);
+}
+
+.bridge-decision .json-key {
+  color: var(--node-type-action);
+}
+
+.bridge-decision .json-string {
+  color: #ffb86c;
+}
+
+.bridge-decision .json-number {
+  color: #5ae0c2;
+}
+
+/* Flow arrows */
+.bridge-decision .flow-arrow {
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.bridge-decision .flow-arrow svg {
+  overflow: visible;
+}
+
+.bridge-decision .arrow-line {
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+  opacity: 0.3;
+  transition: opacity 0.4s, stroke 0.4s;
+}
+
+.bridge-decision .arrow-head {
+  fill: var(--text-muted);
+  opacity: 0.3;
+  transition: opacity 0.4s, fill 0.4s;
+}
+
+.bridge-decision .arrow-line.active {
+  stroke: var(--accent);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px rgba(228, 70, 255, 0.4));
+}
+
+.bridge-decision .arrow-head.active {
+  fill: var(--accent);
+  opacity: 0.8;
+}
+
+/* Particle on arrow */
+.bridge-decision .flow-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(228, 70, 255, 0.4);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Flow table (compact, in developer view) */
+.bridge-decision .flow-table-wrap {
+  flex: 0 0 260px;
+  position: relative;
+  z-index: 2;
+}
+
+.bridge-decision .flow-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(163, 116, 255, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.bridge-decision .flow-table th {
+  padding: 8px 12px;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--node-type-switch);
+  background: rgba(163, 116, 255, 0.08);
+  text-align: left;
+  border-bottom: 1px solid rgba(163, 116, 255, 0.12);
+}
+
+.bridge-decision .flow-table td {
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.4s ease;
+}
+
+.bridge-decision .flow-table tr:last-child td {
+  border-bottom: none;
+}
+
+.bridge-decision .flow-table tbody tr {
+  background: var(--surface);
+  transition: all 0.4s ease;
+}
+
+.bridge-decision .flow-table tbody tr:nth-child(odd) {
+  background: rgba(26, 15, 10, 0.8);
+}
+
+.bridge-decision .flow-table tbody tr:nth-child(even) {
+  background: rgba(34, 21, 16, 0.6);
+}
+
+.bridge-decision .flow-table tbody tr.row-match {
+  background: rgba(228, 70, 255, 0.1) !important;
+  box-shadow: inset 0 0 0 1px rgba(228, 70, 255, 0.25);
+}
+
+.bridge-decision .flow-table tbody tr.row-match td {
+  color: var(--text-primary);
+}
+
+.bridge-decision .flow-table tbody tr.row-dim td {
+  opacity: 0.35;
+}
+
+/* GoRules badge */
+.bridge-decision .gorules-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: rgba(228, 70, 255, 0.06);
+  border: 1px solid rgba(228, 70, 255, 0.12);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.bridge-decision .gorules-badge span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════
+   ANIMATION KEYFRAMES
+   ══════════════════════════════════════════════════════ */
+@keyframes bridge-decision-particle-flow {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 6px);
+    opacity: 0;
+  }
+}

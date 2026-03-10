@@ -1,0 +1,88 @@
+.capabilities {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.perspective-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(26, 15, 10, 0.6);
+  border: 1px solid rgba(228, 70, 255, 0.12);
+  border-radius: 12px;
+  width: fit-content;
+  margin: 0 auto 40px;
+  position: sticky;
+  top: 80px; /* 64px fixed header + 16px breathing room */
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+
+.perspective-toggle button {
+  padding: 10px 28px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b5a4d;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.perspective-toggle button:hover:not(.active) {
+  color: #a89585;
+}
+
+.perspective-toggle button.active {
+  color: #f0e6df;
+  background: rgba(228, 70, 255, 0.12);
+  box-shadow: 0 0 12px rgba(228, 70, 255, 0.15);
+}
+
+.bridge-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* Bridge card — transparent wrapper, bridge components provide own styling */
+.bridge-card {
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+}
+
+/* Only the placeholder card gets visible styling */
+.bridge-card-placeholder {
+  background: #1a0f0a;
+  border: 1px solid rgba(228, 70, 255, 0.12);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.bridge-card-placeholder h3 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: #fafafa;
+  margin: 0 0 20px;
+  letter-spacing: -0.01em;
+}
+
+.bridge-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: rgba(26, 15, 10, 0.4);
+  border: 1px dashed rgba(228, 70, 255, 0.12);
+  border-radius: 8px;
+  color: #6b5a4d;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+}
