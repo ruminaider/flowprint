@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
 import '../flow/flow.css'
+import './bridge-shared.css'
 import './bridge-versioning.css'
 
 interface BridgeVersioningProps {
@@ -350,7 +351,7 @@ export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
 
   return (
     <div className={wrapperClasses}>
-      <div className="card">
+      <div className="bridge-card card">
         {/* Header */}
         <div className="header">
           <div

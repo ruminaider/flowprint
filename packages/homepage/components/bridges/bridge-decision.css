@@ -2,23 +2,7 @@
    Bridge Decision — ported 1:1 from prototype-bridge-decision.html
    ══════════════════════════════════════════════════════ */
 
-/* ══════════════════════════════════════════════════════
-   CARD
-   ══════════════════════════════════════════════════════ */
-.bridge-decision .card {
-  position: relative;
-  width: 780px;
-  border-radius: 20px;
-  background: var(--surface);
-  border: 1px solid var(--surface-border);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.5),
-    0 0 80px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+/* Card base: uses .bridge-card from bridge-shared.css */
 
 /* ══════════════════════════════════════════════════════
    HEADER

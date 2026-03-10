@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
 import { useTimers } from '@/hooks/use-timers'
+import './bridge-shared.css'
 import './bridge-decision.css'
 
 interface BridgeDecisionProps {
@@ -236,7 +237,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
 
   return (
     <div className="bridge-decision">
-      <div className="card">
+      <div className="bridge-card card">
         {/* Header */}
         <div className="header">
           <div
