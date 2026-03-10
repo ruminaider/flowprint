@@ -98,6 +98,7 @@ describe('useSimulationAnimation', () => {
     expect(result.current).toEqual({
       isForwardStep: true,
       particleDurationMs: 600,
+      stepKey: 0,
     })
   })
 
@@ -105,6 +106,7 @@ describe('useSimulationAnimation', () => {
     const config: SimulationAnimationConfig = {
       isForwardStep: false,
       particleDurationMs: 300,
+      stepKey: 5,
     }
     const wrapper = ({ children }: { children: ReactNode }) => (
       <SimulationAnimationProvider value={config}>{children}</SimulationAnimationProvider>
@@ -113,6 +115,7 @@ describe('useSimulationAnimation', () => {
     expect(result.current).toEqual({
       isForwardStep: false,
       particleDurationMs: 300,
+      stepKey: 5,
     })
   })
 })

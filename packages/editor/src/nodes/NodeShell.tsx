@@ -35,6 +35,7 @@ export function NodeShell({
 
   // When stepping forward, delay the "active" glow until the particle arrives
   const isDelayedActive = simState === 'active' && simAnimation.isForwardStep
+  const isDeparting = simState === 'departing' && simAnimation.isForwardStep
 
   const classNames = [
     'fp-node',
@@ -44,6 +45,8 @@ export function NodeShell({
     simState === 'active' && 'fp-node--sim-active',
     isDelayedActive && 'fp-node--sim-active-delayed',
     simState === 'visited' && 'fp-node--sim-visited',
+    isDeparting && 'fp-node--sim-departing',
+    simState === 'departing' && !simAnimation.isForwardStep && 'fp-node--sim-visited',
     simState === 'error' && 'fp-node--sim-error',
   ]
     .filter(Boolean)
@@ -57,6 +60,9 @@ export function NodeShell({
       style={{
         '--node-accent': `var(${colorVar})`,
         '--node-accent-subtle': `var(${colorVar}-subtle)`,
+        ...(isDeparting && {
+          '--fp-sim-depart-delay': `${String(simAnimation.particleDurationMs / 2)}ms`,
+        }),
         ...(isDelayedActive && {
           '--fp-sim-particle-dur': `${String(simAnimation.particleDurationMs)}ms`,
         }),

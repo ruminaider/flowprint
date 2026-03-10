@@ -135,6 +135,19 @@ function buildTraceSnapshots(
       }
     }
 
+    // Previous step's node holds active appearance during particle transit
+    if (i > 0) {
+      const prevNode = steps[i - 1]
+      if (prevNode && prevNode.status !== 'error') {
+        snapshot[prevNode.node_id] = 'departing'
+        if (prevNode.branchNodeIds) {
+          for (const branchId of prevNode.branchNodeIds) {
+            snapshot[branchId] = 'departing'
+          }
+        }
+      }
+    }
+
     // Mark current node
     snapshot[step.node_id] = step.status === 'error' ? 'error' : 'active'
     if (step.branchNodeIds) {

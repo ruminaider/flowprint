@@ -243,19 +243,19 @@ describe('useSimulation', () => {
     // Step 0: a is active
     expect(result.current.nodeHighlights).toEqual({ a: 'active' })
 
-    // Step 1: a is visited, b is active
+    // Step 1: a is departing (immediately previous), b is active
     act(() => {
       result.current.stepForward()
     })
-    expect(result.current.nodeHighlights).toEqual({ a: 'visited', b: 'active' })
+    expect(result.current.nodeHighlights).toEqual({ a: 'departing', b: 'active' })
 
-    // Step 2: a and b visited, c is active
+    // Step 2: a is visited, b is departing (immediately previous), c is active
     act(() => {
       result.current.stepForward()
     })
     expect(result.current.nodeHighlights).toEqual({
       a: 'visited',
-      b: 'visited',
+      b: 'departing',
       c: 'active',
     })
   })
@@ -290,14 +290,16 @@ describe('useSimulation', () => {
     // Step 0: start is active
     expect(result.current.nodeHighlights).toEqual({ start: 'active' })
 
-    // Step 1: par entered — hub active, start visited
+    // Step 1: par entered — hub active, start departing (immediately previous)
     act(() => { result.current.stepForward() })
     expect(result.current.nodeHighlights).toEqual({
-      start: 'visited',
+      start: 'departing',
       par: 'active',
     })
 
-    // Step 2: par completed — hub + all branches active simultaneously
+    // Step 2: par completed — hub + all branches active, start visited
+    // Previous step (par entered) has same node_id as current (par completed),
+    // so 'departing' is overwritten by 'active'
     act(() => { result.current.stepForward() })
     expect(result.current.nodeHighlights).toEqual({
       start: 'visited',
@@ -307,14 +309,14 @@ describe('useSimulation', () => {
       b3: 'active',
     })
 
-    // Step 3: join — hub + all branches visited, join active
+    // Step 3: join — par + branches departing (immediately previous), join active
     act(() => { result.current.stepForward() })
     expect(result.current.nodeHighlights).toEqual({
       start: 'visited',
-      par: 'visited',
-      b1: 'visited',
-      b2: 'visited',
-      b3: 'visited',
+      par: 'departing',
+      b1: 'departing',
+      b2: 'departing',
+      b3: 'departing',
       join: 'active',
     })
   })

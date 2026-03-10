@@ -160,6 +160,33 @@
   opacity: 0.8;
 }
 
+@keyframes fp-sim-depart {
+  0% {
+    background: rgba(166, 227, 161, 0.15);
+    border-color: #a6e3a1;
+    box-shadow:
+      0 0 0 3px rgba(166, 227, 161, 0.3),
+      0 0 12px rgba(166, 227, 161, 0.2);
+    opacity: 1;
+  }
+  100% {
+    background: rgba(180, 190, 254, 0.1);
+    border-color: #b4befe;
+    box-shadow: 0 0 0 2px rgba(180, 190, 254, 0.2);
+    opacity: 0.8;
+  }
+}
+
+.fp-node--sim-departing {
+  border-width: 2px;
+  animation: fp-sim-depart 0.3s ease-out var(--fp-sim-depart-delay, 0ms) both;
+}
+
+@keyframes fp-sim-edge-fadeout {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 .fp-node--sim-error {
   --fp-sim-glow: rgba(243, 139, 168, 0.5);
   background: rgba(243, 139, 168, 0.15);

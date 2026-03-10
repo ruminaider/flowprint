@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react'
 
 // ── Node highlights (existing) ──────────────────
 
-export type NodeHighlightState = 'active' | 'visited' | 'error'
+export type NodeHighlightState = 'active' | 'visited' | 'departing' | 'error'
 export type NodeHighlightMap = Record<string, NodeHighlightState>
 
 const SimulationContext = createContext<NodeHighlightMap>({})

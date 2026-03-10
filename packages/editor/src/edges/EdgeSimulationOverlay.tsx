@@ -60,7 +60,13 @@ export function EdgeSimulationOverlay({ edgeId, edgePath }: EdgeSimulationOverla
   // key includes stepKey so React remounts this <g> on every step change,
   // guaranteeing SMIL animations restart cleanly (both manual and autoplay).
   return (
-    <g ref={groupRef} key={`${edgeId}-${String(animation.stepKey)}`}>
+    <g
+      ref={groupRef}
+      key={`${edgeId}-${String(animation.stepKey)}`}
+      style={{
+        animation: `fp-sim-edge-fadeout 0.4s ease-out ${durSeconds}s forwards`,
+      }}
+    >
       {/* SVG filter for energy bead glow */}
       <defs>
         <filter id={filterId} x="-200%" y="-200%" width="500%" height="500%">
