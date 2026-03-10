@@ -13,7 +13,7 @@
 }
 
 .tryit-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 400;
   color: var(--foreground);
@@ -95,7 +95,7 @@
 }
 
 .template-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 400;
   color: var(--foreground);
@@ -181,7 +181,7 @@
 }
 
 .expanded-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 400;
   color: var(--foreground);

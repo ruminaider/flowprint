@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, JetBrains_Mono } from 'next/font/google'
+import { DM_Sans, JetBrains_Mono, Instrument_Serif } from 'next/font/google'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -12,6 +12,13 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-jetbrains',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-instrument-serif',
 })
 
 export const metadata: Metadata = {
@@ -52,7 +59,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${dmSans.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

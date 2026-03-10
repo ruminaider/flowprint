@@ -75,7 +75,7 @@
 }
 
 .bridge-decision .title {
-  font-family: 'Instrument Serif', serif;
+  font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 400;
   color: var(--text-primary);

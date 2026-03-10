@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useDynamicHeight } from '@/hooks/use-dynamic-height'
 import '../flow/flow.css'
 import './bridge-versioning.css'
 
@@ -316,34 +317,11 @@ function DeveloperViewContent() {
 }
 
 export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
+  const isDev = perspective === 'developer'
   const [isAfterState, setIsAfterState] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstRender = useRef(true)
-
-  // Dynamic height refs
-  const viewsRef = useRef<HTMLDivElement>(null)
-  const bizViewRef = useRef<HTMLDivElement>(null)
-  const devViewRef = useRef<HTMLDivElement>(null)
-  const initialRenderRef = useRef(true)
-
-  const isDev = perspective === 'developer'
-
-  // Dynamic height: measure active view and set container height
-  useEffect(() => {
-    const activeView = isDev ? devViewRef.current : bizViewRef.current
-    if (!activeView || !viewsRef.current) return
-    const h = activeView.scrollHeight
-    if (initialRenderRef.current) {
-      viewsRef.current.style.transition = 'none'
-      viewsRef.current.style.height = `${h}px`
-      requestAnimationFrame(() => {
-        if (viewsRef.current) viewsRef.current.style.transition = ''
-      })
-      initialRenderRef.current = false
-    } else {
-      viewsRef.current.style.height = `${h}px`
-    }
-  }, [isDev])
+  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
 
   // Morph loop: schedule next state flip as a reaction to current state.
   // No side effects inside setState updaters — React Strict Mode calls them twice.

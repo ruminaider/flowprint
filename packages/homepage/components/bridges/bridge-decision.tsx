@@ -1,11 +1,20 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useDynamicHeight } from '@/hooks/use-dynamic-height'
+import { useTimers } from '@/hooks/use-timers'
 import './bridge-decision.css'
 
 interface BridgeDecisionProps {
   perspective: 'business' | 'developer'
 }
+
+const DECISION_ROWS = [
+  { tier: 'Enterprise', value: 'Any', valueClass: 'cell-value--any', route: 'express' },
+  { tier: 'Business', value: '> $10k', valueClass: 'cell-value--input', route: 'review' },
+  { tier: 'Business', value: '\u2264 $10k', valueClass: 'cell-value--input', route: 'standard' },
+  { tier: 'Starter', value: 'Any', valueClass: 'cell-value--any', route: 'standard' },
+]
 
 const testCases = [
   { tier: 'enterprise', value: 50000, matchRow: 1, route: 'express' },
@@ -51,36 +60,14 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     Array<'normal' | 'match' | 'dim'>
   >(['normal', 'normal', 'normal', 'normal'])
 
-  const animationTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const { addTimer, clearTimers } = useTimers()
+  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
   const currentCaseRef = useRef(0)
   const particleInRef = useRef<HTMLDivElement>(null)
   const particleOutRef = useRef<HTMLDivElement>(null)
   const arrowInRef = useRef<HTMLDivElement>(null)
   const arrowOutRef = useRef<HTMLDivElement>(null)
   const animationActiveRef = useRef(false)
-
-  // Dynamic height refs
-  const viewsRef = useRef<HTMLDivElement>(null)
-  const bizViewRef = useRef<HTMLDivElement>(null)
-  const devViewRef = useRef<HTMLDivElement>(null)
-  const initialRenderRef = useRef(true)
-
-  // Dynamic height: measure active view and set container height
-  useEffect(() => {
-    const activeView = isDev ? devViewRef.current : bizViewRef.current
-    if (!activeView || !viewsRef.current) return
-    const h = activeView.scrollHeight
-    if (initialRenderRef.current) {
-      viewsRef.current.style.transition = 'none'
-      viewsRef.current.style.height = `${h}px`
-      requestAnimationFrame(() => {
-        if (viewsRef.current) viewsRef.current.style.transition = ''
-      })
-      initialRenderRef.current = false
-    } else {
-      viewsRef.current.style.height = `${h}px`
-    }
-  }, [isDev])
 
   const resetFlowState = useCallback(() => {
     setInputAnimateIn(false)
@@ -92,17 +79,6 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     setRowStates(['normal', 'normal', 'normal', 'normal'])
     if (particleInRef.current) particleInRef.current.style.opacity = '0'
     if (particleOutRef.current) particleOutRef.current.style.opacity = '0'
-  }, [])
-
-  const addTimer = useCallback((fn: () => void, delay: number) => {
-    const t = setTimeout(fn, delay)
-    animationTimers.current.push(t)
-    return t
-  }, [])
-
-  const clearTimers = useCallback(() => {
-    animationTimers.current.forEach(t => clearTimeout(t))
-    animationTimers.current = []
   }, [])
 
   const animateParticle = useCallback((particle: HTMLDivElement | null) => {
@@ -321,78 +297,26 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="row-num">1</td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      Enterprise
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--any">
-                      Any
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--output">
-                      express
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="row-num">2</td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      Business
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      &gt; $10k
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--output">
-                      review
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="row-num">3</td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      Business
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      &le; $10k
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--output">
-                      standard
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="row-num">4</td>
-                  <td>
-                    <span className="cell-value cell-value--input">
-                      Starter
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--any">
-                      Any
-                    </span>
-                  </td>
-                  <td>
-                    <span className="cell-value cell-value--output">
-                      standard
-                    </span>
-                  </td>
-                </tr>
+                {DECISION_ROWS.map((row, i) => (
+                  <tr key={i}>
+                    <td className="row-num">{i + 1}</td>
+                    <td>
+                      <span className="cell-value cell-value--input">
+                        {row.tier}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`cell-value ${row.valueClass}`}>
+                        {row.value}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="cell-value cell-value--output">
+                        {row.route}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
 
@@ -457,28 +381,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      {
-                        tier: 'Enterprise',
-                        value: 'Any',
-                        route: 'express',
-                      },
-                      {
-                        tier: 'Business',
-                        value: '> $10k',
-                        route: 'review',
-                      },
-                      {
-                        tier: 'Business',
-                        value: '\u2264 $10k',
-                        route: 'standard',
-                      },
-                      {
-                        tier: 'Starter',
-                        value: 'Any',
-                        route: 'standard',
-                      },
-                    ].map((row, i) => (
+                    {DECISION_ROWS.map((row, i) => (
                       <tr
                         key={i}
                         className={

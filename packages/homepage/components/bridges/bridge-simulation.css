@@ -91,7 +91,7 @@
    TYPOGRAPHY
    ══════════════════════════════════════════════════════ */
 .bridge-simulation .card-title {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 400;
   font-style: normal;
