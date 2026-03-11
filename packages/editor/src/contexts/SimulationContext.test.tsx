@@ -96,7 +96,7 @@ describe('useSimulationAnimation', () => {
   it('returns default config with no provider', () => {
     const { result } = renderHook(() => useSimulationAnimation())
     expect(result.current).toEqual({
-      isForwardStep: true,
+      isForwardStep: false,
       particleDurationMs: 600,
       stepKey: 0,
     })

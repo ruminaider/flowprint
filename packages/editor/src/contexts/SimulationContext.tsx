@@ -37,7 +37,7 @@ export interface SimulationAnimationConfig {
 }
 
 const defaultAnimationConfig: SimulationAnimationConfig = {
-  isForwardStep: true,
+  isForwardStep: false,
   particleDurationMs: 600,
   stepKey: 0,
 }
