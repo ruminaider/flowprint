@@ -1,13 +1,14 @@
 /* ══════════════════════════════════════════════════════
    Shared Bridge Styles
    Common patterns used by bridge-decision, bridge-versioning,
-   and bridge-simulation components.
+   bridge-simulation, and overview-parallax components.
    ══════════════════════════════════════════════════════ */
 
 /* ── Shared Card Container ─────────────────────────── */
 .bridge-card {
   position: relative;
-  width: 780px;
+  width: min(780px, calc(100vw - 48px));
+  max-width: 100%;
   border-radius: 20px;
   background: var(--surface);
   border: 1px solid var(--surface-border);
@@ -18,4 +19,240 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* ══════════════════════════════════════════════════════
+   A. BADGE PATTERN
+   Unified badge with color variants.
+   Old aliases: .badge (decision/versioning), .layer-badge (simulation/overview)
+   ══════════════════════════════════════════════════════ */
+.bridge-badge,
+.badge,
+.layer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bridge-badge--magenta,
+.layer-badge--business {
+  color: var(--accent);
+  background: rgba(228, 70, 255, 0.1);
+}
+
+.bridge-badge--teal,
+.layer-badge--developer {
+  color: var(--type-teal);
+  background: rgba(90, 224, 194, 0.1);
+}
+
+.bridge-badge--purple,
+.badge--business {
+  color: var(--node-type-switch);
+  background: rgba(163, 116, 255, 0.12);
+}
+
+.bridge-badge .dot,
+.badge .dot,
+.badge-dot,
+.layer-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bridge-badge--pulse .dot {
+  animation: bridge-badge-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes bridge-badge-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ══════════════════════════════════════════════════════
+   B. CTA BUTTON
+   Unified call-to-action / toggle button.
+   Old aliases: .cta (simulation/overview)
+   ══════════════════════════════════════════════════════ */
+.bridge-cta,
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 11px 22px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(228, 70, 255, 0.15), rgba(228, 70, 255, 0.05));
+  border: 1px solid rgba(228, 70, 255, 0.25);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bridge-cta::before,
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(228, 70, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bridge-cta:hover::before,
+.cta:hover::before { opacity: 1; }
+
+.bridge-cta:hover,
+.cta:hover {
+  border-color: rgba(228, 70, 255, 0.45);
+  box-shadow: 0 0 30px rgba(228, 70, 255, 0.15);
+}
+
+.bridge-cta .cta-icon,
+.cta .cta-icon,
+.cta-icon {
+  display: inline-flex;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ══════════════════════════════════════════════════════
+   C. CARD TYPOGRAPHY
+   Unified title / description styles.
+   Old aliases: .card-title (simulation/overview),
+                .title (decision/versioning),
+                .card-description (simulation/overview),
+                .description (decision/versioning)
+   ══════════════════════════════════════════════════════ */
+.bridge-title,
+.card-title,
+.title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.bridge-description,
+.card-description,
+.description {
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+/* ══════════════════════════════════════════════════════
+   D. VIEW TRANSITION
+   Shared view container + active/hidden states.
+   Old aliases: .views (decision/versioning),
+                .view (decision/versioning)
+   ══════════════════════════════════════════════════════ */
+.bridge-views,
+.views {
+  position: relative;
+  overflow: hidden;
+  transition: height 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.bridge-view,
+.view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.bridge-view--active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.bridge-view--hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   E. FLOW PANEL
+   Shared flow diagram container with editor header.
+   Old aliases: .flow-container (simulation/overview),
+                .flow-panel-header (simulation/overview),
+                .flow-panel-body (simulation/overview)
+   ══════════════════════════════════════════════════════ */
+.bridge-flow-container,
+.flow-container {
+  border: 1px solid rgba(228, 70, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.bridge-flow-panel-header,
+.flow-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--table-header);
+  border-bottom: 1px solid rgba(228, 70, 255, 0.08);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.bridge-flow-panel-header svg,
+.flow-panel-header svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+.bridge-flow-panel-header .header-dot,
+.flow-panel-header .header-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.4;
+  margin-left: auto;
+  box-shadow: 0 0 6px rgba(228, 70, 255, 0.3);
+}
+
+.bridge-flow-panel-body,
+.flow-panel-body {
+  padding: 8px 4px 4px;
+  position: relative;
+}
+
+/* ══════════════════════════════════════════════════════
+   F. RESPONSIVE
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 840px) {
+  .bridge-card {
+    padding: 20px;
+  }
 }

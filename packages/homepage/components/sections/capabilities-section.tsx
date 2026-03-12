@@ -32,17 +32,17 @@ export function CapabilitiesSection() {
       {/* Bridge cards stacked vertically */}
       <div className="bridge-stack">
         {/* Bridge 1: Decision Tables */}
-        <section className="bridge-card">
+        <section className="bridge-card-wrapper">
           <BridgeDecision perspective={perspective} />
         </section>
 
         {/* Bridge 2: Simulation */}
-        <section className="bridge-card">
+        <section className="bridge-card-wrapper">
           <BridgeSimulation perspective={perspective} />
         </section>
 
         {/* Bridge 3: Version Control */}
-        <section className="bridge-card">
+        <section className="bridge-card-wrapper">
           <BridgeVersioning perspective={perspective} />
         </section>
       </div>

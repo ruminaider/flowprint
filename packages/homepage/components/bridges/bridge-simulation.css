@@ -50,63 +50,25 @@
   z-index: 2;
 }
 
-/* ══════════════════════════════════════════════════════
-   LAYER BADGE
-   ══════════════════════════════════════════════════════ */
+/* Layer badge: base styles in bridge-shared.css (.layer-badge) */
+
+/* Component-specific badge overrides */
 .bridge-simulation .layer-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-radius: 100px;
   margin-bottom: 16px;
 }
 
 .bridge-simulation .layer-badge--business {
-  color: var(--accent);
-  background: rgba(228, 70, 255, 0.1);
   border: 1px solid rgba(228, 70, 255, 0.2);
 }
 
 .bridge-simulation .layer-badge--developer {
-  color: var(--type-teal);
-  background: rgba(90, 224, 194, 0.1);
   border: 1px solid rgba(90, 224, 194, 0.2);
-}
-
-.bridge-simulation .layer-badge .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
 }
 
 .bridge-simulation .layer-badge--business .dot { background: var(--accent); }
 .bridge-simulation .layer-badge--developer .dot { background: var(--type-teal); }
 
-/* ══════════════════════════════════════════════════════
-   TYPOGRAPHY
-   ══════════════════════════════════════════════════════ */
-.bridge-simulation .card-title {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 400;
-  font-style: normal;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-  margin-bottom: 10px;
-}
-
-.bridge-simulation .card-description {
-  font-size: 13.5px;
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  margin-bottom: 16px;
-}
+/* Typography: base styles in bridge-shared.css (.card-title, .card-description) */
 
 /* ══════════════════════════════════════════════════════
    PILL TABS (simulation modes)
@@ -146,49 +108,7 @@
   box-shadow: 0 0 12px rgba(228, 70, 255, 0.15);
 }
 
-/* ══════════════════════════════════════════════════════
-   FLOW CONTAINER
-   ══════════════════════════════════════════════════════ */
-.bridge-simulation .flow-container {
-  border: 1px solid rgba(228, 70, 255, 0.08);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--code-bg);
-}
-
-.bridge-simulation .flow-panel-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: var(--table-header);
-  border-bottom: 1px solid rgba(228, 70, 255, 0.08);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-}
-
-.bridge-simulation .flow-panel-header svg {
-  width: 12px;
-  height: 12px;
-  opacity: 0.6;
-}
-
-.bridge-simulation .flow-panel-header .header-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.4;
-  margin-left: auto;
-  box-shadow: 0 0 6px rgba(228, 70, 255, 0.3);
-}
-
-.bridge-simulation .flow-panel-body {
-  padding: 8px 4px 4px;
-  position: relative;
-}
+/* Flow container: base styles in bridge-shared.css (.flow-container, .flow-panel-header, .flow-panel-body) */
 
 /* ══════════════════════════════════════════════════════
    SVG FLOW DIAGRAM STYLES
@@ -528,49 +448,7 @@
   font-weight: 700;
 }
 
-/* ══════════════════════════════════════════════════════
-   CTA / TOGGLE BUTTON
-   ══════════════════════════════════════════════════════ */
-.bridge-simulation .cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 11px 22px;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-  background: linear-gradient(135deg, rgba(228, 70, 255, 0.15), rgba(228, 70, 255, 0.05));
-  border: 1px solid rgba(228, 70, 255, 0.25);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.bridge-simulation .cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(228, 70, 255, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.bridge-simulation .cta:hover::before { opacity: 1; }
-
-.bridge-simulation .cta:hover {
-  border-color: rgba(228, 70, 255, 0.45);
-  box-shadow: 0 0 30px rgba(228, 70, 255, 0.15);
-}
-
-.bridge-simulation .cta-icon {
-  display: inline-flex;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
+/* CTA button: base styles in bridge-shared.css (.cta, .cta-icon) */
 
 /* ══════════════════════════════════════════════════════
    DEVELOPER VIEW: TERMINAL OUTPUT

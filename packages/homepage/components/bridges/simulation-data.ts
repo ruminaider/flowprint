@@ -16,6 +16,7 @@ export interface RippleObj {
 
 export type SimMode = 'walkthrough' | 'stepbystep' | 'whatif'
 
+/** @deprecated Kept for backward-compat; SVG components now use data attributes. */
 export interface FlowSvgProps {
   getNodeClassName: (id: string) => string
   getEdgeClassName: (id: string) => string

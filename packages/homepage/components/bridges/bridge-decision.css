@@ -11,24 +11,15 @@
   padding: 28px 32px 0;
 }
 
+/* Badge: base styles in bridge-shared.css (.badge, .badge-dot) */
+
+/* Component-specific badge overrides */
 .bridge-decision .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 100px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   margin-bottom: 12px;
   transition: all 0.4s ease;
 }
 
 .bridge-decision .badge--business {
-  background: rgba(163, 116, 255, 0.12);
-  color: var(--node-type-switch);
   border: 1px solid rgba(163, 116, 255, 0.2);
 }
 
@@ -39,10 +30,7 @@
 }
 
 .bridge-decision .badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  animation: bridge-decision-pulse-dot 2s ease-in-out infinite;
+  animation: bridge-badge-pulse-dot 2s ease-in-out infinite;
 }
 
 .bridge-decision .badge--business .badge-dot {
@@ -53,42 +41,28 @@
   background: var(--accent);
 }
 
-@keyframes bridge-decision-pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+/* Typography: base styles in bridge-shared.css (.title, .description) */
 
+/* Component-specific typography overrides */
 .bridge-decision .title {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--text-primary);
   margin-bottom: 6px;
-  line-height: 1.15;
 }
 
 .bridge-decision .description {
   font-size: 14px;
-  color: var(--text-secondary);
   line-height: 1.5;
   max-width: 520px;
+  margin-bottom: 0;
 }
 
-/* ══════════════════════════════════════════════════════
-   VIEWS CONTAINER
-   ══════════════════════════════════════════════════════ */
+/* Views container: base styles in bridge-shared.css (.views, .view) */
+
+/* Component-specific view overrides */
 .bridge-decision .views {
-  position: relative;
-  overflow: hidden;
   margin-top: 20px;
-  transition: height 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .bridge-decision .view {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   padding: 0 32px 28px;
   transition: opacity 0.5s ease, transform 0.5s ease;
 }

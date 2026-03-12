@@ -50,8 +50,8 @@
   gap: 48px;
 }
 
-/* Bridge card — transparent wrapper, bridge components provide own styling */
-.bridge-card {
+/* Bridge card wrapper — transparent, centers the bridge component */
+.bridge-card-wrapper {
   display: flex;
   justify-content: center;
   overflow: visible;

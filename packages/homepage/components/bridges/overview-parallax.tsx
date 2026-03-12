@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { OverviewFlowSvg } from './overview-flow-svg'
+import './bridge-shared.css'
 import './overview-parallax.css'
 import '../flow/flow.css'
 

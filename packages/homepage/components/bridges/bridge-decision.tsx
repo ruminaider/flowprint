@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
-import { useTimers } from '@/hooks/use-timers'
 import './bridge-shared.css'
 import './bridge-decision.css'
+
+gsap.registerPlugin(useGSAP)
 
 interface BridgeDecisionProps {
   perspective: 'business' | 'developer'
@@ -47,196 +50,199 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
   const isDev = perspective === 'developer'
   const [hitPolicy, setHitPolicy] = useState('first')
 
-  // Animation state
+  // Text content state (kept as React state for rendering)
   const [inputTier, setInputTier] = useState("'enterprise'")
   const [inputValue, setInputValue] = useState('50,000')
   const [outputRoute, setOutputRoute] = useState("'express'")
-  const [inputAnimateIn, setInputAnimateIn] = useState(false)
-  const [inputActive, setInputActive] = useState(false)
-  const [outputAnimateIn, setOutputAnimateIn] = useState(false)
-  const [outputActive, setOutputActive] = useState(false)
-  const [arrowInActive, setArrowInActive] = useState(false)
-  const [arrowOutActive, setArrowOutActive] = useState(false)
-  const [rowStates, setRowStates] = useState<
-    Array<'normal' | 'match' | 'dim'>
-  >(['normal', 'normal', 'normal', 'normal'])
 
-  const { addTimer, clearTimers } = useTimers()
-  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
-  const currentCaseRef = useRef(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputJsonRef = useRef<HTMLDivElement>(null)
+  const outputJsonRef = useRef<HTMLDivElement>(null)
   const particleInRef = useRef<HTMLDivElement>(null)
   const particleOutRef = useRef<HTMLDivElement>(null)
-  const arrowInRef = useRef<HTMLDivElement>(null)
-  const arrowOutRef = useRef<HTMLDivElement>(null)
-  const animationActiveRef = useRef(false)
 
-  const resetFlowState = useCallback(() => {
-    setInputAnimateIn(false)
-    setInputActive(false)
-    setOutputAnimateIn(false)
-    setOutputActive(false)
-    setArrowInActive(false)
-    setArrowOutActive(false)
-    setRowStates(['normal', 'normal', 'normal', 'normal'])
-    if (particleInRef.current) particleInRef.current.style.opacity = '0'
-    if (particleOutRef.current) particleOutRef.current.style.opacity = '0'
-  }, [])
+  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
 
-  const animateParticle = useCallback((particle: HTMLDivElement | null) => {
-    if (!particle) return
-    const parent = particle.parentElement
-    if (!parent) return
-    const width = parent.offsetWidth
+  const animateParticle = useCallback(
+    (particle: HTMLDivElement | null, onComplete?: () => void) => {
+      if (!particle) return
+      const parent = particle.parentElement
+      if (!parent) return
+      const width = parent.offsetWidth
 
-    particle.style.opacity = '0'
-    particle.style.left = '0px'
-    particle.style.top = '50%'
-    particle.style.transform = 'translateY(-50%)'
-
-    let start: number | null = null
-    const duration = 400
-
-    function step(ts: number) {
-      if (!start) start = ts
-      const progress = Math.min((ts - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3) // ease-out cubic
-
-      particle!.style.left = eased * (width - 6) + 'px'
-      particle!.style.opacity =
-        progress < 0.1
-          ? String(progress / 0.1)
-          : progress > 0.9
-            ? String((1 - progress) / 0.1)
-            : '1'
-
-      if (progress < 1) {
-        requestAnimationFrame(step)
-      } else {
-        particle!.style.opacity = '0'
-      }
-    }
-
-    requestAnimationFrame(step)
-  }, [])
-
-  const runFlowAnimation = useCallback(() => {
-    if (!animationActiveRef.current) return
-
-    const tc = testCases[currentCaseRef.current]
-    currentCaseRef.current =
-      (currentCaseRef.current + 1) % testCases.length
-
-    // Set input values
-    setInputTier(`'${tc.tier}'`)
-    setInputValue(tc.value.toLocaleString())
-    setOutputRoute(`'${tc.route}'`)
-
-    // Reset
-    setInputAnimateIn(false)
-    setInputActive(false)
-    setOutputAnimateIn(false)
-    setOutputActive(false)
-    setArrowInActive(false)
-    setArrowOutActive(false)
-    setRowStates(['normal', 'normal', 'normal', 'normal'])
-    if (particleInRef.current) particleInRef.current.style.opacity = '0'
-    if (particleOutRef.current) particleOutRef.current.style.opacity = '0'
-
-    // Phase 1: Input slides in (0ms)
-    requestAnimationFrame(() => {
-      if (!animationActiveRef.current) return
-      setInputAnimateIn(true)
-      setInputActive(true)
-    })
-
-    // Phase 2: Arrow in activates + particle (600ms)
-    addTimer(() => {
-      if (!animationActiveRef.current) return
-      setArrowInActive(true)
-      animateParticle(particleInRef.current)
-    }, 600)
-
-    // Phase 3: Table rows scan (1200ms)
-    const scanDelay = 200
-    const scanStart = 1200
-    ;[0, 1, 2, 3].forEach((i) => {
-      addTimer(() => {
-        if (!animationActiveRef.current) return
-        setRowStates((prev) =>
-          prev.map((_, j) => (j === i ? 'match' : 'normal'))
-        )
-      }, scanStart + i * scanDelay)
-    })
-
-    // Phase 4: Settle on the matched row (2200ms)
-    addTimer(() => {
-      if (!animationActiveRef.current) return
-      setRowStates(
-        [0, 1, 2, 3].map((i) =>
-          i === tc.matchRow - 1 ? 'match' : 'dim'
-        )
+      gsap.fromTo(
+        particle,
+        { left: 0, opacity: 0 },
+        {
+          left: width - 6,
+          duration: 0.4,
+          ease: 'power3.out',
+          keyframes: {
+            opacity: [0, 1, 1, 0],
+          },
+          onComplete: () => {
+            gsap.set(particle, { opacity: 0 })
+            onComplete?.()
+          },
+        },
       )
-    }, scanStart + 4 * scanDelay + 200)
+    },
+    [],
+  )
 
-    // Phase 5: Arrow out + particle (2800ms)
-    addTimer(() => {
-      if (!animationActiveRef.current) return
-      setArrowOutActive(true)
-      animateParticle(particleOutRef.current)
-    }, 2800)
+  useGSAP(
+    () => {
+      if (!isDev) return
 
-    // Phase 6: Output appears (3200ms)
-    addTimer(() => {
-      if (!animationActiveRef.current) return
-      setOutputAnimateIn(true)
-      setOutputActive(true)
-    }, 3200)
+      const inputJson = inputJsonRef.current
+      const outputJson = outputJsonRef.current
+      const container = containerRef.current
+      if (!inputJson || !outputJson || !container) return
 
-    // Phase 7: Hold and reset (4800ms)
-    addTimer(() => {
-      if (!animationActiveRef.current) return
-      resetFlowState()
-      // Brief pause, then next case
-      addTimer(() => {
-        if (!animationActiveRef.current) return
-        runFlowAnimation()
-      }, 400)
-    }, 4800)
-  }, [addTimer, animateParticle, resetFlowState])
+      const rows = container.querySelectorAll('.flow-table tbody tr')
+      if (!rows.length) return
 
-  const stopAnimation = useCallback(() => {
-    animationActiveRef.current = false
-    clearTimers()
-    resetFlowState()
-  }, [clearTimers, resetFlowState])
+      let caseIndex = 0
 
-  const startAnimation = useCallback(() => {
-    stopAnimation()
-    currentCaseRef.current = 0
-    animationActiveRef.current = true
-    addTimer(() => {
-      if (animationActiveRef.current) {
-        runFlowAnimation()
+      const runCycle = () => {
+        const tc = testCases[caseIndex % testCases.length]
+
+        // Update text content via React state
+        setInputTier(`'${tc.tier}'`)
+        setInputValue(tc.value.toLocaleString())
+        setOutputRoute(`'${tc.route}'`)
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            caseIndex++
+            gsap.delayedCall(0.4, runCycle)
+          },
+        })
+
+        // Phase 1: Input slides in (0s)
+        tl.fromTo(
+          inputJson,
+          { opacity: 0, x: -20 },
+          { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' },
+          0,
+        ).set(
+          inputJson,
+          {
+            borderColor: 'rgba(228, 70, 255, 0.3)',
+            boxShadow: '0 0 12px rgba(228, 70, 255, 0.15)',
+          },
+          0,
+        )
+
+        // Phase 2: Arrow in + particle (0.6s)
+        tl.call(
+          () => {
+            container.querySelectorAll('.arrow-line').forEach((el, i) => {
+              if (i === 0) el.classList.add('active')
+            })
+            container.querySelectorAll('.arrow-head').forEach((el, i) => {
+              if (i === 0) el.classList.add('active')
+            })
+            animateParticle(particleInRef.current)
+          },
+          [],
+          0.6,
+        )
+
+        // Phase 3: Table rows scan (1.2s, staggered 0.2s each)
+        rows.forEach((_, i) => {
+          tl.call(
+            () => {
+              rows.forEach((r, j) => {
+                r.classList.remove('row-match', 'row-dim')
+                if (j === i) r.classList.add('row-match')
+              })
+            },
+            [],
+            1.2 + i * 0.2,
+          )
+        })
+
+        // Phase 4: Settle on matched row (2.2s)
+        tl.call(
+          () => {
+            rows.forEach((r, i) => {
+              r.classList.remove('row-match', 'row-dim')
+              r.classList.add(i === tc.matchRow - 1 ? 'row-match' : 'row-dim')
+            })
+          },
+          [],
+          2.2,
+        )
+
+        // Phase 5: Arrow out + particle (2.8s)
+        tl.call(
+          () => {
+            container.querySelectorAll('.arrow-line').forEach((el, i) => {
+              if (i === 1) el.classList.add('active')
+            })
+            container.querySelectorAll('.arrow-head').forEach((el, i) => {
+              if (i === 1) el.classList.add('active')
+            })
+            animateParticle(particleOutRef.current)
+          },
+          [],
+          2.8,
+        )
+
+        // Phase 6: Output appears (3.2s)
+        tl.fromTo(
+          outputJson,
+          { opacity: 0, x: 20 },
+          { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' },
+          3.2,
+        ).set(
+          outputJson,
+          {
+            borderColor: 'rgba(228, 70, 255, 0.3)',
+            boxShadow: '0 0 12px rgba(228, 70, 255, 0.15)',
+          },
+          3.2,
+        )
+
+        // Phase 7: Hold then reset (4.8s)
+        tl.call(
+          () => {
+            gsap.set(inputJson, {
+              opacity: 0,
+              x: -20,
+              clearProps: 'borderColor,boxShadow',
+            })
+            gsap.set(outputJson, {
+              opacity: 0,
+              x: 20,
+              clearProps: 'borderColor,boxShadow',
+            })
+            container.querySelectorAll('.arrow-line').forEach((el) => {
+              el.classList.remove('active')
+            })
+            container.querySelectorAll('.arrow-head').forEach((el) => {
+              el.classList.remove('active')
+            })
+            rows.forEach((r) => r.classList.remove('row-match', 'row-dim'))
+            gsap.set([particleInRef.current, particleOutRef.current], {
+              opacity: 0,
+            })
+          },
+          [],
+          4.8,
+        )
       }
-    }, 300)
-  }, [addTimer, stopAnimation, runFlowAnimation])
 
-  // Start/stop animation based on perspective
-  useEffect(() => {
-    if (isDev) {
-      startAnimation()
-    } else {
-      stopAnimation()
-    }
-    return () => {
-      stopAnimation()
-    }
-  }, [isDev, startAnimation, stopAnimation])
+      gsap.delayedCall(0.3, runCycle)
+    },
+    { scope: containerRef, dependencies: [isDev, animateParticle] },
+  )
 
   const policyInfo = policyDescriptions[hitPolicy]
 
   return (
-    <div className="bridge-decision">
+    <div className="bridge-decision" ref={containerRef}>
       <div className="bridge-card card">
         {/* Header */}
         <div className="header">
@@ -270,14 +276,14 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               <div className="hit-policy-options">
                 {['first', 'collect', 'all', 'priority'].map(
                   (policy) => (
-                    <span
+                    <button
                       key={policy}
                       className={`hit-option${hitPolicy === policy ? ' active' : ''}`}
                       onClick={() => setHitPolicy(policy)}
                     >
                       {policy.charAt(0).toUpperCase() + policy.slice(1)}
-                    </span>
-                  )
+                    </button>
+                  ),
                 )}
               </div>
             </div>
@@ -334,9 +340,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
           >
             <div className="flow-container">
               {/* Input JSON */}
-              <div
-                className={`flow-json flow-json--input${inputAnimateIn ? ' animate-in' : ''}${inputActive ? ' flow-json--active' : ''}`}
-              >
+              <div ref={inputJsonRef} className="flow-json flow-json--input">
                 <span className="json-brace">{'{'}</span>
                 <br />
                 &nbsp;&nbsp;
@@ -354,17 +358,17 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </div>
 
               {/* Arrow in */}
-              <div className="flow-arrow" ref={arrowInRef}>
+              <div className="flow-arrow">
                 <svg width="40" height="20" viewBox="0 0 40 20">
                   <line
-                    className={`arrow-line${arrowInActive ? ' active' : ''}`}
+                    className="arrow-line"
                     x1="0"
                     y1="10"
                     x2="30"
                     y2="10"
                   />
                   <polygon
-                    className={`arrow-head${arrowInActive ? ' active' : ''}`}
+                    className="arrow-head"
                     points="28,5 38,10 28,15"
                   />
                 </svg>
@@ -383,16 +387,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                   </thead>
                   <tbody>
                     {DECISION_ROWS.map((row, i) => (
-                      <tr
-                        key={i}
-                        className={
-                          rowStates[i] === 'match'
-                            ? 'row-match'
-                            : rowStates[i] === 'dim'
-                              ? 'row-dim'
-                              : ''
-                        }
-                      >
+                      <tr key={i}>
                         <td>{row.tier}</td>
                         <td>{row.value}</td>
                         <td>{row.route}</td>
@@ -403,17 +398,17 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </div>
 
               {/* Arrow out */}
-              <div className="flow-arrow" ref={arrowOutRef}>
+              <div className="flow-arrow">
                 <svg width="40" height="20" viewBox="0 0 40 20">
                   <line
-                    className={`arrow-line${arrowOutActive ? ' active' : ''}`}
+                    className="arrow-line"
                     x1="0"
                     y1="10"
                     x2="30"
                     y2="10"
                   />
                   <polygon
-                    className={`arrow-head${arrowOutActive ? ' active' : ''}`}
+                    className="arrow-head"
                     points="28,5 38,10 28,15"
                   />
                 </svg>
@@ -424,9 +419,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </div>
 
               {/* Output JSON */}
-              <div
-                className={`flow-json flow-json--output${outputAnimateIn ? ' animate-in' : ''}${outputActive ? ' flow-json--active' : ''}`}
-              >
+              <div ref={outputJsonRef} className="flow-json flow-json--output">
                 <span className="json-brace">{'{'}</span>
                 <br />
                 &nbsp;&nbsp;

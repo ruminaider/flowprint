@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
-import { useTimers } from '@/hooks/use-timers'
 import { WalkthroughSvg } from './walkthrough-svg'
 import { StepByStepSvg } from './step-by-step-svg'
 import { WhatIfSvg } from './what-if-svg'
@@ -17,8 +18,88 @@ import {
   type RippleObj,
   type SimMode,
 } from './simulation-data'
+import './bridge-shared.css'
 import './bridge-simulation.css'
 import '../flow/flow.css'
+
+gsap.registerPlugin(useGSAP)
+
+// ══════════════════════════════════════════════════════
+// DOM HELPERS — target SVG elements via data attributes
+// ══════════════════════════════════════════════════════
+
+const q = {
+  node: (el: Element, id: string) => el.querySelector(`[data-node-id="${id}"]`),
+  edge: (el: Element, id: string) => el.querySelector(`[data-edge-id="${id}"]`),
+  tooltip: (el: Element, id: string) => el.querySelector(`[data-tooltip-id="${id}"]`),
+  edgeLabel: (el: Element, id: string) => el.querySelector(`[data-edge-label="${id}"]`),
+}
+
+/** Get the mutable className string for an SVG or HTML element */
+function getBaseClassName(el: Element): string {
+  const cn = el.className
+  if (typeof cn === 'string') return cn
+  // SVGAnimatedString
+  return (cn as SVGAnimatedString).baseVal
+}
+
+function setBaseClassName(el: Element, val: string) {
+  const cn = el.className
+  if (typeof cn === 'string') {
+    // HTML element
+    ;(el as HTMLElement).className = val
+  } else {
+    // SVG element
+    ;(cn as SVGAnimatedString).baseVal = val
+  }
+}
+
+function setNodeClass(el: Element, nodeId: string, cls: string) {
+  const g = q.node(el, nodeId)
+  if (!g) return
+  const base = getBaseClassName(g).replace(/\s*(active|visited|debug-active|active-error)\b/g, '')
+  setBaseClassName(g, cls ? `${base} ${cls}` : base)
+}
+
+function clearNodeClass(el: Element, nodeId: string) {
+  setNodeClass(el, nodeId, '')
+}
+
+function setEdgeClass(el: Element, edgeId: string, cls: string) {
+  const e = q.edge(el, edgeId)
+  if (!e) return
+  const base = getBaseClassName(e).replace(/\s*(active-edge|visited-edge|debug-edge|debug-visited-edge|error-edge|error-visited-edge)\b/g, '')
+  setBaseClassName(e, cls ? `${base} ${cls}` : base)
+}
+
+function clearEdgeClass(el: Element, edgeId: string) {
+  setEdgeClass(el, edgeId, '')
+}
+
+function setTooltipVisible(el: Element, tooltipId: string, visible: boolean) {
+  const t = q.tooltip(el, tooltipId)
+  if (!t) return
+  if (visible) {
+    t.classList.add('visible')
+  } else {
+    t.classList.remove('visible')
+  }
+}
+
+/** Reset all node/edge/tooltip classes in a container to their base state */
+function resetSvgClasses(el: Element) {
+  el.querySelectorAll('[data-node-id]').forEach(g => {
+    const base = getBaseClassName(g).replace(/\s*(active|visited|debug-active|active-error)\b/g, '')
+    setBaseClassName(g, base)
+  })
+  el.querySelectorAll('[data-edge-id]').forEach(e => {
+    const base = getBaseClassName(e).replace(/\s*(active-edge|visited-edge|debug-edge|debug-visited-edge|error-edge|error-visited-edge)\b/g, '')
+    setBaseClassName(e, base)
+  })
+  el.querySelectorAll('[data-tooltip-id]').forEach(t => {
+    t.classList.remove('visible')
+  })
+}
 
 // ══════════════════════════════════════════════════════
 // COMPONENT
@@ -28,89 +109,31 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
   const [showDev, setShowDev] = useState(perspective === 'developer')
   const [currentMode, setCurrentMode] = useState<SimMode>('walkthrough')
   const [statusText, setStatusText] = useState('Simulating...')
-  const [statusDotClass, setStatusDotClass] = useState('')
   const [activeSvg, setActiveSvg] = useState<SimMode>('walkthrough')
-  const [stepControlsVisible, setStepControlsVisible] = useState(false)
   const [stepIndex, setStepIndex] = useState(-1)
   const [scenarioLabelText, setScenarioLabelText] = useState('')
-  const [scenarioLabelClass, setScenarioLabelClass] = useState('')
-  const [scenarioLabelVisible, setScenarioLabelVisible] = useState(false)
-  const [errorTooltipVisible, setErrorTooltipVisible] = useState(false)
 
-  // Node/edge class states
-  const [nodeClasses, setNodeClasses] = useState<Record<string, string>>({})
-  const [edgeClasses, setEdgeClasses] = useState<Record<string, string>>({})
-  const [tooltipVisible, setTooltipVisible] = useState<Record<string, boolean>>({})
-
-  // Ripple state
+  // Ripple state — kept as React state (CSS keyframe-animated)
   const [wtRipples, setWtRipples] = useState<RippleObj[]>([])
   const [sbRipples, setSbRipples] = useState<RippleObj[]>([])
   const [wiRipples, setWiRipples] = useState<RippleObj[]>([])
 
-  // Fraud node visibility
-  const [fraudNodeStyle, setFraudNodeStyle] = useState<React.CSSProperties>({
-    opacity: 0,
-    transformOrigin: '780px 325px',
-    transform: 'scale(0)',
-  })
-  const [fraudNodeRectStyle, setFraudNodeRectStyle] = useState<React.CSSProperties>({
-    stroke: 'rgba(255,146,67,0.3)',
-  })
-  // Investigate edges/label visibility
-  const [investigateEdgesOpacity, setInvestigateEdgesOpacity] = useState(0)
-  const [investigateLabelOpacity, setInvestigateLabelOpacity] = useState(0)
-
   // Developer terminal
   const [revealedLines, setRevealedLines] = useState<Set<number>>(new Set())
 
-  // Timer hooks
-  const { addTimer, clearTimers, timersRef: animationTimers } = useTimers()
-  const { addTimer: addDevTimer, clearTimers: clearDevTimers, timersRef: devAnimTimers } = useTimers()
+  // Refs
   const rippleIdCounter = useRef(0)
-  const currentViewRef = useRef<'business' | 'developer'>(perspective === 'developer' ? 'developer' : 'business')
-  const currentModeRef = useRef<SimMode>('walkthrough')
+  const simRef = useRef<HTMLDivElement>(null)
+  const bizTlRef = useRef<gsap.core.Timeline | null>(null)
+  const devTlRef = useRef<gsap.core.Timeline | null>(null)
   const stepIndexRef = useRef(-1)
+  const currentModeRef = useRef<SimMode>('walkthrough')
+  const showDevRef = useRef(perspective === 'developer')
 
   const { containerRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(showDev)
 
-  // Sync showDev with parent perspective prop and trigger animations
-  const hasInitialized = useRef(false)
-  useEffect(() => {
-    const isDev = perspective === 'developer'
-    setShowDev(isDev)
-    currentViewRef.current = isDev ? 'developer' : 'business'
-
-    // Skip animation trigger on initial mount (handled by INIT effect)
-    if (!hasInitialized.current) {
-      hasInitialized.current = true
-      return
-    }
-
-    if (isDev) {
-      stopAllAnimations()
-      addTimer(() => startDevAnimation(), 0)
-    } else {
-      stopDevAnimation()
-      startSimulation(currentModeRef.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perspective])
-
-  // Keep refs in sync
-  useEffect(() => {
-    currentViewRef.current = showDev ? 'developer' : 'business'
-  }, [showDev])
-
-  useEffect(() => {
-    currentModeRef.current = currentMode
-  }, [currentMode])
-
-  useEffect(() => {
-    stepIndexRef.current = stepIndex
-  }, [stepIndex])
-
   // ══════════════════════════════════════════════════════
-  // RIPPLE EFFECT
+  // RIPPLE EFFECT (React state + CSS keyframes)
   // ══════════════════════════════════════════════════════
   const spawnRipple = useCallback((cx: number, cy: number, color: string, mode: SimMode) => {
     const newRipples: RippleObj[] = []
@@ -126,131 +149,131 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
 
     setter(prev => [...prev, ...newRipples])
 
-    // Remove ripples after animation completes
-    newRipples.forEach((r, i) => {
-      addTimer(() => {
-        setter(prev => prev.filter(p => p.id !== r.id))
-      }, 1400 + i * 200)
-    })
-  }, [addTimer])
-
-  // ══════════════════════════════════════════════════════
-  // RESET
-  // ══════════════════════════════════════════════════════
-  const hideFraudNode = useCallback(() => {
-    setFraudNodeStyle({
-      opacity: 0,
-      transformOrigin: '780px 325px',
-      transform: 'scale(0)',
-    })
-    setFraudNodeRectStyle({ stroke: 'rgba(255,146,67,0.3)' })
+    // Auto-remove after animation
+    setTimeout(() => {
+      const ids = new Set(newRipples.map(r => r.id))
+      setter(prev => prev.filter(p => !ids.has(p.id)))
+    }, 1800)
   }, [])
 
-  const hideInvestigateEdges = useCallback(() => {
-    setInvestigateEdgesOpacity(0)
-    setInvestigateLabelOpacity(0)
+  // ══════════════════════════════════════════════════════
+  // RESET HELPERS
+  // ══════════════════════════════════════════════════════
+  const resetFraudNode = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
+    const fraud = q.node(el, 'wi-node-fraud') as SVGGElement | null
+    if (fraud) {
+      gsap.set(fraud, { opacity: 0, scale: 0, transformOrigin: '780px 325px' })
+      const rect = fraud.querySelector('.node-rect')
+      if (rect) gsap.set(rect, { attr: { style: 'stroke: rgba(255,146,67,0.3)' }, clearProps: 'filter' })
+    }
+    // Hide investigate edges and label
+    const invH = q.edge(el, 'wi-edge-assess-investigate-h')
+    const invV = q.edge(el, 'wi-edge-assess-investigate-v')
+    const invLabel = q.edgeLabel(el, 'investigate')
+    if (invH) gsap.set(invH, { opacity: 0 })
+    if (invV) gsap.set(invV, { opacity: 0 })
+    if (invLabel) gsap.set(invLabel, { opacity: 0 })
   }, [])
 
-  const resetAllSvgStates = useCallback(() => {
-    setNodeClasses({})
-    setEdgeClasses({})
-    setTooltipVisible({})
+  const resetAllVisuals = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
+    resetSvgClasses(el)
     setWtRipples([])
     setSbRipples([])
     setWiRipples([])
-    setScenarioLabelVisible(false)
-    setScenarioLabelClass('')
-    setStepControlsVisible(false)
-    setStatusDotClass('')
-    setErrorTooltipVisible(false)
-    hideFraudNode()
-    hideInvestigateEdges()
-  }, [hideFraudNode, hideInvestigateEdges])
+    resetFraudNode()
+  }, [resetFraudNode])
 
-  const stopAllAnimations = useCallback(() => {
-    clearTimers()
-    resetAllSvgStates()
-  }, [clearTimers, resetAllSvgStates])
+  const killBizTimeline = useCallback(() => {
+    if (bizTlRef.current) {
+      bizTlRef.current.kill()
+      bizTlRef.current = null
+    }
+  }, [])
+
+  const killDevTimeline = useCallback(() => {
+    if (devTlRef.current) {
+      devTlRef.current.kill()
+      devTlRef.current = null
+    }
+  }, [])
 
   // ══════════════════════════════════════════════════════
-  // MODE 1: WALK-THROUGH
+  // MODE 1: WALK-THROUGH (GSAP timeline)
   // ══════════════════════════════════════════════════════
   const runWalkthrough = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
+
     const path = walkthroughPath
-    const delay = 500
-    const totalDuration = path.nodes.length * delay + 1500
+    const delay = 0.5
 
-    path.nodes.forEach((nodeId, i) => {
-      addTimer(() => {
-        setNodeClasses(prev => {
-          const next = { ...prev }
-          if (i > 0) {
-            next[path.nodes[i - 1]] = 'visited'
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (showDevRef.current || currentModeRef.current !== 'walkthrough') return
+        resetAllVisuals()
+        setActiveSvg('walkthrough')
+        // Small gap before looping
+        gsap.delayedCall(0.1, () => {
+          if (!showDevRef.current && currentModeRef.current === 'walkthrough') {
+            runWalkthrough()
           }
-          next[nodeId] = 'active'
-          return next
         })
+      },
+    })
+    bizTlRef.current = tl
 
-        if (i > 0 && path.edges[i - 1]) {
-          setEdgeClasses(prev => ({
-            ...prev,
-            [path.edges[i - 1]]: 'visited-edge',
-          }))
+    // Animate through each node
+    path.nodes.forEach((nodeId, i) => {
+      tl.call(() => {
+        // Mark previous as visited
+        if (i > 0) {
+          setNodeClass(el, path.nodes[i - 1], 'visited')
+          if (path.edges[i - 1]) setEdgeClass(el, path.edges[i - 1], 'visited-edge')
         }
-        if (path.edges[i]) {
-          setEdgeClasses(prev => ({
-            ...prev,
-            [path.edges[i]]: 'active-edge',
-          }))
-        }
+        // Activate current
+        setNodeClass(el, nodeId, 'active')
+        if (path.edges[i]) setEdgeClass(el, path.edges[i], 'active-edge')
 
         const center = nodeCenters[nodeId]
         if (center) spawnRipple(center.x, center.y, '#3FDC77', 'walkthrough')
 
         setStatusText(`Walking: ${path.labels[i]} \u2022 ${i + 1}/${path.nodes.length} nodes`)
-      }, i * delay)
+      }, undefined, i === 0 ? 0 : `>+=${delay}`)
     })
 
-    // Mark last node as visited
-    addTimer(() => {
+    // Mark last as visited
+    tl.call(() => {
       const lastNode = path.nodes[path.nodes.length - 1]
-      setNodeClasses(prev => ({ ...prev, [lastNode]: 'visited' }))
+      setNodeClass(el, lastNode, 'visited')
       const lastEdge = path.edges[path.edges.length - 1]
-      if (lastEdge) {
-        setEdgeClasses(prev => ({ ...prev, [lastEdge]: 'visited-edge' }))
-      }
+      if (lastEdge) setEdgeClass(el, lastEdge, 'visited-edge')
       setStatusText(`Walking: complete \u2022 ${path.nodes.length}/${path.nodes.length} nodes`)
-    }, path.nodes.length * delay)
+    }, undefined, `>+=${delay}`)
 
-    // Loop
-    addTimer(() => {
-      if (currentViewRef.current === 'business' && currentModeRef.current === 'walkthrough') {
-        resetAllSvgStates()
-        setActiveSvg('walkthrough')
-        // Need to re-run after reset
-        addTimer(() => runWalkthrough(), 0)
-      }
-    }, totalDuration)
-  }, [addTimer, spawnRipple, resetAllSvgStates])
+    // Hold before loop
+    tl.call(() => {}, undefined, '+=1.5')
+  }, [spawnRipple, resetAllVisuals])
 
   // ══════════════════════════════════════════════════════
-  // MODE 2: STEP-BY-STEP
+  // MODE 2: STEP-BY-STEP (user-driven)
   // ══════════════════════════════════════════════════════
   const stepForward = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
+
     const path = stepByStepPath
     const idx = stepIndexRef.current
-
     if (idx >= path.nodes.length - 1) return
 
     // Transition current node from debug-active to visited
     if (idx >= 0) {
-      setNodeClasses(prev => ({ ...prev, [path.nodes[idx]]: 'visited' }))
-      if (path.tooltips[idx]) {
-        setTooltipVisible(prev => ({ ...prev, [path.tooltips[idx]!]: false }))
-      }
-      if (path.edges[idx]) {
-        setEdgeClasses(prev => ({ ...prev, [path.edges[idx]]: 'debug-visited-edge' }))
-      }
+      setNodeClass(el, path.nodes[idx], 'visited')
+      if (path.tooltips[idx]) setTooltipVisible(el, path.tooltips[idx]!, false)
+      if (path.edges[idx]) setEdgeClass(el, path.edges[idx], 'debug-visited-edge')
     }
 
     const newIdx = idx + 1
@@ -258,62 +281,43 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     setStepIndex(newIdx)
 
     // Activate new node
-    setNodeClasses(prev => ({ ...prev, [path.nodes[newIdx]]: 'debug-active' }))
+    setNodeClass(el, path.nodes[newIdx], 'debug-active')
 
     // Spawn ripple
     const center = nodeCenters[path.nodes[newIdx]]
     if (center) spawnRipple(center.x, center.y, '#3FDC77', 'stepbystep')
 
     // Show tooltip
-    if (path.tooltips[newIdx]) {
-      setTooltipVisible(prev => ({ ...prev, [path.tooltips[newIdx]!]: true }))
-    }
+    if (path.tooltips[newIdx]) setTooltipVisible(el, path.tooltips[newIdx]!, true)
 
     // Activate leading edge
-    if (path.edges[newIdx]) {
-      setEdgeClasses(prev => ({ ...prev, [path.edges[newIdx]]: 'debug-edge' }))
-    }
+    if (path.edges[newIdx]) setEdgeClass(el, path.edges[newIdx], 'debug-edge')
 
-    // Update status
     const nodeName = path.labels[newIdx]
     setStatusText(`Step ${newIdx + 1} of ${path.nodes.length} \u2022 ${nodeName}`)
   }, [spawnRipple])
 
   const stepBackward = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
+
     const path = stepByStepPath
     const idx = stepIndexRef.current
-
     if (idx <= 0) return
 
     // Remove current node activation
-    setNodeClasses(prev => {
-      const next = { ...prev }
-      delete next[path.nodes[idx]]
-      return next
-    })
-    if (path.tooltips[idx]) {
-      setTooltipVisible(prev => ({ ...prev, [path.tooltips[idx]!]: false }))
-    }
-    if (path.edges[idx]) {
-      setEdgeClasses(prev => {
-        const next = { ...prev }
-        delete next[path.edges[idx]]
-        return next
-      })
-    }
+    clearNodeClass(el, path.nodes[idx])
+    if (path.tooltips[idx]) setTooltipVisible(el, path.tooltips[idx]!, false)
+    if (path.edges[idx]) clearEdgeClass(el, path.edges[idx])
 
     const newIdx = idx - 1
     stepIndexRef.current = newIdx
     setStepIndex(newIdx)
 
     // Re-activate previous node
-    setNodeClasses(prev => ({ ...prev, [path.nodes[newIdx]]: 'debug-active' }))
-    if (path.tooltips[newIdx]) {
-      setTooltipVisible(prev => ({ ...prev, [path.tooltips[newIdx]!]: true }))
-    }
-    if (path.edges[newIdx]) {
-      setEdgeClasses(prev => ({ ...prev, [path.edges[newIdx]]: 'debug-edge' }))
-    }
+    setNodeClass(el, path.nodes[newIdx], 'debug-active')
+    if (path.tooltips[newIdx]) setTooltipVisible(el, path.tooltips[newIdx]!, true)
+    if (path.edges[newIdx]) setEdgeClass(el, path.edges[newIdx], 'debug-edge')
 
     const nodeName = path.labels[newIdx]
     setStatusText(`Step ${newIdx + 1} of ${path.nodes.length} \u2022 ${nodeName}`)
@@ -322,253 +326,204 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
   const initStepByStep = useCallback(() => {
     stepIndexRef.current = -1
     setStepIndex(-1)
-    setStepControlsVisible(true)
-    setStatusDotClass('paused')
     setStatusText('Step-by-step \u2022 click Next to begin')
-    // Auto-advance to first step
-    addTimer(() => stepForward(), 0)
+    // Auto-advance to first step after a tick
+    gsap.delayedCall(0, () => stepForward())
   }, [stepForward])
 
   // ══════════════════════════════════════════════════════
-  // MODE 3: WHAT-IF
+  // MODE 3: WHAT-IF (GSAP timeline)
   // ══════════════════════════════════════════════════════
-  const showFraudNodeFn = useCallback((callback?: () => void) => {
-    // Animate the node appearing
-    setFraudNodeStyle({
-      opacity: 1,
-      transformOrigin: '780px 325px',
-      transform: 'scale(1)',
-      transition: 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-    })
+  const runWhatIf = useCallback(() => {
+    const el = simRef.current
+    if (!el) return
 
-    // Green glow on new node
-    setFraudNodeRectStyle({
-      stroke: '#3FDC77',
-      filter: 'drop-shadow(0 0 12px rgba(63, 220, 119, 0.5))',
-      transition: 'all 0.6s ease',
-    })
+    const pathA = whatIfPathA
+    const pathB = whatIfPathB
+    const delayA = 0.45
+    const delayB = 0.5
 
-    // Fade in edges and label
-    addTimer(() => {
-      setInvestigateEdgesOpacity(1)
-      setInvestigateLabelOpacity(1)
-    }, 300)
-
-    // Pulse the green glow with chained timers
-    addTimer(() => {
-      setFraudNodeRectStyle({
-        stroke: '#3FDC77',
-        filter: 'drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))',
-        transition: 'all 0.6s ease',
-      })
-    }, 0)
-    addTimer(() => {
-      setFraudNodeRectStyle({
-        stroke: '#3FDC77',
-        filter: 'drop-shadow(0 0 8px rgba(63, 220, 119, 0.3))',
-        transition: 'all 0.6s ease',
-      })
-    }, 400)
-    addTimer(() => {
-      setFraudNodeRectStyle({
-        stroke: '#3FDC77',
-        filter: 'drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))',
-        transition: 'all 0.6s ease',
-      })
-    }, 800)
-    addTimer(() => {
-      setFraudNodeRectStyle({ stroke: 'rgba(255,146,67,0.3)' })
-      if (callback) callback()
-    }, 1200)
-  }, [addTimer])
-
-  const runScenarioBPath = useCallback((
-    path: typeof whatIfPathB,
-    delay: number,
-    onDone?: () => void,
-  ) => {
-    const startDelay = 800
-
-    path.nodes.forEach((nodeId, i) => {
-      addTimer(() => {
-        const isLast = i === path.nodes.length - 1
-        const isError = isLast
-
-        if (i > 0) {
-          setNodeClasses(prev => ({ ...prev, [path.nodes[i - 1]]: 'visited' }))
-          if (path.edges[i - 1]) {
-            setEdgeClasses(prev => ({ ...prev, [path.edges[i - 1]]: 'visited-edge' }))
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (showDevRef.current || currentModeRef.current !== 'whatif') return
+        gsap.delayedCall(0.5, () => {
+          if (!showDevRef.current && currentModeRef.current === 'whatif') {
+            resetAllVisuals()
+            setActiveSvg('whatif')
+            gsap.delayedCall(0.1, () => runWhatIf())
           }
+        })
+      },
+    })
+    bizTlRef.current = tl
+
+    // ── SCENARIO A ──
+    tl.call(() => {
+      setScenarioLabelText('Scenario A: Normal Claim')
+    })
+
+    pathA.nodes.forEach((nodeId, i) => {
+      tl.call(() => {
+        if (i > 0) {
+          setNodeClass(el, pathA.nodes[i - 1], 'visited')
+          if (pathA.edges[i - 1]) setEdgeClass(el, pathA.edges[i - 1], 'visited-edge')
+        }
+        setNodeClass(el, nodeId, 'active')
+        if (pathA.edges[i]) setEdgeClass(el, pathA.edges[i], 'active-edge')
+        const center = nodeCenters[nodeId]
+        if (center) spawnRipple(center.x, center.y, '#3FDC77', 'whatif')
+        setStatusText(`Scenario A \u2022 ${pathA.labels[i]} \u2022 ${i + 1}/${pathA.nodes.length}`)
+      }, undefined, i === 0 ? 0 : `>+=${delayA}`)
+    })
+
+    // Mark last node visited
+    tl.call(() => {
+      const lastNode = pathA.nodes[pathA.nodes.length - 1]
+      setNodeClass(el, lastNode, 'visited')
+      const lastEdge = pathA.edges[pathA.edges.length - 1]
+      if (lastEdge) setEdgeClass(el, lastEdge, 'visited-edge')
+      setStatusText('Scenario A \u2022 All nodes passed')
+    }, undefined, `>+=${delayA}`)
+
+    // Pause, then transition to Scenario B
+    tl.call(() => {
+      if (showDevRef.current || currentModeRef.current !== 'whatif') { tl.kill(); return }
+      // Reset for scenario B
+      resetSvgClasses(el)
+      resetFraudNode()
+      setWiRipples([])
+      setActiveSvg('whatif')
+      setScenarioLabelText('Scenario B: + Fraud Detection')
+      setStatusText('Adding Fraud Check node...')
+    }, undefined, '+=1.5')
+
+    // ── SCENARIO B: Show fraud node ──
+    tl.call(() => {
+      const fraud = q.node(el, 'wi-node-fraud') as SVGGElement | null
+      if (!fraud) return
+      gsap.to(fraud, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.6,
+        ease: 'back.out(1.7)',
+        transformOrigin: '780px 325px',
+      })
+      const rect = fraud.querySelector('.node-rect')
+      if (rect) {
+        gsap.to(rect, {
+          attr: { style: 'stroke: #3FDC77; filter: drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))' },
+          duration: 0.3,
+        })
+        gsap.to(rect, {
+          attr: { style: 'stroke: #3FDC77; filter: drop-shadow(0 0 8px rgba(63, 220, 119, 0.3))' },
+          duration: 0.3,
+          delay: 0.4,
+        })
+        gsap.to(rect, {
+          attr: { style: 'stroke: #3FDC77; filter: drop-shadow(0 0 16px rgba(63, 220, 119, 0.7))' },
+          duration: 0.3,
+          delay: 0.8,
+        })
+        gsap.to(rect, {
+          attr: { style: 'stroke: rgba(255,146,67,0.3)' },
+          duration: 0.3,
+          delay: 1.2,
+          clearProps: 'filter',
+        })
+      }
+    }, undefined, '+=0.4')
+
+    // Show investigate edges + label
+    tl.call(() => {
+      const invH = q.edge(el, 'wi-edge-assess-investigate-h')
+      const invV = q.edge(el, 'wi-edge-assess-investigate-v')
+      const invLabel = q.edgeLabel(el, 'investigate')
+      if (invH) gsap.to(invH, { opacity: 1, duration: 0.4 })
+      if (invV) gsap.to(invV, { opacity: 1, duration: 0.4 })
+      if (invLabel) gsap.to(invLabel, { opacity: 1, duration: 0.4 })
+    }, undefined, '+=0.3')
+
+    // Wait for fraud node animation to settle
+    tl.call(() => {}, undefined, '+=1.0')
+
+    // ── SCENARIO B: Run path through to error ──
+    const bStartLabel = 'scenarioB'
+    pathB.nodes.forEach((nodeId, i) => {
+      const isLast = i === pathB.nodes.length - 1
+
+      tl.call(() => {
+        if (i > 0) {
+          setNodeClass(el, pathB.nodes[i - 1], 'visited')
+          if (pathB.edges[i - 1]) setEdgeClass(el, pathB.edges[i - 1], 'visited-edge')
         }
 
-        if (isError) {
+        if (isLast) {
           // ERROR STATE
-          setNodeClasses(prev => ({ ...prev, [nodeId]: 'active-error' }))
-
-          // Red ripple
+          setNodeClass(el, nodeId, 'active-error')
           const center = nodeCenters[nodeId]
           if (center) {
             spawnRipple(center.x, center.y, '#FF362B', 'whatif')
-            addTimer(() => spawnRipple(center.x, center.y, '#FF362B', 'whatif'), 300)
-            addTimer(() => spawnRipple(center.x, center.y, '#FF362B', 'whatif'), 600)
+            setTimeout(() => spawnRipple(center.x, center.y, '#FF362B', 'whatif'), 300)
+            setTimeout(() => spawnRipple(center.x, center.y, '#FF362B', 'whatif'), 600)
           }
-
           // Show error tooltip
-          addTimer(() => {
-            setErrorTooltipVisible(true)
+          setTimeout(() => {
+            const errTip = q.tooltip(el, 'wi-error-tooltip')
+            if (errTip) errTip.classList.add('visible')
           }, 200)
-
-          // Update status to error
-          setStatusDotClass('error')
           setStatusText('Scenario B \u2022 ERROR at Fraud Check')
           setScenarioLabelText('Scenario B: + Fraud Detection \u2192 Alert detected')
         } else {
-          setNodeClasses(prev => ({ ...prev, [nodeId]: 'active' }))
+          setNodeClass(el, nodeId, 'active')
           const center = nodeCenters[nodeId]
           if (center) spawnRipple(center.x, center.y, '#3FDC77', 'whatif')
-
-          if (path.edges[i]) {
-            setEdgeClasses(prev => ({ ...prev, [path.edges[i]]: 'active-edge' }))
-          }
-
-          setStatusText(`Scenario B \u2022 ${path.labels[i]} \u2022 ${i + 1}/${path.nodes.length}`)
+          if (pathB.edges[i]) setEdgeClass(el, pathB.edges[i], 'active-edge')
+          setStatusText(`Scenario B \u2022 ${pathB.labels[i]} \u2022 ${i + 1}/${pathB.nodes.length}`)
         }
-      }, startDelay + i * delay)
+      }, undefined, i === 0 ? `${bStartLabel}` : `>+=${delayB}`)
     })
 
-    // Hold on error state for 3 seconds
-    const totalTime = startDelay + path.nodes.length * delay
-    addTimer(() => {
-      if (onDone) onDone()
-    }, totalTime + 3000)
-  }, [addTimer, spawnRipple])
-
-  const runWhatIfScenarioB = useCallback((onDone?: () => void) => {
-    const path = whatIfPathB
-    const delay = 500
-
-    // Reset graph state
-    resetAllSvgStates()
-    setActiveSvg('whatif')
-
-    setScenarioLabelText('Scenario B: + Fraud Detection')
-    setScenarioLabelClass('scenario-b')
-    setScenarioLabelVisible(true)
-
-    // First: morph in the fraud check node
-    addTimer(() => {
-      setStatusText('Adding Fraud Check node...')
-      showFraudNodeFn(() => {
-        // Now run the path through to the error
-        runScenarioBPath(path, delay, onDone)
-      })
-    }, 400)
-  }, [addTimer, resetAllSvgStates, showFraudNodeFn, runScenarioBPath])
-
-  const runWhatIfScenarioA = useCallback((onDone?: () => void) => {
-    const path = whatIfPathA
-    const delay = 450
-
-    setScenarioLabelText('Scenario A: Normal Claim')
-    setScenarioLabelClass('scenario-a')
-    setScenarioLabelVisible(true)
-
-    path.nodes.forEach((nodeId, i) => {
-      addTimer(() => {
-        if (i > 0) {
-          setNodeClasses(prev => ({ ...prev, [path.nodes[i - 1]]: 'visited' }))
-          if (path.edges[i - 1]) {
-            setEdgeClasses(prev => ({ ...prev, [path.edges[i - 1]]: 'visited-edge' }))
-          }
-        }
-
-        setNodeClasses(prev => ({ ...prev, [nodeId]: 'active' }))
-
-        const center = nodeCenters[nodeId]
-        if (center) spawnRipple(center.x, center.y, '#3FDC77', 'whatif')
-
-        if (path.edges[i]) {
-          setEdgeClasses(prev => ({ ...prev, [path.edges[i]]: 'active-edge' }))
-        }
-
-        setStatusText(`Scenario A \u2022 ${path.labels[i]} \u2022 ${i + 1}/${path.nodes.length}`)
-      }, i * delay)
-    })
-
-    const totalTime = path.nodes.length * delay
-
-    addTimer(() => {
-      const lastNode = path.nodes[path.nodes.length - 1]
-      setNodeClasses(prev => ({ ...prev, [lastNode]: 'visited' }))
-      const lastEdge = path.edges[path.edges.length - 1]
-      if (lastEdge) {
-        setEdgeClasses(prev => ({ ...prev, [lastEdge]: 'visited-edge' }))
-      }
-      setStatusText('Scenario A \u2022 All nodes passed')
-    }, totalTime)
-
-    // Brief pause then callback
-    addTimer(() => {
-      if (onDone) onDone()
-    }, totalTime + 1500)
-  }, [addTimer, spawnRipple])
-
-  const runWhatIf = useCallback(() => {
-    runWhatIfScenarioA(() => {
-      if (currentViewRef.current !== 'business' || currentModeRef.current !== 'whatif') return
-
-      runWhatIfScenarioB(() => {
-        // Loop back to start after error hold
-        if (currentViewRef.current === 'business' && currentModeRef.current === 'whatif') {
-          addTimer(() => {
-            if (currentViewRef.current === 'business' && currentModeRef.current === 'whatif') {
-              resetAllSvgStates()
-              setActiveSvg('whatif')
-              addTimer(() => runWhatIf(), 0)
-            }
-          }, 500)
-        }
-      })
-    })
-  }, [addTimer, resetAllSvgStates, runWhatIfScenarioA, runWhatIfScenarioB])
+    // Hold on error for 3 seconds before looping
+    tl.call(() => {}, undefined, '+=3.0')
+  }, [spawnRipple, resetAllVisuals, resetFraudNode])
 
   // ══════════════════════════════════════════════════════
-  // DEVELOPER VIEW ANIMATION
+  // DEVELOPER VIEW (GSAP timeline)
   // ══════════════════════════════════════════════════════
-  const stopDevAnimation = useCallback(() => {
-    clearDevTimers()
-    setRevealedLines(new Set())
-  }, [clearDevTimers])
-
   const startDevAnimation = useCallback(() => {
-    stopDevAnimation()
+    killDevTimeline()
+    setRevealedLines(new Set())
 
-    const delays = [0, 200, 600, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3000, 3300]
+    const delays = [0, 0.2, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3.0, 3.3]
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (showDevRef.current) {
+          gsap.delayedCall(2.2, () => {
+            if (showDevRef.current) startDevAnimation()
+          })
+        }
+      },
+    })
+    devTlRef.current = tl
 
     delays.forEach((d, i) => {
-      addDevTimer(() => {
+      tl.call(() => {
         setRevealedLines(prev => new Set([...prev, i]))
-      }, d)
+      }, undefined, d)
     })
-
-    addDevTimer(() => {
-      if (currentViewRef.current === 'developer') {
-        stopDevAnimation()
-        addDevTimer(() => startDevAnimation(), 0)
-      }
-    }, 5500)
-  }, [addDevTimer, stopDevAnimation])
+  }, [killDevTimeline])
 
   // ══════════════════════════════════════════════════════
   // SIMULATION CONTROLLER
   // ══════════════════════════════════════════════════════
   const startSimulation = useCallback((mode: SimMode) => {
-    resetAllSvgStates()
-    clearTimers()
+    killBizTimeline()
+    resetAllVisuals()
     setActiveSvg(mode)
 
-    // Use setTimeout(0) to ensure state updates from resetAllSvgStates have been applied
-    addTimer(() => {
+    // Defer start to let React flush the SVG swap
+    gsap.delayedCall(0, () => {
       switch (mode) {
         case 'walkthrough':
           runWalkthrough()
@@ -580,25 +535,27 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           runWhatIf()
           break
       }
-    }, 0)
-  }, [resetAllSvgStates, clearTimers, runWalkthrough, initStepByStep, runWhatIf])
+    })
+  }, [killBizTimeline, resetAllVisuals, runWalkthrough, initStepByStep, runWhatIf])
 
   // ══════════════════════════════════════════════════════
   // VIEW TOGGLE HANDLERS
   // ══════════════════════════════════════════════════════
   const handleShowDev = useCallback(() => {
     setShowDev(true)
-    currentViewRef.current = 'developer'
-    stopAllAnimations()
-    addTimer(() => startDevAnimation(), 0)
-  }, [stopAllAnimations, startDevAnimation, addTimer])
+    showDevRef.current = true
+    killBizTimeline()
+    resetAllVisuals()
+    startDevAnimation()
+  }, [killBizTimeline, resetAllVisuals, startDevAnimation])
 
   const handleShowBusiness = useCallback(() => {
     setShowDev(false)
-    currentViewRef.current = 'business'
-    stopDevAnimation()
+    showDevRef.current = false
+    killDevTimeline()
+    setRevealedLines(new Set())
     startSimulation(currentModeRef.current)
-  }, [stopDevAnimation, startSimulation])
+  }, [killDevTimeline, startSimulation])
 
   // ══════════════════════════════════════════════════════
   // PILL TAB HANDLER
@@ -606,32 +563,15 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
   const handleTabClick = useCallback((mode: SimMode) => {
     setCurrentMode(mode)
     currentModeRef.current = mode
-    stopAllAnimations()
+    killBizTimeline()
+    resetAllVisuals()
     startSimulation(mode)
-  }, [stopAllAnimations, startSimulation])
+  }, [killBizTimeline, resetAllVisuals, startSimulation])
 
   // ══════════════════════════════════════════════════════
-  // KEYBOARD SUPPORT
+  // INIT + CLEANUP via useGSAP
   // ══════════════════════════════════════════════════════
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (currentModeRef.current !== 'stepbystep' || currentViewRef.current !== 'business') return
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        e.preventDefault()
-        stepForward()
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault()
-        stepBackward()
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [stepForward, stepBackward])
-
-  // ══════════════════════════════════════════════════════
-  // INIT
-  // ══════════════════════════════════════════════════════
-  useEffect(() => {
+  useGSAP(() => {
     if (perspective === 'developer') {
       startDevAnimation()
     } else {
@@ -639,33 +579,73 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
     }
 
     return () => {
-      // Cleanup ALL timeouts
-      animationTimers.current.forEach(t => clearTimeout(t))
-      devAnimTimers.current.forEach(t => clearTimeout(t))
+      killBizTimeline()
+      killDevTimeline()
+      gsap.killTweensOf('*')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, { scope: simRef, dependencies: [] })
+
+  // Sync showDev with parent perspective prop
+  const prevPerspective = useRef(perspective)
+  useGSAP(() => {
+    if (prevPerspective.current === perspective) return
+    prevPerspective.current = perspective
+
+    const isDev = perspective === 'developer'
+    setShowDev(isDev)
+    showDevRef.current = isDev
+
+    if (isDev) {
+      killBizTimeline()
+      resetAllVisuals()
+      startDevAnimation()
+    } else {
+      killDevTimeline()
+      setRevealedLines(new Set())
+      startSimulation(currentModeRef.current)
+    }
+  }, { dependencies: [perspective] })
 
   // ══════════════════════════════════════════════════════
-  // HELPERS
+  // KEYBOARD SUPPORT (scoped to container)
   // ══════════════════════════════════════════════════════
-  const getNodeClassName = (id: string) => {
-    const cls = nodeClasses[id]
-    return cls ? ` ${cls}` : ''
-  }
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (currentModeRef.current !== 'stepbystep' || showDevRef.current) return
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault()
+      stepForward()
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      stepBackward()
+    }
+  }, [stepForward, stepBackward])
 
-  const getEdgeClassName = (id: string) => {
-    const cls = edgeClasses[id]
-    return cls ? ` ${cls}` : ''
-  }
-
-  const isTooltipVisible = (id: string) => !!tooltipVisible[id]
+  // ══════════════════════════════════════════════════════
+  // DERIVED STATE
+  // ══════════════════════════════════════════════════════
+  const statusDotClass =
+    currentMode === 'stepbystep' && !showDev ? 'paused' :
+    scenarioLabelText.includes('ERROR') || scenarioLabelText.includes('Alert') ? 'error' : ''
+  const scenarioLabelClass = scenarioLabelText.includes('Scenario B') ? 'scenario-b' : scenarioLabelText.includes('Scenario A') ? 'scenario-a' : ''
+  const scenarioLabelVisible = scenarioLabelText.length > 0 && currentMode === 'whatif' && !showDev
+  const stepControlsVisible = currentMode === 'stepbystep' && !showDev
 
   // ══════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════
   return (
-    <div ref={containerRef} className={`bridge-simulation${showDev ? ' show-dev' : ''}`} style={{ position: 'relative', width: 780, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--surface-border)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.5), 0 0 80px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.04)', overflow: 'hidden', transition: 'height 0.5s cubic-bezier(0.23, 1, 0.32, 1)' }}>
+    <div
+      ref={(node: HTMLDivElement | null) => {
+        // Share the ref between simRef and containerRef (from useDynamicHeight)
+        simRef.current = node
+        // containerRef from useDynamicHeight is a MutableRefObject
+        ;(containerRef as { current: HTMLDivElement | null }).current = node
+      }}
+      className={`bridge-simulation${showDev ? ' show-dev' : ''}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      style={{ position: 'relative', width: 780, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--surface-border)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.5), 0 0 80px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.04)', overflow: 'hidden', transition: 'height 0.5s cubic-bezier(0.23, 1, 0.32, 1)', outline: 'none' }}
+    >
 
       {/* ===== BUSINESS VIEW ===== */}
       <div ref={bizViewRef} className="view view--business">
@@ -718,29 +698,17 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
 
             <WalkthroughSvg
               isActive={activeSvg === 'walkthrough'}
-              getNodeClassName={getNodeClassName}
-              getEdgeClassName={getEdgeClassName}
               wtRipples={wtRipples}
             />
 
             <StepByStepSvg
               isActive={activeSvg === 'stepbystep'}
-              getNodeClassName={getNodeClassName}
-              getEdgeClassName={getEdgeClassName}
-              isTooltipVisible={isTooltipVisible}
               sbRipples={sbRipples}
             />
 
             <WhatIfSvg
               isActive={activeSvg === 'whatif'}
-              getNodeClassName={getNodeClassName}
-              getEdgeClassName={getEdgeClassName}
               wiRipples={wiRipples}
-              fraudNodeStyle={fraudNodeStyle}
-              fraudNodeRectStyle={fraudNodeRectStyle}
-              investigateEdgesOpacity={investigateEdgesOpacity}
-              investigateLabelOpacity={investigateLabelOpacity}
-              errorTooltipVisible={errorTooltipVisible}
             />
 
           </div>

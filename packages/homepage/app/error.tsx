@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 export default function Error({
   error,
   reset,
@@ -7,6 +9,10 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    console.error('Unhandled error:', error)
+  }, [error])
+
   return (
     <div
       style={{
@@ -46,7 +52,7 @@ export default function Error({
             lineHeight: 1.5,
           }}
         >
-          {error.message || 'An unexpected error occurred.'}
+          An unexpected error occurred.
         </p>
         <button
           onClick={reset}

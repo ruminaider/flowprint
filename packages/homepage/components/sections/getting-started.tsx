@@ -13,10 +13,14 @@ const cliSteps = [
 export function GettingStartedSection() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
-  const handleCopy = (command: string, index: number) => {
-    navigator.clipboard.writeText(command)
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
+  const handleCopy = async (command: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(command)
+      setCopiedIndex(index)
+      setTimeout(() => setCopiedIndex(null), 2000)
+    } catch {
+      // Clipboard API unavailable (insecure context, permission denied, etc.)
+    }
   }
 
   return (
@@ -110,18 +114,18 @@ export function GettingStartedSection() {
 
             {/* Links */}
             <div className="mt-6 flex flex-wrap gap-4 text-sm">
-              <a href="#" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <span className="inline-flex items-center gap-1 text-muted-foreground/50 cursor-default" title="Coming soon">
                 Documentation
                 <ExternalLink className="h-3 w-3" />
-              </a>
-              <a href="#" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              </span>
+              <span className="inline-flex items-center gap-1 text-muted-foreground/50 cursor-default" title="Coming soon">
                 GitHub
                 <ExternalLink className="h-3 w-3" />
-              </a>
-              <a href="#" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              </span>
+              <span className="inline-flex items-center gap-1 text-muted-foreground/50 cursor-default" title="Coming soon">
                 npm
                 <ExternalLink className="h-3 w-3" />
-              </a>
+              </span>
             </div>
           </div>
         </div>

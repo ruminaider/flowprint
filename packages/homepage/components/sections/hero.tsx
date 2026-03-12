@@ -9,10 +9,14 @@ export function HeroSection() {
   const [copied, setCopied] = useState(false)
   const installCommand = "npm i -g flowprint"
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(installCommand)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(installCommand)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable (insecure context, permission denied, etc.)
+    }
   }
 
   return (
