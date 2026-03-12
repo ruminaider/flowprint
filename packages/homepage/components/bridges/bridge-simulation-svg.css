@@ -472,3 +472,22 @@
    ══════════════════════════════════════════════════════ */
 .bridge-simulation .flow-svg { display: none; }
 .bridge-simulation .flow-svg.active-svg { display: block; }
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 840px) {
+  .bridge-simulation .view {
+    padding: 24px 24px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .bridge-simulation .view {
+    padding: 20px 16px 16px;
+  }
+
+  .bridge-simulation .term-node-name {
+    min-width: 100px;
+  }
+}

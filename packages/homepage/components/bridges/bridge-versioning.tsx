@@ -315,11 +315,11 @@ export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
     <div className="bridge-versioning">
       <div className="relative w-[min(780px,calc(100vw-48px))] max-w-full rounded-[20px] bg-surface border border-surface-border shadow-bridge-card overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-8 pt-7 relative z-10">
+        <div className="px-5 pt-5 sm:px-8 sm:pt-7 relative z-10">
           <div className="inline-flex items-center rounded px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] mb-3 transition-all duration-[400ms] bg-accent/[0.08] text-accent border border-accent-dim">
             {isDev ? 'Developer Perspective' : 'Business Perspective'}
           </div>
-          <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.1] mb-1.5 text-fg">
+          <h2 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.1] mb-1.5 text-fg">
             Version Control
           </h2>
           <p className="text-sm leading-normal text-fg-secondary max-w-[500px] m-0">
@@ -343,7 +343,7 @@ export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
           <div
             ref={devViewRef}
             className={cn(
-              'absolute top-0 inset-x-0 px-8 pt-4 pb-6 transition-all duration-500 ease-out-expo',
+              'absolute top-0 inset-x-0 px-5 sm:px-8 pt-4 pb-6 transition-all duration-500 ease-out-expo',
               isDev ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none',
             )}
           >

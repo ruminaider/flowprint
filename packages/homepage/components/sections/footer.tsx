@@ -1,21 +1,25 @@
 import { Github, Package, BookOpen } from "lucide-react"
 
-const footerLinks = {
+const GITHUB_URL = "https://github.com/ruminaider/flowprint"
+
+type FooterLink = { label: string; href?: string }
+
+const footerLinks: Record<string, FooterLink[]> = {
   product: [
-    { label: "Web App", href: "#" },
-    { label: "CLI", href: "#" },
-    { label: "Documentation", href: "#" },
-    { label: "Templates", href: "#" },
+    { label: "Web App" },
+    { label: "CLI" },
+    { label: "Documentation" },
+    { label: "Templates" },
   ],
   packages: [
-    { label: "@ruminaider/flowprint-schema", href: "#" },
-    { label: "@ruminaider/flowprint-editor", href: "#" },
-    { label: "flowprint (CLI)", href: "#" },
+    { label: "@ruminaider/flowprint-schema" },
+    { label: "@ruminaider/flowprint-editor" },
+    { label: "flowprint (CLI)" },
   ],
   resources: [
-    { label: "GitHub", href: "#" },
-    { label: "Changelog", href: "#" },
-    { label: "License (MIT)", href: "#" },
+    { label: "GitHub", href: GITHUB_URL },
+    { label: "Changelog" },
+    { label: "License (MIT)", href: `${GITHUB_URL}/blob/main/LICENSE` },
   ],
 }
 
@@ -56,12 +60,11 @@ export function FooterSection() {
             <ul className="space-y-2">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors" target="_blank" rel="noopener noreferrer">{link.label}</a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-default" title="Coming soon">{link.label}</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -73,12 +76,11 @@ export function FooterSection() {
             <ul className="space-y-2">
               {footerLinks.packages.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors font-mono" target="_blank" rel="noopener noreferrer">{link.label}</a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-default font-mono" title="Coming soon">{link.label}</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -90,12 +92,11 @@ export function FooterSection() {
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href ? (
+                    <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors" target="_blank" rel="noopener noreferrer">{link.label}</a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground/50 cursor-default" title="Coming soon">{link.label}</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -110,26 +111,28 @@ export function FooterSection() {
           
           <div className="flex items-center gap-4">
             <a
-              href="#"
+              href={GITHUB_URL}
               className="p-2 text-muted-foreground hover:text-foreground transition-colors"
               aria-label="GitHub"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Github className="w-5 h-5" />
             </a>
-            <a
-              href="#"
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            <span
+              className="p-2 text-muted-foreground/50 cursor-default"
+              title="Coming soon"
               aria-label="npm"
             >
               <Package className="w-5 h-5" />
-            </a>
-            <a
-              href="#"
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            </span>
+            <span
+              className="p-2 text-muted-foreground/50 cursor-default"
+              title="Coming soon"
               aria-label="Documentation"
             >
               <BookOpen className="w-5 h-5" />
-            </a>
+            </span>
           </div>
         </div>
       </div>

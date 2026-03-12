@@ -251,7 +251,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
     <div className="bridge-decision" ref={containerRef}>
       <div className="relative w-[min(780px,calc(100vw-48px))] max-w-full rounded-[20px] bg-surface border border-surface-border shadow-bridge-card overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-8 pt-7">
+        <div className="px-5 pt-5 sm:px-8 sm:pt-7">
           <div
             className={cn(
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-3 transition-all duration-[400ms]',
@@ -265,7 +265,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               {isDev ? 'Developer Perspective' : 'Business Perspective'}
             </span>
           </div>
-          <h1 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-1.5 text-fg">
+          <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-1.5 text-fg">
             Decision Tables
           </h1>
           <p className="text-sm leading-normal text-fg-secondary max-w-[520px]">
@@ -281,11 +281,11 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
           <div
             ref={bizViewRef}
             className={cn(
-              'absolute top-0 inset-x-0 px-8 pb-7 transition-all duration-500 ease-out-expo',
+              'absolute top-0 inset-x-0 px-5 pb-5 sm:px-8 sm:pb-7 transition-all duration-500 ease-out-expo',
               isDev ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0',
             )}
           >
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-3 overflow-x-auto">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-elevated border border-node-switch/[0.15] rounded-lg">
                 <span className="font-mono text-[10px] text-fg-muted uppercase tracking-[0.08em]">
                   Hit Policy
@@ -307,7 +307,8 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </div>
             </div>
 
-            <table className="w-full border-separate border-spacing-0 rounded-xl overflow-hidden border border-node-switch/10">
+            <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full border-separate border-spacing-0 rounded-xl overflow-hidden border border-node-switch/10 min-w-[480px]">
               <thead>
                 <tr>
                   <th className="w-9 text-center text-[10px] text-fg-muted px-4 py-2.5 font-mono font-medium uppercase tracking-[0.1em] text-node-switch bg-node-switch/[0.08] border-b border-node-switch/[0.12]">
@@ -364,6 +365,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                 ))}
               </tbody>
             </table>
+            </div>
 
             <div className="flex items-center gap-2 mt-3.5 text-xs text-fg-muted">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-node-switch/[0.08] text-node-switch font-mono text-[10px] font-medium">
@@ -377,11 +379,11 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
           <div
             ref={devViewRef}
             className={cn(
-              'absolute top-0 inset-x-0 px-8 pb-7 transition-all duration-500 ease-out-expo',
+              'absolute top-0 inset-x-0 px-5 pb-5 sm:px-8 sm:pb-7 transition-all duration-500 ease-out-expo',
               isDev ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none',
             )}
           >
-            <div className="flex items-center justify-center gap-0 min-h-[200px] relative">
+            <div className="flex items-center justify-center gap-0 min-h-[200px] relative overflow-x-auto">
               {/* Input JSON */}
               <div
                 ref={inputJsonRef}

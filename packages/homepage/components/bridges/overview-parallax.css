@@ -45,8 +45,8 @@
 
 /* ── Scene + 3D card shell ── */
 .overview-parallax .scene {
-  width: 780px;
-  height: 720px;
+  width: min(780px, calc(100vw - 96px));
+  aspect-ratio: 780 / 720;
   perspective: 1400px;
   perspective-origin: 50% 50%;
   cursor: default;
@@ -581,4 +581,97 @@
 .overview-parallax .card.state-peeked .color-bleed,
 .overview-parallax .card.state-developer .color-bleed {
   clip-path: circle(160% at 90% 10%);
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 840px) {
+  .overview-parallax {
+    padding: 32px;
+  }
+
+  .overview-parallax .scene {
+    width: min(780px, calc(100vw - 64px));
+  }
+
+  .overview-parallax .layer {
+    padding: 24px 24px 20px;
+  }
+
+  .overview-parallax .separator-content {
+    font-size: 12px;
+    padding: 12px 28px;
+  }
+
+  .overview-parallax .separator-content::before,
+  .overview-parallax .separator-content::after {
+    width: 40px;
+  }
+
+  .overview-parallax .toolchain-grid {
+    gap: 8px;
+  }
+
+  .overview-parallax .tool-card {
+    padding: 10px;
+  }
+
+  .overview-parallax .tool-card-body {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 640px) {
+  .overview-parallax {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .overview-parallax .scene {
+    width: min(780px, calc(100vw - 40px));
+  }
+
+  .overview-parallax .layer {
+    padding: 20px 16px 16px;
+    border-radius: 12px;
+  }
+
+  .overview-parallax .separator-content {
+    font-size: 10px;
+    padding: 10px 20px;
+    gap: 6px;
+  }
+
+  .overview-parallax .separator-content::before,
+  .overview-parallax .separator-content::after {
+    width: 24px;
+  }
+
+  .overview-parallax .toolchain-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .overview-parallax .tool-card {
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .overview-parallax .tool-card-title {
+    font-size: 10px;
+  }
+
+  .overview-parallax .tool-card-body {
+    font-size: 8px;
+  }
+
+  .overview-parallax .tool-card-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .overview-parallax .tool-card-icon svg {
+    width: 12px;
+    height: 12px;
+  }
 }

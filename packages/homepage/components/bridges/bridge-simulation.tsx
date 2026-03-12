@@ -656,13 +656,13 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           Business Perspective
         </div>
 
-        <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
+        <h2 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
         <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
           Test every path before it goes live. No technical skills needed.
         </p>
 
         {/* Pill tabs */}
-        <div className="inline-flex gap-0.5 p-[3px] bg-accent/[0.06] border border-accent/10 rounded-full mb-3.5">
+        <div className="inline-flex gap-0.5 p-[3px] bg-accent/[0.06] border border-accent/10 rounded-full mb-3.5 max-w-full overflow-x-auto">
           <button
             className={cn(
               'px-4 py-1.5 font-mono text-[10.5px] font-medium tracking-[0.04em] bg-transparent border-none rounded-full cursor-pointer transition-all duration-300 whitespace-nowrap text-fg-muted',
@@ -778,7 +778,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           Developer Perspective
         </div>
 
-        <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
+        <h2 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
         <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
           Debug flows locally. Run in CI. Catch structural issues before production.
         </p>
@@ -792,7 +792,7 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
             </div>
             <span>terminal</span>
           </div>
-          <div className="px-5 py-4 font-mono text-[12.5px] leading-[1.9] min-h-[220px]">
+          <div className="px-3 py-3 sm:px-5 sm:py-4 font-mono text-[11px] sm:text-[12.5px] leading-[1.9] min-h-[220px] overflow-x-auto">
             <div className={`term-line${revealedLines.has(0) ? ' revealed' : ''}`}>
               <span className="term-prompt">$</span> <span className="term-cmd">flowprint run patient-intake.flowprint.yaml</span>
             </div>
