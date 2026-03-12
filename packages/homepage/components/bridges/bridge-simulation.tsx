@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
+import { cn } from '@/lib/utils'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
 import { WalkthroughSvg } from './walkthrough-svg'
 import { StepByStepSvg } from './step-by-step-svg'
@@ -18,8 +19,7 @@ import {
   type RippleObj,
   type SimMode,
 } from './simulation-data'
-import './bridge-shared.css'
-import './bridge-simulation.css'
+import './bridge-simulation-svg.css'
 import '../flow/flow.css'
 
 gsap.registerPlugin(useGSAP)
@@ -641,40 +641,51 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
         // containerRef from useDynamicHeight is a MutableRefObject
         ;(containerRef as { current: HTMLDivElement | null }).current = node
       }}
-      className={`bridge-simulation${showDev ? ' show-dev' : ''}`}
+      className={cn(
+        'bridge-simulation relative w-[min(780px,calc(100vw-48px))] max-w-full rounded-[20px] bg-surface border border-surface-border shadow-bridge-card overflow-hidden transition-[height] duration-500 ease-out-expo outline-none',
+        showDev && 'show-dev',
+      )}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      style={{ position: 'relative', width: 780, borderRadius: 20, background: 'var(--surface)', border: '1px solid var(--surface-border)', boxShadow: '0 4px 24px rgba(0, 0, 0, 0.5), 0 0 80px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.04)', overflow: 'hidden', transition: 'height 0.5s cubic-bezier(0.23, 1, 0.32, 1)', outline: 'none' }}
     >
 
       {/* ===== BUSINESS VIEW ===== */}
       <div ref={bizViewRef} className="view view--business">
-        <div className="layer-badge layer-badge--business">
-          <span className="dot"></span>
+        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-4 text-accent bg-accent/10 border border-accent/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           Business Perspective
         </div>
 
-        <h2 className="card-title">Simulation &amp; Testing</h2>
-        <p className="card-description">
+        <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
+        <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
           Test every path before it goes live. No technical skills needed.
         </p>
 
         {/* Pill tabs */}
-        <div className="pill-tabs">
+        <div className="inline-flex gap-0.5 p-[3px] bg-accent/[0.06] border border-accent/10 rounded-full mb-3.5">
           <button
-            className={`pill-tab${currentMode === 'walkthrough' ? ' active' : ''}`}
+            className={cn(
+              'px-4 py-1.5 font-mono text-[10.5px] font-medium tracking-[0.04em] bg-transparent border-none rounded-full cursor-pointer transition-all duration-300 whitespace-nowrap text-fg-muted',
+              currentMode === 'walkthrough' && 'text-fg bg-accent/[0.15] shadow-[0_0_12px_rgba(228,70,255,0.15)]',
+            )}
             onClick={() => handleTabClick('walkthrough')}
           >
             Walk-through
           </button>
           <button
-            className={`pill-tab${currentMode === 'stepbystep' ? ' active' : ''}`}
+            className={cn(
+              'px-4 py-1.5 font-mono text-[10.5px] font-medium tracking-[0.04em] bg-transparent border-none rounded-full cursor-pointer transition-all duration-300 whitespace-nowrap text-fg-muted',
+              currentMode === 'stepbystep' && 'text-fg bg-accent/[0.15] shadow-[0_0_12px_rgba(228,70,255,0.15)]',
+            )}
             onClick={() => handleTabClick('stepbystep')}
           >
             Step-by-step
           </button>
           <button
-            className={`pill-tab${currentMode === 'whatif' ? ' active' : ''}`}
+            className={cn(
+              'px-4 py-1.5 font-mono text-[10.5px] font-medium tracking-[0.04em] bg-transparent border-none rounded-full cursor-pointer transition-all duration-300 whitespace-nowrap text-fg-muted',
+              currentMode === 'whatif' && 'text-fg bg-accent/[0.15] shadow-[0_0_12px_rgba(228,70,255,0.15)]',
+            )}
             onClick={() => handleTabClick('whatif')}
           >
             What-if
@@ -682,17 +693,21 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
         </div>
 
         {/* Flow diagram */}
-        <div className="flow-container">
-          <div className="flow-panel-header">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+        <div className="border border-accent/[0.08] rounded-xl overflow-hidden bg-code-bg">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-table-header border-b border-accent/[0.08] font-mono text-[10.5px] text-fg-muted tracking-[0.02em]">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2" className="w-3 h-3 opacity-60">
               <path d="M2 4h12M2 8h12M2 12h12" stroke="#6b5a4d"/>
             </svg>
             <span>{fileNames[currentMode]}</span>
-            <div className="header-dot"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-accent opacity-40 ml-auto shadow-[0_0_6px_rgba(228,70,255,0.3)]"></div>
           </div>
-          <div className="flow-panel-body">
+          <div className="p-2 pt-2 relative">
             {/* Scenario label overlay for what-if mode */}
-            <div className={`scenario-label${scenarioLabelVisible ? ' visible' : ''} ${scenarioLabelClass}`}>
+            <div className={cn(
+              'scenario-label absolute top-3 right-4 py-[5px] px-3 font-mono text-[10px] font-semibold tracking-[0.04em] rounded-md z-[5] transition-all duration-[400ms]',
+              scenarioLabelVisible && 'visible',
+              scenarioLabelClass,
+            )}>
               {scenarioLabelText}
             </div>
 
@@ -714,19 +729,22 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           </div>
 
           {/* Step control bar */}
-          <div className={`step-controls${stepControlsVisible ? ' visible' : ''}`}>
+          <div className={cn(
+            'step-controls items-center justify-center gap-4 px-4 py-2.5 border-t border-accent/[0.08] bg-secondary/60',
+            stepControlsVisible && 'visible',
+          )}>
             <button
-              className="step-btn"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] font-medium tracking-[0.03em] text-fg-secondary bg-accent/[0.08] border border-accent/[0.15] rounded-md cursor-pointer transition-all duration-200 whitespace-nowrap hover:text-fg hover:bg-accent/[0.15] hover:border-accent/30 disabled:opacity-30 disabled:cursor-not-allowed"
               disabled={stepIndex <= 0}
               onClick={stepBackward}
             >
               {'\u2190'} Prev
             </button>
-            <span className="step-indicator">
+            <span className="font-mono text-[11px] font-medium text-fg min-w-[90px] text-center">
               {stepIndex < 0 ? 'Ready' : `Step ${stepIndex + 1} of ${stepByStepPath.nodes.length}`}
             </span>
             <button
-              className="step-btn"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-[10px] font-medium tracking-[0.03em] text-fg-secondary bg-accent/[0.08] border border-accent/[0.15] rounded-md cursor-pointer transition-all duration-200 whitespace-nowrap hover:text-fg hover:bg-accent/[0.15] hover:border-accent/30 disabled:opacity-30 disabled:cursor-not-allowed"
               disabled={stepIndex >= stepByStepPath.nodes.length - 1}
               onClick={stepForward}
             >
@@ -734,18 +752,18 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
             </button>
           </div>
 
-          <div className="flow-status">
-            <div className={`status-dot${statusDotClass ? ` ${statusDotClass}` : ''}`}></div>
+          <div className="flow-status flex items-center gap-2 px-3 py-1.5 border-t border-accent/[0.06] font-mono text-[9.5px] text-fg-muted">
+            <div className={cn('status-dot w-[5px] h-[5px] rounded-full bg-true-green', statusDotClass)}></div>
             <span>{statusText}</span>
-            <span className="status-mode">
+            <span className="text-accent ml-auto">
               {currentMode === 'walkthrough' ? 'walk-through' : currentMode === 'stepbystep' ? 'step-by-step' : 'what-if'}
             </span>
           </div>
         </div>
 
-        <button className="cta" onClick={handleShowDev}>
+        <button className="bridge-cta inline-flex items-center gap-2.5 mt-4 px-[22px] py-[11px] font-sans text-[13px] font-semibold tracking-[0.02em] text-fg bg-gradient-to-br from-accent/[0.15] to-accent/[0.05] border border-accent/25 rounded-[10px] cursor-pointer transition-all duration-300 relative overflow-hidden hover:border-accent/45 hover:shadow-[0_0_30px_rgba(228,70,255,0.15)]" onClick={handleShowDev}>
           <span>See the developer view</span>
-          <span className="cta-icon">
+          <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -755,24 +773,26 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
 
       {/* ===== DEVELOPER VIEW ===== */}
       <div ref={devViewRef} className="view view--developer">
-        <div className="layer-badge layer-badge--developer">
-          <span className="dot"></span>
+        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-4 text-type-teal bg-type-teal/10 border border-type-teal/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-type-teal" />
           Developer Perspective
         </div>
 
-        <h2 className="card-title">Simulation &amp; Testing</h2>
-        <p className="card-description">
+        <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
+        <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
           Debug flows locally. Run in CI. Catch structural issues before production.
         </p>
 
-        <div className="terminal-container">
-          <div className="terminal-header">
-            <div className="header-dots">
-              <span></span><span></span><span></span>
+        <div className="border border-accent/[0.08] rounded-xl overflow-hidden bg-code-bg mt-1">
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-table-header border-b border-accent/[0.08] font-mono text-[10.5px] text-fg-muted tracking-[0.02em]">
+            <div className="flex gap-[5px] mr-2">
+              <span className="w-[7px] h-[7px] rounded-full opacity-50 bg-false-red"></span>
+              <span className="w-[7px] h-[7px] rounded-full opacity-50 bg-string-amber"></span>
+              <span className="w-[7px] h-[7px] rounded-full opacity-50 bg-true-green"></span>
             </div>
             <span>terminal</span>
           </div>
-          <div className="terminal-body">
+          <div className="px-5 py-4 font-mono text-[12.5px] leading-[1.9] min-h-[220px]">
             <div className={`term-line${revealedLines.has(0) ? ' revealed' : ''}`}>
               <span className="term-prompt">$</span> <span className="term-cmd">flowprint run patient-intake.flowprint.yaml</span>
             </div>
@@ -808,9 +828,9 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           </div>
         </div>
 
-        <button className="cta" onClick={handleShowBusiness}>
+        <button className="bridge-cta inline-flex items-center gap-2.5 mt-4 px-[22px] py-[11px] font-sans text-[13px] font-semibold tracking-[0.02em] text-fg bg-gradient-to-br from-accent/[0.15] to-accent/[0.05] border border-accent/25 rounded-[10px] cursor-pointer transition-all duration-300 relative overflow-hidden hover:border-accent/45 hover:shadow-[0_0_30px_rgba(228,70,255,0.15)]" onClick={handleShowBusiness}>
           <span>See the business view</span>
-          <span className="cta-icon">
+          <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

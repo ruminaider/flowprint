@@ -1,0 +1,124 @@
+/* Bridge Versioning — SVG node/edge transitions and state styles */
+
+.bridge-versioning .flow-svg {
+  width: 716px;
+  height: 420px;
+}
+
+.bridge-versioning .lane-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--text-muted);
+}
+
+.bridge-versioning .lane-sep {
+  stroke: var(--node-stroke);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.4;
+}
+
+.bridge-versioning .node-group {
+  transition: transform 0.9s var(--ease-out-expo),
+              opacity 0.7s var(--ease-out-expo);
+}
+
+.bridge-versioning .node-rect {
+  rx: 6;
+  ry: 6;
+  fill: var(--node-fill);
+  stroke: var(--node-stroke);
+  stroke-width: 1.2;
+  transition: stroke 0.5s, filter 0.5s, fill 0.5s;
+}
+
+.bridge-versioning .node-label {
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+.bridge-versioning .node-type-badge {
+  font-family: var(--font-mono);
+  font-size: 5.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.bridge-versioning .node-circle {
+  fill: var(--node-fill);
+  stroke: var(--node-type-terminal);
+  stroke-width: 1.2;
+  transition: stroke 0.5s, filter 0.5s;
+}
+
+.bridge-versioning .edge {
+  fill: none;
+  stroke: var(--edge-color, #6b4d40);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  marker-end: url(#bv-arrowhead);
+  transition: d 0.9s var(--ease-out-expo),
+              opacity 0.7s var(--ease-out-expo),
+              stroke 0.5s;
+}
+
+/* Glow effects for added/changed nodes */
+.bridge-versioning .node-added .node-rect {
+  stroke: var(--node-type-terminal);
+  filter: drop-shadow(0 0 8px var(--green-glow)) drop-shadow(0 0 16px var(--green-glow));
+}
+
+.bridge-versioning .node-changed .node-rect {
+  stroke: var(--node-type-action);
+  filter: drop-shadow(0 0 8px var(--amber-glow)) drop-shadow(0 0 16px var(--amber-glow));
+}
+
+/* Enter/exit states */
+.bridge-versioning .node-entering {
+  opacity: 0;
+  transform: scale(0.5);
+  transform-origin: center;
+}
+.bridge-versioning .node-entering.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bridge-versioning .node-hidden {
+  opacity: 0;
+  transform: scale(0.5);
+  transform-origin: center;
+}
+
+.bridge-versioning .edge-entering { opacity: 0; }
+.bridge-versioning .edge-entering.visible { opacity: 1; }
+.bridge-versioning .edge-hidden { opacity: 0; }
+
+/* Change indicator badge */
+.bridge-versioning .change-badge {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 500;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.bridge-versioning .show-changes .change-badge {
+  opacity: 1;
+}

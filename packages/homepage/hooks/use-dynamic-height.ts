@@ -9,17 +9,29 @@ export function useDynamicHeight(isDev: boolean) {
   useEffect(() => {
     const activeView = isDev ? devRef.current : bizRef.current
     if (!activeView || !containerRef.current) return
-    const h = activeView.scrollHeight
-    if (initialRender.current) {
-      containerRef.current.style.transition = 'none'
-      containerRef.current.style.height = `${h}px`
-      requestAnimationFrame(() => {
-        if (containerRef.current) containerRef.current.style.transition = ''
-      })
-      initialRender.current = false
-    } else {
-      containerRef.current.style.height = `${h}px`
+
+    const applyHeight = () => {
+      const h = activeView.scrollHeight
+      if (!containerRef.current) return
+      if (initialRender.current) {
+        containerRef.current.style.transition = 'none'
+        containerRef.current.style.height = `${h}px`
+        requestAnimationFrame(() => {
+          if (containerRef.current) containerRef.current.style.transition = ''
+        })
+        initialRender.current = false
+      } else {
+        containerRef.current.style.height = `${h}px`
+      }
     }
+
+    applyHeight()
+
+    // Watch for content size changes within the active view
+    const ro = new ResizeObserver(applyHeight)
+    ro.observe(activeView)
+
+    return () => ro.disconnect()
   }, [isDev])
 
   return { containerRef, bizRef, devRef }

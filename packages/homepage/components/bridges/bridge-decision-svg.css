@@ -1,0 +1,87 @@
+/* Bridge Decision — SVG arrows, particles, and GSAP animation states */
+
+/* ── Arrow states (GSAP toggles .active) ─────────── */
+.bridge-decision .arrow-line {
+  stroke: var(--fg-muted);
+  stroke-width: 1.5;
+  opacity: 0.3;
+  transition: opacity 0.4s, stroke 0.4s;
+}
+
+.bridge-decision .arrow-head {
+  fill: var(--fg-muted);
+  opacity: 0.3;
+  transition: opacity 0.4s, fill 0.4s;
+}
+
+.bridge-decision .arrow-line.active {
+  stroke: var(--accent);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px rgba(228, 70, 255, 0.4));
+}
+
+.bridge-decision .arrow-head.active {
+  fill: var(--accent);
+  opacity: 0.8;
+}
+
+/* ── Flow particle (positioned dot with glow) ────── */
+.bridge-decision .flow-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(228, 70, 255, 0.4);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── JSON box initial states (GSAP targets) ──────── */
+.bridge-decision .flow-json--input {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.bridge-decision .flow-json--output {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+/* ── JSON box active glow (GSAP sets inline) ─────── */
+.bridge-decision .flow-json--active {
+  border-color: rgba(228, 70, 255, 0.3);
+  box-shadow: 0 0 20px rgba(228, 70, 255, 0.1);
+}
+
+/* ── Table row scan states (GSAP toggles) ────────── */
+.bridge-decision .flow-table tbody tr.row-match {
+  background: rgba(228, 70, 255, 0.1) !important;
+  box-shadow: inset 0 0 0 1px rgba(228, 70, 255, 0.25);
+}
+
+.bridge-decision .flow-table tbody tr.row-match td {
+  color: var(--fg);
+}
+
+.bridge-decision .flow-table tbody tr.row-dim td {
+  opacity: 0.35;
+}
+
+/* ── Particle keyframe ───────────────────────────── */
+@keyframes bridge-decision-particle-flow {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 6px);
+    opacity: 0;
+  }
+}

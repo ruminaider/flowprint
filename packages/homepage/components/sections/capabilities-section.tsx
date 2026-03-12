@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { BridgeDecision } from '@/components/bridges/bridge-decision'
 import { BridgeSimulation } from '@/components/bridges/bridge-simulation'
 import { BridgeVersioning } from '@/components/bridges/bridge-versioning'
-import './capabilities-section.css'
 
 type Perspective = 'business' | 'developer'
 
@@ -12,17 +12,27 @@ export function CapabilitiesSection() {
   const [perspective, setPerspective] = useState<Perspective>('business')
 
   return (
-    <div className="capabilities">
+    <div className="mx-auto w-full max-w-[1100px] px-6">
       {/* Pinned pill toggle — sticky below fixed header */}
-      <div className="perspective-toggle">
+      <div className="sticky top-[80px] z-10 mx-auto mb-10 flex w-fit gap-1 rounded-xl border border-surface-border bg-[rgba(26,15,10,0.6)] p-1 backdrop-blur-[12px]">
         <button
-          className={perspective === 'business' ? 'active' : ''}
+          className={cn(
+            'cursor-pointer rounded-lg border-none bg-transparent px-7 py-2.5 font-sans text-sm font-medium text-fg-muted transition-all duration-200',
+            perspective === 'business'
+              ? 'bg-accent/[0.12] text-fg shadow-[0_0_12px_rgba(228,70,255,0.15)]'
+              : 'hover:text-fg-secondary',
+          )}
           onClick={() => setPerspective('business')}
         >
           Business
         </button>
         <button
-          className={perspective === 'developer' ? 'active' : ''}
+          className={cn(
+            'cursor-pointer rounded-lg border-none bg-transparent px-7 py-2.5 font-sans text-sm font-medium text-fg-muted transition-all duration-200',
+            perspective === 'developer'
+              ? 'bg-accent/[0.12] text-fg shadow-[0_0_12px_rgba(228,70,255,0.15)]'
+              : 'hover:text-fg-secondary',
+          )}
           onClick={() => setPerspective('developer')}
         >
           Developer
@@ -30,19 +40,16 @@ export function CapabilitiesSection() {
       </div>
 
       {/* Bridge cards stacked vertically */}
-      <div className="bridge-stack">
-        {/* Bridge 1: Decision Tables */}
-        <section className="bridge-card-wrapper">
+      <div className="flex flex-col gap-12">
+        <section className="flex justify-center overflow-visible">
           <BridgeDecision perspective={perspective} />
         </section>
 
-        {/* Bridge 2: Simulation */}
-        <section className="bridge-card-wrapper">
+        <section className="flex justify-center overflow-visible">
           <BridgeSimulation perspective={perspective} />
         </section>
 
-        {/* Bridge 3: Version Control */}
-        <section className="bridge-card-wrapper">
+        <section className="flex justify-center overflow-visible">
           <BridgeVersioning perspective={perspective} />
         </section>
       </div>

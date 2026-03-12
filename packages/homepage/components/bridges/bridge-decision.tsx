@@ -3,9 +3,10 @@
 import { useState, useRef, useCallback } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
+import { cn } from '@/lib/utils'
 import { useDynamicHeight } from '@/hooks/use-dynamic-height'
-import './bridge-shared.css'
-import './bridge-decision.css'
+import '../flow/flow.css'
+import './bridge-decision-svg.css'
 
 gsap.registerPlugin(useGSAP)
 
@@ -14,10 +15,10 @@ interface BridgeDecisionProps {
 }
 
 const DECISION_ROWS = [
-  { tier: 'Enterprise', value: 'Any', valueClass: 'cell-value--any', route: 'express' },
-  { tier: 'Business', value: '> $10k', valueClass: 'cell-value--input', route: 'review' },
-  { tier: 'Business', value: '\u2264 $10k', valueClass: 'cell-value--input', route: 'standard' },
-  { tier: 'Starter', value: 'Any', valueClass: 'cell-value--any', route: 'standard' },
+  { tier: 'Enterprise', value: 'Any', valueClass: 'any' as const, route: 'express' },
+  { tier: 'Business', value: '> $10k', valueClass: 'input' as const, route: 'review' },
+  { tier: 'Business', value: '\u2264 $10k', valueClass: 'input' as const, route: 'standard' },
+  { tier: 'Starter', value: 'Any', valueClass: 'any' as const, route: 'standard' },
 ]
 
 const testCases = [
@@ -45,6 +46,11 @@ const policyDescriptions: Record<string, { icon: string; text: string }> = {
     text: 'Priority policy \u2014 returns the highest-priority matching row.',
   },
 }
+
+const VALUE_CLASSES = {
+  input: 'text-node-action',
+  any: 'text-fg-muted italic',
+} as const
 
 export function BridgeDecision({ perspective }: BridgeDecisionProps) {
   const isDev = perspective === 'developer'
@@ -243,19 +249,26 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
 
   return (
     <div className="bridge-decision" ref={containerRef}>
-      <div className="bridge-card card">
+      <div className="relative w-[min(780px,calc(100vw-48px))] max-w-full rounded-[20px] bg-surface border border-surface-border shadow-bridge-card overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="header">
+        <div className="px-8 pt-7">
           <div
-            className={`badge ${isDev ? 'badge--developer' : 'badge--business'}`}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-3 transition-all duration-[400ms]',
+              isDev
+                ? 'border border-accent/20 text-accent bg-accent/[0.12]'
+                : 'border border-node-switch/20 text-node-switch bg-node-switch/[0.12]',
+            )}
           >
-            <span className="badge-dot"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-current animate-[bridge-badge-pulse-dot_2s_ease-in-out_infinite]" />
             <span>
               {isDev ? 'Developer Perspective' : 'Business Perspective'}
             </span>
           </div>
-          <h1 className="title">Decision Tables</h1>
-          <p className="description">
+          <h1 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-1.5 text-fg">
+            Decision Tables
+          </h1>
+          <p className="text-sm leading-normal text-fg-secondary max-w-[520px]">
             {isDev
               ? 'Zero developer code for decision logic. GoRules ZEN evaluates tables natively at runtime.'
               : 'Define routing rules in a spreadsheet. No code, no developer needed.'}
@@ -263,62 +276,87 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
         </div>
 
         {/* Views */}
-        <div ref={viewsRef} className="views">
+        <div ref={viewsRef} className="relative overflow-hidden w-full mt-5 transition-[height] duration-500 ease-out-expo">
           {/* BUSINESS VIEW */}
           <div
             ref={bizViewRef}
-            className={`view view--business${isDev ? ' hidden' : ''}`}
+            className={cn(
+              'absolute top-0 inset-x-0 px-8 pb-7 transition-all duration-500 ease-out-expo',
+              isDev ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0',
+            )}
           >
-            <div className="table-toolbar">
-              <div className="hit-policy">
-                <span className="hit-policy-label">Hit Policy</span>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-elevated border border-node-switch/[0.15] rounded-lg">
+                <span className="font-mono text-[10px] text-fg-muted uppercase tracking-[0.08em]">
+                  Hit Policy
+                </span>
               </div>
-              <div className="hit-policy-options">
-                {['first', 'collect', 'all', 'priority'].map(
-                  (policy) => (
-                    <button
-                      key={policy}
-                      className={`hit-option${hitPolicy === policy ? ' active' : ''}`}
-                      onClick={() => setHitPolicy(policy)}
-                    >
-                      {policy.charAt(0).toUpperCase() + policy.slice(1)}
-                    </button>
-                  ),
-                )}
+              <div className="flex gap-0.5">
+                {['first', 'collect', 'all', 'priority'].map((policy) => (
+                  <button
+                    key={policy}
+                    className={cn(
+                      'px-2 py-[3px] rounded font-mono text-[10px] text-fg-muted cursor-pointer transition-all duration-200 border border-transparent',
+                      hitPolicy === policy && 'text-node-switch bg-node-switch/10 border-node-switch/20',
+                    )}
+                    onClick={() => setHitPolicy(policy)}
+                  >
+                    {policy.charAt(0).toUpperCase() + policy.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <table className="table-editor">
+            <table className="w-full border-separate border-spacing-0 rounded-xl overflow-hidden border border-node-switch/10">
               <thead>
                 <tr>
-                  <th className="row-num">#</th>
-                  <th className="col-input">
-                    Tier<span className="col-type">input</span>
+                  <th className="w-9 text-center text-[10px] text-fg-muted px-4 py-2.5 font-mono font-medium uppercase tracking-[0.1em] text-node-switch bg-node-switch/[0.08] border-b border-node-switch/[0.12]">
+                    #
                   </th>
-                  <th className="col-input">
-                    Value<span className="col-type">input</span>
+                  <th className="px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-node-action bg-node-action/[0.06] text-left border-b border-node-switch/[0.12]">
+                    Tier
+                    <span className="block text-[9px] text-fg-muted font-normal mt-0.5 tracking-[0.06em]">
+                      input
+                    </span>
                   </th>
-                  <th className="col-output">
-                    Route<span className="col-type">output</span>
+                  <th className="px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-node-action bg-node-action/[0.06] text-left border-b border-node-switch/[0.12]">
+                    Value
+                    <span className="block text-[9px] text-fg-muted font-normal mt-0.5 tracking-[0.06em]">
+                      input
+                    </span>
+                  </th>
+                  <th className="px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-node-terminal bg-node-terminal/[0.06] text-left border-b border-node-switch/[0.12]">
+                    Route
+                    <span className="block text-[9px] text-fg-muted font-normal mt-0.5 tracking-[0.06em]">
+                      output
+                    </span>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {DECISION_ROWS.map((row, i) => (
-                  <tr key={i}>
-                    <td className="row-num">{i + 1}</td>
-                    <td>
-                      <span className="cell-value cell-value--input">
+                  <tr
+                    key={i}
+                    className={cn(
+                      'transition-colors duration-200 hover:bg-node-switch/[0.06]',
+                      i % 2 === 0 ? 'bg-[rgba(26,15,10,0.8)]' : 'bg-[rgba(34,21,16,0.6)]',
+                    )}
+                  >
+                    <td className="w-9 text-center text-[10px] text-fg-muted px-4 py-2.5 font-mono border-b border-white/[0.04] border-r border-white/[0.03]">
+                      {i + 1}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-[13px] text-fg border-b border-white/[0.04] border-r border-white/[0.03]">
+                      <span className="py-0.5 px-1.5 rounded text-node-action">
                         {row.tier}
                       </span>
                     </td>
-                    <td>
-                      <span className={`cell-value ${row.valueClass}`}>
+                    <td className="px-4 py-2.5 font-mono text-[13px] text-fg border-b border-white/[0.04] border-r border-white/[0.03]">
+                      <span className={cn('py-0.5 px-1.5 rounded', VALUE_CLASSES[row.valueClass])}>
                         {row.value}
                       </span>
                     </td>
-                    <td>
-                      <span className="cell-value cell-value--output">
+                    <td className="px-4 py-2.5 font-mono text-[13px] text-fg border-b border-white/[0.04]">
+                      <span className="py-0.5 px-1.5 rounded text-node-terminal">
                         {row.route}
                       </span>
                     </td>
@@ -327,8 +365,10 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </tbody>
             </table>
 
-            <div className="table-note">
-              <span className="table-note-icon">{policyInfo.icon}</span>
+            <div className="flex items-center gap-2 mt-3.5 text-xs text-fg-muted">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-node-switch/[0.08] text-node-switch font-mono text-[10px] font-medium">
+                {policyInfo.icon}
+              </span>
               <span>{policyInfo.text}</span>
             </div>
           </div>
@@ -336,30 +376,36 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
           {/* DEVELOPER VIEW */}
           <div
             ref={devViewRef}
-            className={`view view--developer${isDev ? ' visible' : ''}`}
+            className={cn(
+              'absolute top-0 inset-x-0 px-8 pb-7 transition-all duration-500 ease-out-expo',
+              isDev ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none',
+            )}
           >
-            <div className="flow-container">
+            <div className="flex items-center justify-center gap-0 min-h-[200px] relative">
               {/* Input JSON */}
-              <div ref={inputJsonRef} className="flow-json flow-json--input">
-                <span className="json-brace">{'{'}</span>
+              <div
+                ref={inputJsonRef}
+                className="flow-json flow-json--input shrink-0 basis-[180px] bg-code-bg border border-white/[0.06] rounded-[10px] px-4 py-3.5 font-mono text-xs leading-relaxed relative z-[2] transition-[border-color,box-shadow] duration-[400ms]"
+              >
+                <span className="text-fg-muted">{'{'}</span>
                 <br />
                 &nbsp;&nbsp;
-                <span className="json-key">tier</span>
-                <span className="json-brace">:</span>{' '}
-                <span className="json-string">{inputTier}</span>
-                <span className="json-brace">,</span>
+                <span className="text-node-action">tier</span>
+                <span className="text-fg-muted">:</span>{' '}
+                <span className="text-string-amber">{inputTier}</span>
+                <span className="text-fg-muted">,</span>
                 <br />
                 &nbsp;&nbsp;
-                <span className="json-key">value</span>
-                <span className="json-brace">:</span>{' '}
-                <span className="json-number">{inputValue}</span>
+                <span className="text-node-action">value</span>
+                <span className="text-fg-muted">:</span>{' '}
+                <span className="text-type-teal">{inputValue}</span>
                 <br />
-                <span className="json-brace">{'}'}</span>
+                <span className="text-fg-muted">{'}'}</span>
               </div>
 
               {/* Arrow in */}
-              <div className="flow-arrow">
-                <svg width="40" height="20" viewBox="0 0 40 20">
+              <div className="shrink-0 basis-10 flex items-center justify-center relative z-[1]">
+                <svg width="40" height="20" viewBox="0 0 40 20" className="overflow-visible">
                   <line
                     className="arrow-line"
                     x1="0"
@@ -372,25 +418,43 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                     points="28,5 38,10 28,15"
                   />
                 </svg>
-                <div className="flow-particle" ref={particleInRef}></div>
+                <div className="flow-particle" ref={particleInRef} />
               </div>
 
               {/* Decision Table */}
-              <div className="flow-table-wrap">
-                <table className="flow-table">
+              <div className="shrink-0 basis-[260px] relative z-[2]">
+                <table className="flow-table w-full border-separate border-spacing-0 rounded-[10px] overflow-hidden border border-node-switch/10 font-mono text-[11px]">
                   <thead>
                     <tr>
-                      <th>Tier</th>
-                      <th>Value</th>
-                      <th>Route</th>
+                      <th className="px-3 py-2 text-[9px] font-medium uppercase tracking-[0.1em] text-node-switch bg-node-switch/[0.08] text-left border-b border-node-switch/[0.12]">
+                        Tier
+                      </th>
+                      <th className="px-3 py-2 text-[9px] font-medium uppercase tracking-[0.1em] text-node-switch bg-node-switch/[0.08] text-left border-b border-node-switch/[0.12]">
+                        Value
+                      </th>
+                      <th className="px-3 py-2 text-[9px] font-medium uppercase tracking-[0.1em] text-node-switch bg-node-switch/[0.08] text-left border-b border-node-switch/[0.12]">
+                        Route
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {DECISION_ROWS.map((row, i) => (
-                      <tr key={i}>
-                        <td>{row.tier}</td>
-                        <td>{row.value}</td>
-                        <td>{row.route}</td>
+                      <tr
+                        key={i}
+                        className={cn(
+                          'transition-all duration-[400ms]',
+                          i % 2 === 0 ? 'bg-[rgba(26,15,10,0.8)]' : 'bg-[rgba(34,21,16,0.6)]',
+                        )}
+                      >
+                        <td className="px-3 py-2 text-fg-secondary border-b border-white/[0.03] transition-all duration-[400ms]">
+                          {row.tier}
+                        </td>
+                        <td className="px-3 py-2 text-fg-secondary border-b border-white/[0.03] transition-all duration-[400ms]">
+                          {row.value}
+                        </td>
+                        <td className="px-3 py-2 text-fg-secondary border-b border-white/[0.03] transition-all duration-[400ms]">
+                          {row.route}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -398,8 +462,8 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </div>
 
               {/* Arrow out */}
-              <div className="flow-arrow">
-                <svg width="40" height="20" viewBox="0 0 40 20">
+              <div className="shrink-0 basis-10 flex items-center justify-center relative z-[1]">
+                <svg width="40" height="20" viewBox="0 0 40 20" className="overflow-visible">
                   <line
                     className="arrow-line"
                     x1="0"
@@ -412,27 +476,27 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
                     points="28,5 38,10 28,15"
                   />
                 </svg>
-                <div
-                  className="flow-particle"
-                  ref={particleOutRef}
-                ></div>
+                <div className="flow-particle" ref={particleOutRef} />
               </div>
 
               {/* Output JSON */}
-              <div ref={outputJsonRef} className="flow-json flow-json--output">
-                <span className="json-brace">{'{'}</span>
+              <div
+                ref={outputJsonRef}
+                className="flow-json flow-json--output shrink-0 basis-[180px] bg-code-bg border border-white/[0.06] rounded-[10px] px-4 py-3.5 font-mono text-xs leading-relaxed relative z-[2] transition-[border-color,box-shadow] duration-[400ms]"
+              >
+                <span className="text-fg-muted">{'{'}</span>
                 <br />
                 &nbsp;&nbsp;
-                <span className="json-key">route</span>
-                <span className="json-brace">:</span>{' '}
-                <span className="json-string">{outputRoute}</span>
+                <span className="text-node-action">route</span>
+                <span className="text-fg-muted">:</span>{' '}
+                <span className="text-string-amber">{outputRoute}</span>
                 <br />
-                <span className="json-brace">{'}'}</span>
+                <span className="text-fg-muted">{'}'}</span>
               </div>
             </div>
 
-            <div className="gorules-badge">
-              Powered by <span>GoRules ZEN</span> — native decision table
+            <div className="inline-flex items-center gap-1.5 mt-3.5 px-3 py-[5px] rounded-md bg-accent/[0.06] border border-accent/[0.12] font-mono text-[10px] text-fg-muted tracking-[0.04em]">
+              Powered by <span className="text-accent font-medium">GoRules ZEN</span> — native decision table
               evaluation at runtime
             </div>
           </div>
