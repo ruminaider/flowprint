@@ -1,0 +1,493 @@
+/* Bridge Simulation — SVG styles, keyframes, and state classes
+   that cannot be expressed as Tailwind utilities.
+   Scoped under .bridge-simulation */
+
+/* ══════════════════════════════════════════════════════
+   VIEW LAYERS (CSS-based transitions tied to .show-dev)
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 32px 32px 28px;
+  transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.bridge-simulation .view--business {
+  opacity: 1;
+  transform: translateY(0);
+  z-index: 2;
+}
+
+.bridge-simulation .view--developer {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bridge-simulation.show-dev .view--business {
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+}
+
+.bridge-simulation.show-dev .view--developer {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+/* ══════════════════════════════════════════════════════
+   SVG FLOW DIAGRAM STYLES
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .flow-svg .lane-bg-rect {
+  fill: rgba(228, 70, 255, 0.03);
+  stroke: rgba(228, 70, 255, 0.08);
+  stroke-width: 0.5;
+}
+
+.bridge-simulation .flow-svg .lane-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: rgba(160, 139, 122, 0.5);
+}
+
+.bridge-simulation .flow-svg .node-rect {
+  rx: 6;
+  ry: 6;
+  fill: var(--node-fill);
+  stroke: var(--node-stroke);
+  stroke-width: 1.2;
+  transition: stroke 0.5s, filter 0.5s, fill 0.5s;
+}
+
+.bridge-simulation .flow-svg .node-circle {
+  fill: var(--node-fill);
+  stroke: var(--node-type-terminal);
+  stroke-width: 1.2;
+  transition: stroke 0.5s, filter 0.5s;
+}
+
+.bridge-simulation .flow-svg .node-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: var(--text-primary);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: fill 0.4s ease;
+}
+
+.bridge-simulation .flow-svg .node-type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.bridge-simulation .flow-svg .edge {
+  fill: none;
+  stroke: #6b4d40;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.4s ease, stroke-width 0.4s ease, filter 0.4s ease;
+}
+
+.bridge-simulation .flow-svg .edge-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px;
+  font-weight: 500;
+  fill: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ── Ripple circle ── */
+.bridge-simulation .ripple-circle {
+  fill: none;
+  stroke-width: 1.5;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Data tooltip (step-by-step) ── */
+.bridge-simulation .data-tooltip {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.bridge-simulation .data-tooltip rect {
+  fill: rgba(13, 8, 5, 0.95);
+  stroke: rgba(228, 70, 255, 0.25);
+  stroke-width: 0.7;
+  rx: 5;
+}
+
+.bridge-simulation .data-tooltip text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 6.5px;
+  fill: var(--text-secondary);
+}
+
+.bridge-simulation .data-tooltip .tt-key {
+  fill: var(--keyword-blue);
+}
+
+.bridge-simulation .data-tooltip .tt-val {
+  fill: var(--string-amber);
+}
+
+.bridge-simulation .data-tooltip .tt-arrow-label {
+  fill: var(--text-muted);
+  font-size: 7px;
+}
+
+.bridge-simulation .data-tooltip .tt-heading {
+  fill: var(--text-primary);
+  font-weight: 500;
+  font-size: 7px;
+}
+
+.bridge-simulation .data-tooltip.visible {
+  opacity: 1;
+}
+
+/* ══════════════════════════════════════════════════════
+   NODE ACTIVATION STATES
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .node-group.active .node-rect,
+.bridge-simulation .node-group.active .node-circle {
+  fill: rgba(63, 220, 119, 0.15);
+  stroke: var(--node-type-terminal);
+  filter: drop-shadow(0 0 8px rgba(63, 220, 119, 0.4));
+}
+
+.bridge-simulation .node-group.active .node-label {
+  fill: var(--node-type-terminal);
+}
+
+/* ── ERROR activation ── */
+.bridge-simulation .node-group.active-error .node-rect,
+.bridge-simulation .node-group.active-error .node-circle {
+  fill: rgba(255, 54, 43, 0.15);
+  stroke: var(--error-red);
+  filter: drop-shadow(0 0 12px rgba(255, 54, 43, 0.3));
+}
+
+.bridge-simulation .node-group.active-error .node-label {
+  fill: var(--error-red);
+}
+
+/* ── Debug active (step-by-step) ── */
+.bridge-simulation .node-group.debug-active .node-rect,
+.bridge-simulation .node-group.debug-active .node-circle {
+  fill: rgba(63, 220, 119, 0.22);
+  stroke: var(--node-type-terminal);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 12px rgba(63, 220, 119, 0.5)) drop-shadow(0 0 4px rgba(63, 220, 119, 0.3));
+}
+
+.bridge-simulation .node-group.debug-active .node-label {
+  fill: var(--node-type-terminal);
+}
+
+/* ── Visited ── */
+.bridge-simulation .node-group.visited .node-rect,
+.bridge-simulation .node-group.visited .node-circle {
+  fill: rgba(180, 190, 254, 0.06);
+  stroke: rgba(180, 190, 254, 0.2);
+  filter: none;
+}
+
+.bridge-simulation .node-group.visited .node-label {
+  fill: rgba(180, 190, 254, 0.5);
+}
+
+/* ── Edge states ── */
+.bridge-simulation .edge.active-edge {
+  stroke: var(--node-type-terminal);
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 6px rgba(63, 220, 119, 0.5));
+}
+
+.bridge-simulation .edge.visited-edge {
+  stroke: rgba(180, 190, 254, 0.2);
+  stroke-width: 1.2;
+  filter: none;
+}
+
+.bridge-simulation .edge.error-edge {
+  stroke: var(--error-red);
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 6px rgba(255, 54, 43, 0.5));
+}
+
+.bridge-simulation .edge.error-visited-edge {
+  stroke: rgba(255, 54, 43, 0.2);
+  stroke-width: 1.2;
+  filter: none;
+}
+
+.bridge-simulation .edge.debug-edge {
+  stroke: var(--node-type-terminal);
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 8px rgba(63, 220, 119, 0.6));
+}
+
+.bridge-simulation .edge.debug-visited-edge {
+  stroke: rgba(180, 190, 254, 0.2);
+  stroke-width: 1.2;
+  filter: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   STEP CONTROLS — display toggle
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .step-controls {
+  display: none;
+}
+
+.bridge-simulation .step-controls.visible {
+  display: flex;
+}
+
+/* ══════════════════════════════════════════════════════
+   SCENARIO LABEL — display toggle + color variants
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .scenario-label {
+  display: none;
+}
+
+.bridge-simulation .scenario-label.visible {
+  display: block;
+}
+
+.bridge-simulation .scenario-label.scenario-a {
+  color: var(--node-type-terminal);
+  background: rgba(63, 220, 119, 0.1);
+  border: 1px solid rgba(63, 220, 119, 0.25);
+}
+
+.bridge-simulation .scenario-label.scenario-b {
+  color: var(--error-red);
+  background: rgba(255, 54, 43, 0.1);
+  border: 1px solid rgba(255, 54, 43, 0.25);
+}
+
+/* ══════════════════════════════════════════════════════
+   ERROR TOOLTIP (what-if mode)
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .error-tooltip {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.bridge-simulation .error-tooltip.visible {
+  opacity: 1;
+}
+
+.bridge-simulation .error-tooltip rect {
+  fill: rgba(13, 8, 5, 0.95);
+  stroke: rgba(255, 54, 43, 0.4);
+  stroke-width: 0.8;
+  rx: 5;
+}
+
+.bridge-simulation .error-tooltip text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px;
+  fill: var(--error-red);
+  font-weight: 500;
+}
+
+.bridge-simulation .error-tooltip .tt-icon {
+  fill: var(--error-red);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════
+   TERMINAL LINE REVEAL
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .term-line {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+.bridge-simulation .term-line.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Terminal syntax tokens ── */
+.bridge-simulation .term-cmd { color: var(--text-secondary); }
+.bridge-simulation .term-prompt { color: var(--true-green); }
+.bridge-simulation .term-file { color: var(--accent); }
+.bridge-simulation .term-check { color: var(--true-green); }
+.bridge-simulation .term-node-name {
+  color: var(--text-primary);
+  display: inline-block;
+  min-width: 130px;
+}
+.bridge-simulation .term-timing { color: var(--text-muted); }
+.bridge-simulation .term-route { color: var(--node-type-switch); }
+.bridge-simulation .term-blank { height: 1.9em; }
+.bridge-simulation .term-summary { color: var(--true-green); font-weight: 500; }
+.bridge-simulation .term-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  background: var(--text-primary);
+  opacity: 0.7;
+  animation: bridge-sim-blink-cursor 1s step-end infinite;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+@keyframes bridge-sim-blink-cursor {
+  50% { opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════════
+   STATUS DOT — pulse + variants
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .status-dot {
+  animation: bridge-sim-pulse-dot 2s ease-in-out infinite;
+}
+
+.bridge-simulation .status-dot.paused {
+  background: var(--string-amber);
+  animation: none;
+}
+
+.bridge-simulation .status-dot.error {
+  background: var(--error-red);
+  animation: bridge-sim-pulse-dot-red 1s ease-in-out infinite;
+}
+
+@keyframes bridge-sim-pulse-dot {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; box-shadow: 0 0 6px rgba(90, 224, 122, 0.5); }
+}
+
+@keyframes bridge-sim-pulse-dot-red {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; box-shadow: 0 0 6px rgba(255, 54, 43, 0.5); }
+}
+
+/* ══════════════════════════════════════════════════════
+   KEYFRAMES
+   ══════════════════════════════════════════════════════ */
+@keyframes bridge-sim-ripple-expand {
+  0% {
+    r: 4;
+    opacity: 0.7;
+    stroke-width: 2;
+  }
+  60% {
+    opacity: 0.3;
+  }
+  100% {
+    r: 38;
+    opacity: 0;
+    stroke-width: 0.3;
+  }
+}
+
+@keyframes bridge-sim-debug-pulse {
+  0%, 100% {
+    stroke-width: 2;
+    filter: drop-shadow(0 0 10px rgba(63, 220, 119, 0.5));
+  }
+  50% {
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 16px rgba(63, 220, 119, 0.7));
+  }
+}
+
+.bridge-simulation .node-group.debug-active .node-rect,
+.bridge-simulation .node-group.debug-active .node-circle {
+  animation: bridge-sim-debug-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes bridge-sim-error-pulse {
+  0%, 100% {
+    stroke-width: 2;
+    filter: drop-shadow(0 0 10px rgba(255, 54, 43, 0.3));
+  }
+  50% {
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 18px rgba(255, 54, 43, 0.6));
+  }
+}
+
+.bridge-simulation .node-group.active-error .node-rect,
+.bridge-simulation .node-group.active-error .node-circle {
+  animation: bridge-sim-error-pulse 1s ease-in-out infinite;
+}
+
+@keyframes bridge-sim-node-appear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bridge-sim-new-node-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(63, 220, 119, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(63, 220, 119, 0.7));
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SVG VISIBILITY: show/hide per mode
+   ══════════════════════════════════════════════════════ */
+.bridge-simulation .flow-svg { display: none; }
+.bridge-simulation .flow-svg.active-svg { display: block; }
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 840px) {
+  .bridge-simulation .view {
+    padding: 24px 24px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .bridge-simulation .view {
+    padding: 20px 16px 16px;
+  }
+
+  .bridge-simulation .term-node-name {
+    min-width: 100px;
+  }
+}

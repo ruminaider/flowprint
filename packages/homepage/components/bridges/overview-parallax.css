@@ -1,0 +1,642 @@
+/* ══════════════════════════════════════════════════════
+   OVERVIEW PARALLAX — scoped styles
+   Ported 1:1 from prototype-consolidated.html
+   ══════════════════════════════════════════════════════ */
+
+/* ── Root container — centers the 3D scene like the prototype body ── */
+.overview-parallax {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #110904;
+  border: 1px solid rgba(228, 70, 255, 0.12);
+  border-radius: 16px;
+  padding: 48px;
+  position: relative;
+}
+
+/* ── Ambient background shapes ── */
+.overview-parallax .ambient {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(120px);
+  opacity: 0.3;
+}
+
+.overview-parallax .ambient--1 {
+  width: 400px;
+  height: 400px;
+  background: rgba(228, 70, 255, 0.08);
+  top: -100px;
+  right: -100px;
+}
+
+.overview-parallax .ambient--2 {
+  width: 300px;
+  height: 300px;
+  background: rgba(228, 70, 255, 0.05);
+  bottom: -80px;
+  left: -60px;
+}
+
+/* ── Scene + 3D card shell ── */
+.overview-parallax .scene {
+  width: min(780px, calc(100vw - 96px));
+  aspect-ratio: 780 / 720;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  cursor: default;
+}
+
+.overview-parallax .card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+}
+
+/* ── Shared layer base ── */
+.overview-parallax .layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 32px 32px 28px;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+/* ── Front layer (Business) ── */
+.overview-parallax .layer--front {
+  z-index: 3;
+  background: var(--surface, #1a0f0a);
+  border: 1px solid var(--surface-border, rgba(228, 70, 255, 0.12));
+  transform: translateZ(60px);
+  transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+              filter 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 80px var(--accent-glow, rgba(228, 70, 255, 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.overview-parallax .card.state-peeked .layer--front {
+  opacity: 0.15;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.overview-parallax .card.state-developer .layer--front {
+  opacity: 0;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* ── Separator plane (Flowprint Engine badge) ── */
+.overview-parallax .layer--separator {
+  z-index: 2;
+  transform: translateZ(0px);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+  border: none;
+  padding: 0;
+}
+
+.overview-parallax .card.state-peeked .layer--separator {
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+
+.overview-parallax .card.state-developer .layer--separator {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.overview-parallax .separator-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #E446FF);
+  border: 1px solid var(--accent-dim, rgba(228, 70, 255, 0.35));
+  border-radius: 10px;
+  background: rgba(17, 9, 4, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 40px rgba(228, 70, 255, 0.25),
+    0 0 80px rgba(228, 70, 255, 0.1),
+    inset 0 0 20px rgba(228, 70, 255, 0.06);
+  text-shadow: 0 0 20px rgba(228, 70, 255, 0.5);
+  transform: scale(0.8);
+  transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+              transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.overview-parallax .separator-content .engine-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 6px rgba(228, 70, 255, 0.6));
+  animation: overview-parallax-engine-icon-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes overview-parallax-engine-icon-glow {
+  0% { filter: drop-shadow(0 0 4px rgba(228, 70, 255, 0.4)); }
+  100% { filter: drop-shadow(0 0 10px rgba(228, 70, 255, 0.8)); }
+}
+
+.overview-parallax .card.state-peeked .separator-content {
+  transform: scale(1);
+}
+
+.overview-parallax .card.state-developer .separator-content {
+  transform: scale(1.1);
+}
+
+/* Separator extending lines */
+.overview-parallax .separator-content::before,
+.overview-parallax .separator-content::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 80px;
+  height: 1px;
+}
+
+.overview-parallax .separator-content::before {
+  right: 100%;
+  margin-right: 16px;
+  background: linear-gradient(90deg, transparent, var(--accent-dim, rgba(228, 70, 255, 0.35)));
+}
+
+.overview-parallax .separator-content::after {
+  left: 100%;
+  margin-left: 16px;
+  background: linear-gradient(270deg, transparent, var(--accent-dim, rgba(228, 70, 255, 0.35)));
+}
+
+/* Pulse ring on separator */
+.overview-parallax .separator-content .pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 1.5px solid var(--accent, #E446FF);
+  opacity: 0;
+  animation: overview-parallax-separator-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes overview-parallax-separator-pulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.04); }
+}
+
+/* ── Back layer (Developer) ── */
+.overview-parallax .layer--back {
+  z-index: 1;
+  transform: translateZ(-60px);
+  background: var(--surface, #1a0f0a);
+  border: 1px solid var(--surface-border, rgba(228, 70, 255, 0.12));
+  filter: blur(6px);
+  opacity: 0.3;
+  transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+              filter 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  /* Flexbox layout so CTA button is never clipped below the toolchain grid */
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-parallax .card.state-peeked .layer--back {
+  opacity: 0.55;
+  filter: blur(2px);
+}
+
+.overview-parallax .card.state-developer .layer--back {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateZ(0px);
+  z-index: 5;
+}
+
+/* Badge, CTA, typography, and flow-container base styles migrated to
+   Tailwind classes directly in overview-parallax.tsx.
+   Badge and CTA use shared components (badge.tsx, bridge-cta.tsx). */
+
+/* ── SVG flow diagram — swimlane styling ── */
+.overview-parallax .flow-svg .lane-group {
+  cursor: default;
+  filter: drop-shadow(0 0 0 transparent);
+  transition: filter 0.15s ease;
+}
+
+.overview-parallax .flow-svg .lane-bg-rect {
+  fill: rgba(228, 70, 255, 0.03);
+  stroke: rgba(228, 70, 255, 0.08);
+  stroke-width: 0.5;
+  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+.overview-parallax .flow-svg .lane-inner-glow {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.overview-parallax .lane-customer .lane-bg-rect { fill: rgba(228, 70, 255, 0.03); stroke: rgba(228, 70, 255, 0.08); }
+.overview-parallax .lane-routing .lane-bg-rect  { fill: rgba(228, 70, 255, 0.02); stroke: rgba(228, 70, 255, 0.06); }
+.overview-parallax .lane-fulfillment .lane-bg-rect { fill: rgba(228, 70, 255, 0.015); stroke: rgba(228, 70, 255, 0.05); }
+
+.overview-parallax .flow-svg .lane-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  fill: rgba(160, 139, 122, 0.5);
+  transition: fill 0.15s ease;
+}
+
+/* ── Nodes ── */
+.overview-parallax .flow-svg .node-group {
+  cursor: default;
+}
+
+.overview-parallax .flow-svg .node-rect {
+  rx: 6;
+  ry: 6;
+  fill: #2a1a14;
+  stroke: #3d2a22;
+  stroke-width: 1.2;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.overview-parallax .flow-svg .node-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  fill: #f0e6df;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: fill 0.15s ease;
+}
+
+.overview-parallax .flow-svg .node-type-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  dominant-baseline: central;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.overview-parallax .flow-svg .node-circle {
+  fill: #2a1a14;
+  stroke: #3FDC77;
+  stroke-width: 1.2;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.overview-parallax .flow-svg .edge {
+  fill: none;
+  stroke: #6b4d40;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.15s ease;
+}
+
+.overview-parallax .flow-svg .edge-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px;
+  font-weight: 500;
+  fill: var(--text-muted, #6b5a4d);
+  opacity: 0.7;
+  transition: fill 0.15s ease;
+}
+
+/* ── Swimlane hover states ── */
+
+/* Customer lane hover */
+.overview-parallax .lane-customer:hover {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 20px rgba(255, 107, 107, 0.08));
+}
+.overview-parallax .lane-customer:hover .lane-bg-rect {
+  fill: url(#grad-customer-hover);
+  stroke: rgba(255, 107, 107, 0.20);
+  stroke-width: 1;
+}
+.overview-parallax .lane-customer:hover .lane-inner-glow { opacity: 1; }
+.overview-parallax .lane-customer:hover .lane-label { fill: var(--lane-customer, #FF6B6B); }
+
+/* Routing lane hover */
+.overview-parallax .lane-routing:hover {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 20px rgba(228, 70, 255, 0.08));
+}
+.overview-parallax .lane-routing:hover .lane-bg-rect {
+  fill: url(#grad-routing-hover);
+  stroke: rgba(228, 70, 255, 0.20);
+  stroke-width: 1;
+}
+.overview-parallax .lane-routing:hover .lane-inner-glow { opacity: 1; }
+.overview-parallax .lane-routing:hover .lane-label { fill: var(--lane-routing, #E446FF); }
+.overview-parallax .lane-routing:hover .edge { stroke: rgba(228, 70, 255, 0.35); }
+.overview-parallax .lane-routing:hover .edge-label { fill: rgba(228, 70, 255, 0.6); }
+
+/* Fulfillment lane hover */
+.overview-parallax .lane-fulfillment:hover {
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 20px rgba(6, 182, 212, 0.08));
+}
+.overview-parallax .lane-fulfillment:hover .lane-bg-rect {
+  fill: url(#grad-fulfillment-hover);
+  stroke: rgba(6, 182, 212, 0.20);
+  stroke-width: 1;
+}
+.overview-parallax .lane-fulfillment:hover .lane-inner-glow { opacity: 1; }
+.overview-parallax .lane-fulfillment:hover .lane-label { fill: var(--lane-fulfillment, #06B6D4); }
+
+/* Node-type coloring on ANY lane hover */
+.overview-parallax .lane-group:hover .node-type-terminal .node-circle {
+  fill: rgba(63, 220, 119, 0.15);
+  stroke: var(--node-type-terminal, #3FDC77);
+}
+.overview-parallax .lane-group:hover .node-type-terminal .node-label { fill: var(--node-type-terminal, #3FDC77); }
+
+.overview-parallax .lane-group:hover .node-type-action .node-rect {
+  fill: rgba(255, 146, 67, 0.15);
+  stroke: var(--node-type-action, #FF9243);
+}
+.overview-parallax .lane-group:hover .node-type-action .node-label { fill: var(--node-type-action, #FF9243); }
+
+.overview-parallax .lane-group:hover .node-type-switch .node-rect {
+  fill: rgba(163, 116, 255, 0.15);
+  stroke: var(--node-type-switch, #A374FF);
+}
+.overview-parallax .lane-group:hover .node-type-switch .node-label { fill: var(--node-type-switch, #A374FF); }
+
+/* ── Developer toolchain grid ── */
+.overview-parallax .toolchain-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.overview-parallax .tool-card {
+  background: var(--code-bg, #0d0805);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.overview-parallax .tool-card:hover {
+  border-color: rgba(228, 70, 255, 0.15);
+}
+
+.overview-parallax .tool-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.overview-parallax .tool-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.overview-parallax .tool-card-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.overview-parallax .tool-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-primary, #f0e6df);
+  white-space: nowrap;
+}
+
+.overview-parallax .tool-card-body {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-muted, #6b5a4d);
+  overflow: hidden;
+}
+
+/* Card-specific icon styles */
+.overview-parallax .tool-card--ci .tool-card-icon { background: rgba(90, 224, 122, 0.12); }
+.overview-parallax .tool-card--ci .tool-card-icon svg { color: var(--true-green, #5ae07a); }
+
+.overview-parallax .tool-card--yaml .tool-card-icon { background: rgba(228, 70, 255, 0.12); }
+.overview-parallax .tool-card--yaml .tool-card-icon svg { color: var(--accent, #E446FF); }
+
+.overview-parallax .tool-card--npm .tool-card-icon { background: rgba(228, 70, 255, 0.12); }
+.overview-parallax .tool-card--npm .tool-card-icon svg { color: #CB3837; }
+
+.overview-parallax .tool-card--codegen .tool-card-icon { background: rgba(122, 175, 255, 0.12); }
+.overview-parallax .tool-card--codegen .tool-card-icon svg { color: var(--keyword-blue, #7aafff); }
+
+.overview-parallax .tool-card--git .tool-card-icon { background: rgba(255, 184, 108, 0.12); }
+.overview-parallax .tool-card--git .tool-card-icon svg { color: var(--string-amber, #ffb86c); }
+
+.overview-parallax .tool-card--schema .tool-card-icon { background: rgba(90, 224, 194, 0.12); }
+.overview-parallax .tool-card--schema .tool-card-icon svg { color: var(--type-teal, #5ae0c2); }
+
+/* CI output lines */
+.overview-parallax .ci-line { display: flex; align-items: center; gap: 5px; font-size: 9.5px; line-height: 1.8; }
+.overview-parallax .ci-check { color: var(--true-green, #5ae07a); font-size: 10px; flex-shrink: 0; }
+.overview-parallax .ci-label { color: var(--text-muted, #6b5a4d); }
+.overview-parallax .ci-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 9px; font-weight: 600; border-radius: 4px; margin-bottom: 6px; }
+.overview-parallax .ci-badge--pass { color: var(--true-green, #5ae07a); background: rgba(90, 224, 122, 0.1); border: 1px solid rgba(90, 224, 122, 0.2); }
+
+/* YAML snippet */
+.overview-parallax .yaml-snippet { font-size: 9.5px; line-height: 1.7; }
+.overview-parallax .yaml-key { color: var(--keyword-blue, #7aafff); }
+.overview-parallax .yaml-val { color: var(--string-amber, #ffb86c); }
+
+/* npm install */
+.overview-parallax .npm-cmd { font-size: 10px; line-height: 1.7; color: var(--text-muted, #6b5a4d); word-break: break-all; }
+.overview-parallax .npm-prompt { color: var(--true-green, #5ae07a); }
+.overview-parallax .npm-pkg { color: var(--accent, #E446FF); }
+.overview-parallax .npm-result { margin-top: 6px; font-size: 9px; color: var(--text-muted, #6b5a4d); opacity: 0.7; }
+
+/* Codegen arrow */
+.overview-parallax .codegen-flow { display: flex; align-items: center; gap: 6px; font-size: 10px; margin-bottom: 4px; }
+.overview-parallax .codegen-file { padding: 3px 8px; border-radius: 4px; font-size: 9.5px; white-space: nowrap; }
+.overview-parallax .codegen-from { background: rgba(228, 70, 255, 0.1); color: var(--accent, #E446FF); border: 1px solid rgba(228, 70, 255, 0.15); }
+.overview-parallax .codegen-to { background: rgba(122, 175, 255, 0.1); color: var(--keyword-blue, #7aafff); border: 1px solid rgba(122, 175, 255, 0.15); }
+.overview-parallax .codegen-arrow { color: var(--text-muted, #6b5a4d); font-size: 14px; opacity: 0.5; }
+.overview-parallax .codegen-desc { font-size: 9px; color: var(--text-muted, #6b5a4d); opacity: 0.7; margin-top: 4px; }
+
+/* Git diff */
+.overview-parallax .diff-line { font-size: 9.5px; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.overview-parallax .diff-add { color: var(--true-green, #5ae07a); }
+.overview-parallax .diff-del { color: var(--false-red, #e05a5a); opacity: 0.7; }
+.overview-parallax .diff-ctx { color: var(--text-muted, #6b5a4d); opacity: 0.5; }
+.overview-parallax .diff-header { font-size: 9px; color: var(--text-muted, #6b5a4d); opacity: 0.5; margin-bottom: 4px; }
+
+/* Schema validation */
+.overview-parallax .schema-line { display: flex; align-items: center; gap: 5px; font-size: 9.5px; line-height: 1.8; }
+.overview-parallax .schema-icon { flex-shrink: 0; font-size: 10px; }
+.overview-parallax .schema-ok { color: var(--type-teal, #5ae0c2); }
+.overview-parallax .schema-label { color: var(--text-muted, #6b5a4d); }
+
+/* ── Liquid color bleed overlay ── */
+.overview-parallax .color-bleed {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 90% 10%,
+    rgba(228, 70, 255, 0.12) 0%,
+    rgba(228, 70, 255, 0.06) 30%,
+    rgba(228, 70, 255, 0.02) 60%,
+    transparent 80%
+  );
+  clip-path: circle(0% at 90% 10%);
+  transition: clip-path 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: clip-path;
+  transform: translateZ(61px);
+  backface-visibility: hidden;
+}
+
+.overview-parallax .card.state-peeked .color-bleed,
+.overview-parallax .card.state-developer .color-bleed {
+  clip-path: circle(160% at 90% 10%);
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 840px) {
+  .overview-parallax {
+    padding: 32px;
+  }
+
+  .overview-parallax .scene {
+    width: min(780px, calc(100vw - 64px));
+  }
+
+  .overview-parallax .layer {
+    padding: 24px 24px 20px;
+  }
+
+  .overview-parallax .separator-content {
+    font-size: 12px;
+    padding: 12px 28px;
+  }
+
+  .overview-parallax .separator-content::before,
+  .overview-parallax .separator-content::after {
+    width: 40px;
+  }
+
+  .overview-parallax .toolchain-grid {
+    gap: 8px;
+  }
+
+  .overview-parallax .tool-card {
+    padding: 10px;
+  }
+
+  .overview-parallax .tool-card-body {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 640px) {
+  .overview-parallax {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .overview-parallax .scene {
+    width: min(780px, calc(100vw - 40px));
+  }
+
+  .overview-parallax .layer {
+    padding: 20px 16px 16px;
+    border-radius: 12px;
+  }
+
+  .overview-parallax .separator-content {
+    font-size: 10px;
+    padding: 10px 20px;
+    gap: 6px;
+  }
+
+  .overview-parallax .separator-content::before,
+  .overview-parallax .separator-content::after {
+    width: 24px;
+  }
+
+  .overview-parallax .toolchain-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .overview-parallax .tool-card {
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .overview-parallax .tool-card-title {
+    font-size: 10px;
+  }
+
+  .overview-parallax .tool-card-body {
+    font-size: 8px;
+  }
+
+  .overview-parallax .tool-card-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .overview-parallax .tool-card-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+}
