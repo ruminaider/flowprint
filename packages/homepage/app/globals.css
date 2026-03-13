@@ -238,6 +238,11 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes bridge-badge-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
