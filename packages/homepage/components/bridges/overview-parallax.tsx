@@ -4,7 +4,6 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import { OverviewFlowSvg } from './overview-flow-svg'
 import { Badge } from './shared/badge'
 import { BridgeCTA } from './shared/bridge-cta'
-import './bridge-shared.css'
 import './overview-parallax.css'
 import '../flow/flow.css'
 
@@ -191,28 +190,28 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
               Business Perspective
             </Badge>
 
-            <h2 className="card-title">Service Blueprints</h2>
-            <p className="card-description">
+            <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Service Blueprints</h2>
+            <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-5">
               Design configurable service flows visually &mdash; drag nodes, connect paths,
               define swimlanes, and embed decision tables at every routing point.
               Your entire business process in one executable specification.
             </p>
 
             {/* Flow diagram sub-container with editor header */}
-            <div className="flow-container">
-              <div className="flow-panel-header">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2">
+            <div className="flow-container border border-accent/[0.08] rounded-xl overflow-hidden bg-code-bg mt-1">
+              <div className="flow-panel-header flex items-center gap-1.5 px-3 py-2 bg-table-header border-b border-accent/[0.08] font-mono text-[10.5px] text-fg-muted tracking-[0.02em]">
+                <svg className="w-3 h-3 opacity-60" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.2">
                   <path d="M2 4h12M2 8h12M2 12h12" stroke="#6b5a4d" />
                 </svg>
                 <span>order-fulfillment.flowprint</span>
-                <div className="header-dot" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent opacity-40 ml-auto shadow-[0_0_6px_rgba(228,70,255,0.3)]" />
               </div>
-              <div className="flow-panel-body">
+              <div className="flow-panel-body pt-2 px-1 pb-1 relative">
                 <OverviewFlowSvg />
               </div>
             </div>
 
-            <BridgeCTA onClick={handleCtaClick}>
+            <BridgeCTA onClick={handleCtaClick} className="z-10">
               <span>See the developer toolchain</span>
               <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -241,8 +240,8 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
               Developer Perspective
             </Badge>
 
-            <h2 className="card-title">Service Blueprints</h2>
-            <p className="card-description">
+            <h2 className="font-serif text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Service Blueprints</h2>
+            <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-5">
               Validated specifications feed your existing toolchain &mdash; CI catches structural
               errors, deterministic YAML diffs cleanly, and one command generates production
               Temporal TypeScript. No Flowprint runtime dependency.
@@ -364,7 +363,7 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
               </div>
             </div>
 
-            <BridgeCTA onClick={handleCtaClick}>
+            <BridgeCTA onClick={handleCtaClick} className="z-10">
               <span className="inline-flex transition-transform duration-[400ms] ease-out-expo" style={{ transform: 'rotate(180deg)' }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

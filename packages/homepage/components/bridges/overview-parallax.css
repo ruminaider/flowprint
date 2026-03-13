@@ -238,44 +238,9 @@
   z-index: 5;
 }
 
-/* Layer badge: base styles in bridge-shared.css (.layer-badge) */
-
-/* Component-specific badge overrides */
-.overview-parallax .layer-badge {
-  margin-bottom: 16px;
-}
-
-.overview-parallax .layer-badge--business {
-  border: 1px solid rgba(228, 70, 255, 0.2);
-}
-
-.overview-parallax .layer-badge--developer {
-  border: 1px solid rgba(90, 224, 194, 0.2);
-}
-
-.overview-parallax .layer-badge--business .dot { background: var(--accent, #E446FF); }
-.overview-parallax .layer-badge--developer .dot { background: var(--type-teal, #5ae0c2); }
-
-/* Typography: base styles in bridge-shared.css (.card-title, .card-description) */
-
-/* Component-specific typography overrides */
-.overview-parallax .card-description {
-  margin-bottom: 20px;
-}
-
-/* CTA button: base styles in bridge-shared.css (.cta, .cta-icon) */
-
-/* Component-specific CTA overrides */
-.overview-parallax .cta {
-  z-index: 10;
-}
-
-/* Flow container: base styles in bridge-shared.css (.flow-container, .flow-panel-header, .flow-panel-body) */
-
-/* Component-specific flow container overrides */
-.overview-parallax .flow-container {
-  margin-top: 4px;
-}
+/* Badge, CTA, typography, and flow-container base styles migrated to
+   Tailwind classes directly in overview-parallax.tsx.
+   Badge and CTA use shared components (badge.tsx, bridge-cta.tsx). */
 
 /* ── SVG flow diagram — swimlane styling ── */
 .overview-parallax .flow-svg .lane-group {
