@@ -139,7 +139,7 @@ nodes:
 
 | Field       | Type   | Required | Description                                                   |
 | ----------- | ------ | -------- | ------------------------------------------------------------- |
-| `file`      | string | yes      | Relative path to `.rules.yaml` file from the repository root. |
+| `file`      | string | yes      | Path to `.rules.yaml` file, resolved relative to the blueprint file's directory. |
 | `evaluator` | string | no       | Evaluator plugin name. Default: `builtin`.                    |
 
 ## Test Files
