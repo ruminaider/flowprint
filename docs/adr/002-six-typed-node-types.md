@@ -4,6 +4,8 @@
 
 Accepted (amended 2026-03-02 to add trigger node)
 
+Note: The filename retains the original `002-six-typed-node-types` for URL stability. The ADR was amended to add the seventh node type (trigger).
+
 ## Date
 
 2025-01-15

@@ -95,7 +95,7 @@ Lanes are horizontal bands on the canvas. Double-click a lane header to rename i
 
 ### Nodes
 
-Add nodes from the **floating toolbar** at the bottom of the canvas, or use the Command Palette (Cmd+K / Ctrl+K) to search for node types. Six node types are available:
+Add nodes from the **floating toolbar** at the bottom of the canvas, or use the Command Palette (Cmd+K / Ctrl+K) to search for node types. Seven node types are available:
 
 | Type       | Purpose                                                    |
 | ---------- | ---------------------------------------------------------- |
@@ -105,6 +105,7 @@ Add nodes from the **floating toolbar** at the bottom of the canvas, or use the 
 | `wait`     | Pauses until an event occurs or a timeout expires          |
 | `error`    | Handles errors from upstream action nodes                  |
 | `terminal` | End state of the flow (`success` or `failure`)             |
+| `trigger`  | Declares how a workflow starts (schedule, webhook, event, manual) |
 
 ### Connections
 
@@ -173,7 +174,67 @@ To also verify that entry point file paths and symbols exist on disk:
 flowprint validate my-service.flowprint.yaml --check-entry-points
 ```
 
-## 7. Lint Your Blueprint (Optional)
+## 7. Run Your Blueprint
+
+The dev runner executes entry point functions and walks the graph, producing a trace of every node visited and the output at each step.
+
+```bash
+flowprint run my-service.flowprint.yaml --input '{"customer": "test"}'
+```
+
+Sample trace output:
+
+```
+  ✓ start_action → { processed: true }
+  ✓ end_success (terminal: success)
+
+  2 nodes executed in 12ms
+```
+
+Use `--json` for structured output, or `--fixtures` to provide mock data for wait nodes.
+
+## 8. Generate Temporal Code (Optional)
+
+Generate Temporal TypeScript workflow scaffolding from your blueprint:
+
+```bash
+flowprint generate my-service.flowprint.yaml --output ./generated
+```
+
+This creates:
+
+- `workflow.ts` — workflow definition
+- `activities.ts` — activity stubs for each action node
+- `worker.ts` — worker configuration
+- `types.ts` — TypeScript type definitions
+- `test-fixtures.ts` — test fixture helpers
+
+The generated code is a starting point, not a runtime dependency. Teams own and extend the output.
+
+## 9. Test Decision Tables (Optional)
+
+If your blueprint uses decision tables (`.rules.yaml` files), create a corresponding test file:
+
+```yaml
+# pricing.rules.test.yaml
+tests:
+  - name: standard customer gets base price
+    input:
+      customer_type: standard
+      order_total: 100
+    expected:
+      discount: 0
+```
+
+Run all test files:
+
+```bash
+flowprint test
+```
+
+The test runner auto-derives `pricing.rules.yaml` from `pricing.rules.test.yaml`.
+
+## 10. Lint Your Blueprint (Optional)
 
 ```bash
 flowprint lint my-service.flowprint.yaml
@@ -198,7 +259,7 @@ rules:
   no-empty-branches: error
 ```
 
-## 8. Set Up CI Validation (Optional)
+## 11. Set Up CI Validation (Optional)
 
 Add a GitHub Actions workflow to validate blueprints on every push and pull request:
 
@@ -220,7 +281,7 @@ jobs:
       - run: flowprint validate '**/*.flowprint.yaml'
 ```
 
-## 9. Embed in Your Own App (Optional)
+## 12. Embed in Your Own App (Optional)
 
 The editor is available as a standalone React component for embedding in your own applications:
 
@@ -251,5 +312,6 @@ For the full API reference, theming details, symbol search configuration, and re
 
 - [YAML Format Reference](yaml-format-reference.md) -- full schema documentation for `.flowprint.yaml` files
 - [CLI Reference](cli-reference.md) -- all CLI commands, options, and exit codes
+- [Rules Format Reference](rules-format-reference.md) -- decision table schema and test file format
 - [Deployment Guide](deployment.md) -- host the standalone app with Docker, Vercel, Cloudflare Pages, AWS, GCP, or GitHub Pages
 - [Embedding Guide](../packages/editor/docs/EMBEDDING_GUIDE.md) -- embed the editor component in your React application

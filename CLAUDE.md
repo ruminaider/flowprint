@@ -1,18 +1,20 @@
 # Flowprint
 
-Visual service blueprint editor. Produces `.flowprint.yaml` files consumed by code-search.
+Visual service blueprint editor and workflow execution engine. Produces `.flowprint.yaml` specifications that can be edited visually, validated in CI, executed via the dev runner, and used to generate Temporal workflow code.
 
 ## Monorepo Structure
 
 ```
 packages/
-  schema/   @ruminaider/flowprint-schema   (tsup  -> ESM + CJS + .d.ts)
-  editor/   @ruminaider/flowprint-editor   (Vite lib mode -> ESM + .d.ts + CSS)
-  cli/      flowprint                       (tsup  -> CJS Node.js binary)
-  app/      flowprint-app (private)         (Vite  -> static site)
+  schema/   @ruminaider/flowprint-schema    (tsup  -> ESM + CJS + .d.ts)
+  engine/   @ruminaider/flowprint-engine    (tsup  -> ESM + CJS + .d.ts)
+  editor/   @ruminaider/flowprint-editor    (Vite lib mode -> ESM + .d.ts + CSS)
+  cli/      flowprint                        (tsup  -> CJS Node.js binary)
+  app/      flowprint-app (private)          (Vite  -> static site)
+  homepage/ @ruminaider/flowprint-homepage (private) (Vite  -> static site)
 ```
 
-Dependency graph: `schema` has zero dependents. `editor` and `cli` depend on `schema`. `app` depends on `editor` + `schema`. Editor and CLI are siblings -- neither depends on the other.
+Dependency graph: `engine` depends on `schema`. `cli` depends on `engine` + `schema`. `editor` depends on `schema`. `app` depends on `editor` + `schema`. `homepage` is standalone. Editor and engine are siblings -- neither depends on the other.
 
 ## Commands
 
@@ -66,11 +68,11 @@ Both CLI and editor use tree-sitter WASM grammars. Pin exact versions to prevent
 - Node IDs in blueprints: `snake_case` (e.g., `complete_consultation`, `evaluate_treatment`)
 - npm scope: `@ruminaider`
 - File extension: `*.flowprint.yaml`
-- Package names: `@ruminaider/flowprint-schema`, `@ruminaider/flowprint-editor`, `flowprint` (CLI)
+- Package names: `@ruminaider/flowprint-schema`, `@ruminaider/flowprint-engine`, `@ruminaider/flowprint-editor`, `flowprint` (CLI)
 
 ## Node Types
 
-Six types: `action`, `switch`, `parallel`, `wait`, `error`, `terminal`. Edges are implicit in node definitions (`next`, `cases[].next`, `branches[]`, `join`, `error.catch`), not stored separately.
+Seven types: `action`, `switch`, `parallel`, `wait`, `error`, `terminal`, `trigger`. Edges are implicit in node definitions (`next`, `cases[].next`, `branches[]`, `join`, `error.catch`, `default`, `timeout_next`), not stored separately. Trigger nodes declare how a workflow starts (`trigger_type`: `schedule`, `webhook`, `event`, `manual`) and point to the first node via `next`.
 
 ## Code Style
 

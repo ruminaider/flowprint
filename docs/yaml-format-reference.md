@@ -34,7 +34,7 @@ Every node is keyed by its ID (snake_case convention, e.g. `create_prescription`
 
 | Field          | Type                | Required | Description                                                 |
 | -------------- | ------------------- | -------- | ----------------------------------------------------------- |
-| `type`         | enum                | yes      | One of the 6 node types listed below.                       |
+| `type`         | enum                | yes      | One of the 7 node types listed below.                       |
 | `lane`         | string              | yes      | Lane ID this node belongs to.                               |
 | `label`        | string              | yes      | Human-readable display name.                                |
 | `description`  | string              | no       | Longer description of what this node does. Not on terminal. |
@@ -112,6 +112,56 @@ End state of the flow. Has no outgoing edges.
 
 **Note:** Terminal nodes do not support `description` or `entry_points`.
 
+### Node Type: `trigger`
+
+Declares how a workflow starts. Trigger nodes have no incoming edges and don't execute logic — they define the workflow's activation mechanism. Only one trigger-type-specific configuration block (`schedule`, `webhook`, `event`, or `manual`) is allowed per trigger node, matching the `trigger_type` value.
+
+| Field          | Type   | Required | Description                                              |
+| -------------- | ------ | -------- | -------------------------------------------------------- |
+| `trigger_type` | enum   | yes      | `schedule`, `webhook`, `event`, or `manual`.             |
+| `next`         | string | yes      | Node ID that this trigger initiates.                     |
+| `schedule`     | object | cond.    | Required when `trigger_type` is `schedule`.              |
+| `webhook`      | object | cond.    | Required when `trigger_type` is `webhook`.               |
+| `event`        | object | cond.    | Required when `trigger_type` is `event`.                 |
+| `manual`       | object | cond.    | Required when `trigger_type` is `manual`.                |
+
+**Schedule configuration:**
+
+| Field      | Type   | Required | Description                      |
+| ---------- | ------ | -------- | -------------------------------- |
+| `cron`     | string | no       | Cron expression.                 |
+| `timezone` | string | no       | IANA timezone (e.g. `UTC`).      |
+
+**Webhook configuration:**
+
+| Field     | Type                | Required | Description                                      |
+| --------- | ------------------- | -------- | ------------------------------------------------ |
+| `method`  | enum                | no       | `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.      |
+| `path`    | string              | no       | URL path.                                        |
+| `headers` | map\<string,string> | no       | Required headers.                                |
+
+**Event configuration:**
+
+| Field    | Type   | Required | Description              |
+| -------- | ------ | -------- | ------------------------ |
+| `source` | string | no       | Event source identifier. |
+| `type`   | string | no       | Event type.              |
+| `filter` | string | no       | Filter expression.       |
+
+**Manual configuration:**
+
+| Field         | Type         | Required | Description     |
+| ------------- | ------------ | -------- | --------------- |
+| `form_fields` | FormField[]  | no       | Input fields.   |
+
+Each **FormField**:
+
+| Field      | Type    | Required | Description                               |
+| ---------- | ------- | -------- | ----------------------------------------- |
+| `name`     | string  | no       | Field name.                               |
+| `type`     | enum    | no       | `string`, `number`, or `boolean`.         |
+| `required` | boolean | no       | Whether the field is required.            |
+
 ## ErrorHandler
 
 Configured on `action` nodes via the `error` field.
@@ -132,15 +182,15 @@ Configured on `action` nodes via the `error` field.
 
 Edges are implicit in node definitions -- they are not stored as a separate section. The graph is derived from these fields:
 
-| Source Field   | Node Types          | Edge Type |
-| -------------- | ------------------- | --------- |
-| `next`         | action, wait, error | `normal`  |
-| `cases[].next` | switch              | `normal`  |
-| `default`      | switch              | `default` |
-| `branches[]`   | parallel            | `normal`  |
-| `join`         | parallel            | `normal`  |
-| `timeout_next` | wait                | `normal`  |
-| `error.catch`  | action              | `error`   |
+| Source Field   | Node Types                   | Edge Type  |
+| -------------- | ---------------------------- | ---------- |
+| `next`         | action, wait, error, trigger | `normal`   |
+| `cases[].next` | switch                       | `normal`   |
+| `default`      | switch                       | `default`  |
+| `branches[]`   | parallel                     | `normal`   |
+| `join`         | parallel                     | `normal`   |
+| `timeout_next` | wait                         | `normal`   |
+| `error.catch`  | action                       | `error`    |
 
 ## Structural Validation Rules
 
@@ -149,6 +199,7 @@ Beyond schema validation, the following structural rules are enforced:
 1. **Dangling references**: All node ID references (`next`, `cases[].next`, `branches[]`, `join`, `error.catch`, `default`, `timeout_next`) must point to existing nodes.
 2. **Lane references**: Every node's `lane` must match a key in the `lanes` map.
 3. **Orphan detection**: Non-terminal nodes with no incoming and no outgoing edges are flagged. Terminal nodes with no incoming edges (in multi-node documents) are flagged.
+4. **Trigger constraints**: Trigger nodes must have no incoming edges — they are always entry points of the workflow.
 
 ## Canonical Serialization
 
@@ -160,14 +211,15 @@ The `serialize()` function in `@ruminaider/flowprint-schema` is the only sanctio
 
 **Node keys** (in order): `type`, `lane`, `label`, `description`, `metadata`, `entry_points`, then type-specific fields in this order:
 
-| Node Type  | Type-specific key order                    |
-| ---------- | ------------------------------------------ |
-| `action`   | `next`, `error`                            |
-| `switch`   | `cases`, `default`                         |
-| `parallel` | `branches`, `join`, `join_strategy`        |
-| `wait`     | `event`, `timeout`, `next`, `timeout_next` |
-| `error`    | `next`                                     |
-| `terminal` | `outcome`                                  |
+| Node Type  | Type-specific key order                                       |
+| ---------- | ------------------------------------------------------------- |
+| `action`   | `next`, `error`                                               |
+| `switch`   | `cases`, `default`                                            |
+| `parallel` | `branches`, `join`, `join_strategy`                           |
+| `wait`     | `event`, `timeout`, `next`, `timeout_next`                    |
+| `error`    | `next`                                                        |
+| `terminal` | `outcome`                                                     |
+| `trigger`  | `trigger_type`, `next`, `schedule`, `webhook`, `event`, `manual` |
 
 ### Formatting Rules
 

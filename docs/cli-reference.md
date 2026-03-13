@@ -1,6 +1,6 @@
 # Flowprint CLI Reference
 
-The `flowprint` CLI validates, lints, diffs, and scaffolds `.flowprint.yaml` service blueprints.
+The `flowprint` CLI validates, lints, diffs, runs, generates, tests, and scaffolds `.flowprint.yaml` service blueprints.
 
 ## Installation
 
@@ -108,22 +108,6 @@ Reports:
 | ---- | ------------------------------ |
 | 0    | Always (informational command) |
 
-### `flowprint migrate`
-
-Migrate `.flowprint.yaml` files to the latest schema version.
-
-```sh
-flowprint migrate
-```
-
-Currently a placeholder that reports the latest version.
-
-**Exit codes:**
-
-| Code | Meaning                   |
-| ---- | ------------------------- |
-| 0    | Already at latest version |
-
 ### `flowprint init [name]`
 
 Create a starter `.flowprint.yaml` blueprint with interactive prompts.
@@ -155,6 +139,85 @@ Uses `serialize()` from `@ruminaider/flowprint-schema` to produce canonical YAML
 | ---- | ------------------------------ |
 | 0    | Blueprint created successfully |
 | 2    | File already exists            |
+
+### `flowprint run <file>`
+
+Execute a blueprint using the dev runner. Validates schema and expressions first, then walks the graph — evaluating switch conditions via sandboxed expressions, running parallel branches concurrently, and loading entry point functions via dynamic import. Produces an execution trace showing the path taken and output at each step.
+
+```sh
+flowprint run my-service.flowprint.yaml
+flowprint run my-service.flowprint.yaml --input '{"customer": "test"}'
+flowprint run my-service.flowprint.yaml --fixtures fixtures.json --json
+```
+
+**Options:**
+
+| Option                      | Description                                        |
+| --------------------------- | -------------------------------------------------- |
+| `--input <json>`            | Workflow input as JSON string (default: `"{}"`)    |
+| `--fixtures <path>`         | Path to JSON fixtures file for wait nodes          |
+| `--json`                    | Output structured JSON trace                       |
+| `--expression-timeout <ms>` | Expression evaluation timeout in ms (default: `1000`) |
+
+**Engine functions used:** `runGraph()`, `validateExpressions()`, `loadFixtures()`, `formatTrace()`
+
+**Exit codes:**
+
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | Success                       |
+| 1    | Execution failure             |
+| 2    | File not found or parse error |
+
+### `flowprint generate <file>`
+
+Generate Temporal TypeScript workflow code from a blueprint. Creates workflow definitions, activity stubs, worker configuration, type definitions, and test fixture files in the output directory.
+
+```sh
+flowprint generate my-service.flowprint.yaml
+flowprint generate my-service.flowprint.yaml --output ./src/workflows
+```
+
+**Options:**
+
+| Option           | Description                             |
+| ---------------- | --------------------------------------- |
+| `--output <dir>` | Output directory (default: `./generated`) |
+
+**Engine functions used:** `generateCode()`
+
+**Exit codes:**
+
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | Success                       |
+| 1    | Validation errors             |
+| 2    | File not found or parse error |
+
+### `flowprint test [glob]`
+
+Run decision table test files against their corresponding rules. Auto-derives `.rules.yaml` from `.rules.test.yaml` filenames (e.g., `pricing.rules.test.yaml` tests `pricing.rules.yaml`).
+
+```sh
+flowprint test
+flowprint test "src/**/*.rules.test.yaml"
+```
+
+**Arguments:**
+
+| Argument | Description                                             |
+| -------- | ------------------------------------------------------- |
+| `[glob]` | Glob pattern for test files (default: `**/*.rules.test.yaml`) |
+
+**Engine functions used:** `runRulesTests()`
+
+**Exit codes:**
+
+| Code | Meaning                       |
+| ---- | ----------------------------- |
+| 0    | All tests passed              |
+| 1    | Test failures                 |
+| 2    | File not found or parse error |
 
 ## Global Exit Codes
 
