@@ -242,6 +242,14 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
       }
 
       gsap.delayedCall(0.3, runCycle)
+
+      // Cleanup: remove DOM classes that GSAP context.revert() won't catch
+      return () => {
+        container.querySelectorAll('.arrow-line, .arrow-head').forEach((el) => {
+          el.classList.remove('active')
+        })
+        rows.forEach((r) => r.classList.remove('row-match', 'row-dim'))
+      }
     },
     { scope: containerRef, dependencies: [isDev, animateParticle] },
   )
