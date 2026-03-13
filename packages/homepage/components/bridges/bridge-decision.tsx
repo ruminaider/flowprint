@@ -4,7 +4,8 @@ import { useState, useRef, useCallback } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { cn } from '@/lib/utils'
-import { useDynamicHeight } from '@/hooks/use-dynamic-height'
+import { Badge } from './shared/badge'
+import { ViewTransition } from './shared/view-transition'
 import '../flow/flow.css'
 import './bridge-decision-svg.css'
 
@@ -67,7 +68,7 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
   const particleInRef = useRef<HTMLDivElement>(null)
   const particleOutRef = useRef<HTMLDivElement>(null)
 
-  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
+  // useDynamicHeight is now handled internally by ViewTransition
 
   const animateParticle = useCallback(
     (particle: HTMLDivElement | null, onComplete?: () => void) => {
@@ -252,19 +253,14 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
       <div className="relative w-[min(780px,calc(100vw-48px))] max-w-full rounded-[20px] bg-surface border border-surface-border shadow-bridge-card overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-5 pt-5 sm:px-8 sm:pt-7">
-          <div
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-3 transition-all duration-[400ms]',
-              isDev
-                ? 'border border-accent/20 text-accent bg-accent/[0.12]'
-                : 'border border-node-switch/20 text-node-switch bg-node-switch/[0.12]',
-            )}
+          <Badge
+            variant={isDev ? 'developer' : 'business'}
+            colorScheme="purple-magenta"
+            pulse
+            className="mb-3 transition-all duration-[400ms]"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-[bridge-badge-pulse-dot_2s_ease-in-out_infinite]" />
-            <span>
-              {isDev ? 'Developer Perspective' : 'Business Perspective'}
-            </span>
-          </div>
+            {isDev ? 'Developer Perspective' : 'Business Perspective'}
+          </Badge>
           <h1 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-1.5 text-fg">
             Decision Tables
           </h1>
@@ -276,15 +272,13 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
         </div>
 
         {/* Views */}
-        <div ref={viewsRef} className="relative overflow-hidden w-full mt-5 transition-[height] duration-500 ease-out-expo">
-          {/* BUSINESS VIEW */}
-          <div
-            ref={bizViewRef}
-            className={cn(
-              'absolute top-0 inset-x-0 px-5 pb-5 sm:px-8 sm:pb-7 transition-all duration-500 ease-out-expo',
-              isDev ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0',
-            )}
-          >
+        <ViewTransition
+          showDev={isDev}
+          className="mt-5"
+          bizClassName="px-5 pb-5 sm:px-8 sm:pb-7"
+          devClassName="px-5 pb-5 sm:px-8 sm:pb-7"
+          bizContent={
+            <>
             <div className="flex items-center gap-3 mb-3 overflow-x-auto">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-elevated border border-node-switch/[0.15] rounded-lg">
                 <span className="font-mono text-[10px] text-fg-muted uppercase tracking-[0.08em]">
@@ -373,16 +367,10 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               </span>
               <span>{policyInfo.text}</span>
             </div>
-          </div>
-
-          {/* DEVELOPER VIEW */}
-          <div
-            ref={devViewRef}
-            className={cn(
-              'absolute top-0 inset-x-0 px-5 pb-5 sm:px-8 sm:pb-7 transition-all duration-500 ease-out-expo',
-              isDev ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none',
-            )}
-          >
+            </>
+          }
+          devContent={
+            <>
             <div className="flex items-center justify-center gap-0 min-h-[200px] relative overflow-x-auto">
               {/* Input JSON */}
               <div
@@ -501,8 +489,9 @@ export function BridgeDecision({ perspective }: BridgeDecisionProps) {
               Powered by <span className="text-accent font-medium">GoRules ZEN</span> — native decision table
               evaluation at runtime
             </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       </div>
     </div>
   )

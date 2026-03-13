@@ -2,6 +2,8 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { OverviewFlowSvg } from './overview-flow-svg'
+import { Badge } from './shared/badge'
+import { BridgeCTA } from './shared/bridge-cta'
 import './bridge-shared.css'
 import './overview-parallax.css'
 import '../flow/flow.css'
@@ -185,10 +187,9 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
         <div className={cardClassName} ref={cardRef} onClick={handleCardClick}>
           {/* ===== FRONT FACE — Business Perspective ===== */}
           <div className="layer layer--front">
-            <div className="layer-badge layer-badge--business">
-              <span className="dot" />
+            <Badge variant="business" colorScheme="magenta-teal">
               Business Perspective
-            </div>
+            </Badge>
 
             <h2 className="card-title">Service Blueprints</h2>
             <p className="card-description">
@@ -211,14 +212,14 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
               </div>
             </div>
 
-            <button className="cta" onClick={handleCtaClick}>
+            <BridgeCTA onClick={handleCtaClick}>
               <span>See the developer toolchain</span>
-              <span className="cta-icon">
+              <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-            </button>
+            </BridgeCTA>
           </div>
 
           {/* ===== SEPARATOR PLANE (Flowprint Engine) ===== */}
@@ -236,10 +237,9 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
 
           {/* ===== BACK FACE — Developer Perspective ===== */}
           <div className="layer layer--back">
-            <div className="layer-badge layer-badge--developer">
-              <span className="dot" />
+            <Badge variant="developer" colorScheme="magenta-teal">
               Developer Perspective
-            </div>
+            </Badge>
 
             <h2 className="card-title">Service Blueprints</h2>
             <p className="card-description">
@@ -364,14 +364,14 @@ export function OverviewParallax({ perspective, onPerspectiveChange }: OverviewP
               </div>
             </div>
 
-            <button className="cta cta--back" onClick={handleCtaClick}>
-              <span className="cta-icon" style={{ transform: 'rotate(180deg)' }}>
+            <BridgeCTA onClick={handleCtaClick}>
+              <span className="inline-flex transition-transform duration-[400ms] ease-out-expo" style={{ transform: 'rotate(180deg)' }}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
               <span>See the business workflow</span>
-            </button>
+            </BridgeCTA>
           </div>
 
           {/* ===== LIQUID COLOR BLEED OVERLAY ===== */}

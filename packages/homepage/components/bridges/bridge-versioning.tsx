@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { useDynamicHeight } from '@/hooks/use-dynamic-height'
+import { ViewTransition } from './shared/view-transition'
 import '../flow/flow.css'
 import './bridge-versioning-svg.css'
 
@@ -294,7 +294,7 @@ export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
   const [isAfterState, setIsAfterState] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstRender = useRef(true)
-  const { containerRef: viewsRef, bizRef: bizViewRef, devRef: devViewRef } = useDynamicHeight(isDev)
+  // useDynamicHeight is now handled internally by ViewTransition
 
   useEffect(() => {
     const delay = isFirstRender.current ? 2000 : (isAfterState ? 3000 : 2500)
@@ -330,26 +330,13 @@ export function BridgeVersioning({ perspective }: BridgeVersioningProps) {
         </div>
 
         {/* Views */}
-        <div ref={viewsRef} className="relative overflow-hidden w-full transition-[height] duration-500 ease-out-expo">
-          <div
-            ref={bizViewRef}
-            className={cn(
-              'absolute top-0 inset-x-0 pt-4 pb-6 transition-all duration-500 ease-out-expo',
-              isDev ? 'opacity-0 -translate-y-3 pointer-events-none' : 'opacity-100 translate-y-0',
-            )}
-          >
-            <BusinessViewContent isAfterState={isAfterState} />
-          </div>
-          <div
-            ref={devViewRef}
-            className={cn(
-              'absolute top-0 inset-x-0 px-5 sm:px-8 pt-4 pb-6 transition-all duration-500 ease-out-expo',
-              isDev ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-3 pointer-events-none',
-            )}
-          >
-            <DeveloperViewContent />
-          </div>
-        </div>
+        <ViewTransition
+          showDev={isDev}
+          bizClassName="pt-4 pb-6"
+          devClassName="px-5 sm:px-8 pt-4 pb-6"
+          bizContent={<BusinessViewContent isAfterState={isAfterState} />}
+          devContent={<DeveloperViewContent />}
+        />
       </div>
     </div>
   )

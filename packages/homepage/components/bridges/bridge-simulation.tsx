@@ -8,6 +8,8 @@ import { useDynamicHeight } from '@/hooks/use-dynamic-height'
 import { WalkthroughSvg } from './walkthrough-svg'
 import { StepByStepSvg } from './step-by-step-svg'
 import { WhatIfSvg } from './what-if-svg'
+import { Badge } from './shared/badge'
+import { BridgeCTA } from './shared/bridge-cta'
 import {
   walkthroughPath,
   stepByStepPath,
@@ -651,10 +653,9 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
 
       {/* ===== BUSINESS VIEW ===== */}
       <div ref={bizViewRef} className="view view--business">
-        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-4 text-accent bg-accent/10 border border-accent/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+        <Badge variant="business" colorScheme="magenta-teal" className="mb-4">
           Business Perspective
-        </div>
+        </Badge>
 
         <h2 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
         <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
@@ -761,22 +762,21 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           </div>
         </div>
 
-        <button className="bridge-cta inline-flex items-center gap-2.5 mt-4 px-[22px] py-[11px] font-sans text-[13px] font-semibold tracking-[0.02em] text-fg bg-gradient-to-br from-accent/[0.15] to-accent/[0.05] border border-accent/25 rounded-[10px] cursor-pointer transition-all duration-300 relative overflow-hidden hover:border-accent/45 hover:shadow-[0_0_30px_rgba(228,70,255,0.15)]" onClick={handleShowDev}>
+        <BridgeCTA onClick={handleShowDev}>
           <span>See the developer view</span>
           <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
-        </button>
+        </BridgeCTA>
       </div>
 
       {/* ===== DEVELOPER VIEW ===== */}
       <div ref={devViewRef} className="view view--developer">
-        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.05em] mb-4 text-type-teal bg-type-teal/10 border border-type-teal/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-type-teal" />
+        <Badge variant="developer" colorScheme="magenta-teal" className="mb-4">
           Developer Perspective
-        </div>
+        </Badge>
 
         <h2 className="font-serif text-[26px] sm:text-[32px] font-normal tracking-[-0.01em] leading-[1.15] mb-2.5 text-fg">Simulation &amp; Testing</h2>
         <p className="text-[13.5px] leading-relaxed text-fg-secondary mb-4">
@@ -828,14 +828,14 @@ export function BridgeSimulation({ perspective }: BridgeSimulationProps) {
           </div>
         </div>
 
-        <button className="bridge-cta inline-flex items-center gap-2.5 mt-4 px-[22px] py-[11px] font-sans text-[13px] font-semibold tracking-[0.02em] text-fg bg-gradient-to-br from-accent/[0.15] to-accent/[0.05] border border-accent/25 rounded-[10px] cursor-pointer transition-all duration-300 relative overflow-hidden hover:border-accent/45 hover:shadow-[0_0_30px_rgba(228,70,255,0.15)]" onClick={handleShowBusiness}>
+        <BridgeCTA onClick={handleShowBusiness}>
           <span>See the business view</span>
           <span className="inline-flex transition-transform duration-[400ms] ease-out-expo">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M10 3l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
-        </button>
+        </BridgeCTA>
       </div>
 
     </div>
