@@ -18,3 +18,4 @@ We follow the [Nygard ADR template](https://cognitect.com/blog/2011/11/15/docume
 | [008](008-design-time-specification-architecture.md) | Design-Time Specification Architecture | Accepted | 2025-12-01 |
 | [009](009-decision-tables-and-rules-engine.md) | Decision Tables and Rules Engine | Accepted | 2026-03-02 |
 | [010](010-browser-safe-simulation-engine.md) | Browser-Safe Simulation Engine | Accepted | 2026-03-02 |
+| [011](011-execution-engine-with-embedded-gorules.md) | Execution Engine with Embedded GoRules | Proposed | 2026-03-08 |

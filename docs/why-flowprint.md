@@ -59,14 +59,14 @@ Output: rendered diagrams from text DSLs.
 
 Flowprint is an open-source bridge between service design and service
 implementation. It introduces a structured, machine-readable format for service
-blueprints -- `.flowprint.yaml` -- and provides tooling to edit, validate, and
-generate code from that format.
+blueprints -- `.flowprint.yaml` -- and provides tooling to edit, validate,
+execute, test, and generate code from that format.
 
 ### Schema-first
 
 A `.flowprint.yaml` file is not a picture. It is a structured document with a
 published JSON Schema. It can be validated, linted, diffed, and processed by any
-tool that reads YAML. The schema defines six node types that map directly to
+tool that reads YAML. The schema defines seven node types that map directly to
 service blueprint semantics: customer actions, frontstage interactions, backstage
 processes, support processes, physical evidence, and external systems.
 
@@ -84,6 +84,21 @@ workflow scaffolding: workflow definitions, activity stubs, worker configuration
 and type definitions. The generated code is a starting point, not a runtime
 dependency. Teams own and extend the output.
 
+### Execution
+
+`flowprint run` executes blueprints locally using the dev runner. The graph
+walker processes nodes in dependency order, evaluates switch conditions via
+sandboxed expressions, runs parallel branches concurrently, and produces an
+execution trace showing the path taken and output at each step. Entry point
+functions are loaded dynamically from the codebase.
+
+### Decision tables
+
+Business rules are declared in `.rules.yaml` files alongside blueprints.
+Decision tables use structured conditions (operators, hit policies) that are
+readable by non-developers and testable independently via `flowprint test`. The
+browser-safe evaluator provides instant feedback in the editor.
+
 ### Embeddable
 
 `<FlowprintEditor>` is an npm package. It can be embedded in internal tools,
@@ -92,8 +107,8 @@ a focused API, not a standalone application that requires its own infrastructure
 
 ### Focused vocabulary
 
-Six typed node types cover service blueprint semantics without the complexity of
-full BPMN notation. Edges are implicit (derived from node relationships), and
+Seven typed node types cover service blueprint semantics without the complexity
+of full BPMN notation. Edges are implicit (derived from node relationships), and
 the canonical serializer ensures that the YAML output stays clean and
 diff-friendly. The goal is a format that service designers can read and engineers
 can generate from -- not a general-purpose diagramming language.
