@@ -174,12 +174,12 @@ export function SimulationPanel({ simulation, scenarios, onSelectScenario }: Sim
   const handleInputChange = useCallback(
     (value: string) => {
       setInputText(value)
+      // Clear the scenario label but keep rules — user is customizing the input
       if (selectedScenarioId) {
         setSelectedScenarioId(null)
-        onSelectScenario?.(null)
       }
     },
-    [selectedScenarioId, onSelectScenario],
+    [selectedScenarioId],
   )
 
   const handleFixturesChange = useCallback(
@@ -187,10 +187,9 @@ export function SimulationPanel({ simulation, scenarios, onSelectScenario }: Sim
       setFixturesText(value)
       if (selectedScenarioId) {
         setSelectedScenarioId(null)
-        onSelectScenario?.(null)
       }
     },
-    [selectedScenarioId, onSelectScenario],
+    [selectedScenarioId],
   )
 
   const {

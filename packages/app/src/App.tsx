@@ -27,6 +27,7 @@ export function App() {
   const [showSimPanel, setShowSimPanel] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rulesDataMap, setRulesDataMap] = useState<RulesDataMap>({})
+  const [simulationRules, setSimulationRules] = useState<RulesDataMap>({})
 
   const settingsHook = useSettings()
   const { settings } = settingsHook
@@ -37,12 +38,14 @@ export function App() {
     codeSearchUrl: settings.codeSearchUrl || undefined,
   })
 
-  const simulation = useSimulation(doc, rulesDataMap)
+  // Merge project rules with simulation-scoped rules for the simulation hook
+  const effectiveRules: RulesDataMap = { ...rulesDataMap, ...simulationRules }
+  const simulation = useSimulation(doc, effectiveRules)
   const scenarios = doc ? getScenarios(doc.name) : []
 
   const handleSelectScenario = useCallback(
     (scenario: TemplateScenario | null) => {
-      setRulesDataMap(scenario?.rulesData ?? {})
+      setSimulationRules(scenario?.rulesData ?? {})
     },
     [],
   )
@@ -54,6 +57,7 @@ export function App() {
     if (simulation.isActive) {
       simulation.stop()
       setShowSimPanel(false)
+      setSimulationRules({})
     } else {
       setShowSimPanel(true)
     }
@@ -145,6 +149,7 @@ export function App() {
     setDoc(null)
     fileManager.setDirty(false)
     setRulesDataMap({})
+    setSimulationRules({})
     setError(null)
   }, [fileManager, simulation])
 
@@ -239,7 +244,7 @@ export function App() {
               onChange={handleChange}
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
-              rulesDataMap={rulesDataMap}
+              rulesDataMap={effectiveRules}
               nodeHighlights={simulation.nodeHighlights}
               edgeHighlights={simulation.edgeHighlights}
               simulationAnimation={simulation.simulationAnimation}
@@ -255,6 +260,7 @@ export function App() {
                 stop: () => {
                   simulation.stop()
                   setShowSimPanel(false)
+                  setSimulationRules({})
                 },
               }}
               scenarios={scenarios}
