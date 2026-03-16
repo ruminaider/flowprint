@@ -9,6 +9,8 @@ import { WelcomeScreen } from './components/WelcomeScreen'
 import { NewBlueprintWizard } from './components/NewBlueprintWizard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SimulationPanel } from './components/SimulationPanel'
+import { getScenarios } from './data/template-scenarios'
+import type { TemplateScenario } from './data/template-scenarios'
 import { UnsavedChangesGuard } from './components/UnsavedChangesGuard'
 import { useFileManager } from './hooks/useFileManager'
 import { useProjectDirectory } from './hooks/useProjectDirectory'
@@ -25,6 +27,7 @@ export function App() {
   const [showSimPanel, setShowSimPanel] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rulesDataMap, setRulesDataMap] = useState<RulesDataMap>({})
+  const [simulationRules, setSimulationRules] = useState<RulesDataMap>({})
 
   const settingsHook = useSettings()
   const { settings } = settingsHook
@@ -35,7 +38,17 @@ export function App() {
     codeSearchUrl: settings.codeSearchUrl || undefined,
   })
 
-  const simulation = useSimulation(doc, rulesDataMap)
+  // Merge project rules with simulation-scoped rules for the simulation hook
+  const effectiveRules: RulesDataMap = { ...rulesDataMap, ...simulationRules }
+  const simulation = useSimulation(doc, effectiveRules)
+  const scenarios = doc ? getScenarios(doc.name) : []
+
+  const handleSelectScenario = useCallback(
+    (scenario: TemplateScenario | null) => {
+      setSimulationRules(scenario?.rulesData ?? {})
+    },
+    [],
+  )
 
   // Review #5: gate on doc !== null only, not on rules presence
   const canSimulate = doc !== null
@@ -44,6 +57,7 @@ export function App() {
     if (simulation.isActive) {
       simulation.stop()
       setShowSimPanel(false)
+      setSimulationRules({})
     } else {
       setShowSimPanel(true)
     }
@@ -135,6 +149,7 @@ export function App() {
     setDoc(null)
     fileManager.setDirty(false)
     setRulesDataMap({})
+    setSimulationRules({})
     setError(null)
   }, [fileManager, simulation])
 
@@ -229,8 +244,10 @@ export function App() {
               onChange={handleChange}
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
-              rulesDataMap={rulesDataMap}
+              rulesDataMap={effectiveRules}
               nodeHighlights={simulation.nodeHighlights}
+              edgeHighlights={simulation.edgeHighlights}
+              simulationAnimation={simulation.simulationAnimation}
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}
@@ -243,8 +260,11 @@ export function App() {
                 stop: () => {
                   simulation.stop()
                   setShowSimPanel(false)
+                  setSimulationRules({})
                 },
               }}
+              scenarios={scenarios}
+              onSelectScenario={handleSelectScenario}
             />
           )}
         </>

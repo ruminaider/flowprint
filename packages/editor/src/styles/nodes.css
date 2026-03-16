@@ -100,6 +100,21 @@
   }
 }
 
+@keyframes fp-sim-entrance {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  60% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .fp-node--sim-active {
   --fp-sim-glow: rgba(166, 227, 161, 0.5);
   background: rgba(166, 227, 161, 0.15);
@@ -108,7 +123,33 @@
   box-shadow:
     0 0 0 3px rgba(166, 227, 161, 0.3),
     0 0 12px rgba(166, 227, 161, 0.2);
-  animation: fp-sim-pulse 1.5s ease-in-out infinite;
+  animation:
+    fp-sim-entrance 0.3s ease-out,
+    fp-sim-pulse 1.5s ease-in-out 0.3s infinite;
+}
+
+/* Delay the active glow until the edge particle arrives.
+ * animation-fill-mode:both holds the 0% (normal) look during the delay,
+ * then transitions to 100% (active glow) over 0.3s. */
+@keyframes fp-sim-delayed-entrance {
+  0% {
+    background: var(--fp-bg-node);
+    border-color: var(--fp-border-default);
+    box-shadow: none;
+  }
+  100% {
+    background: rgba(166, 227, 161, 0.15);
+    border-color: #a6e3a1;
+    box-shadow:
+      0 0 0 3px rgba(166, 227, 161, 0.3),
+      0 0 12px rgba(166, 227, 161, 0.2);
+  }
+}
+
+.fp-node--sim-active.fp-node--sim-active-delayed {
+  animation:
+    fp-sim-delayed-entrance 0.3s ease-out var(--fp-sim-particle-dur, 0ms) both,
+    fp-sim-pulse 1.5s ease-in-out calc(var(--fp-sim-particle-dur, 0ms) + 0.3s) infinite;
 }
 
 .fp-node--sim-visited {
@@ -117,6 +158,33 @@
   border-width: 2px;
   box-shadow: 0 0 0 2px rgba(180, 190, 254, 0.2);
   opacity: 0.8;
+}
+
+@keyframes fp-sim-depart {
+  0% {
+    background: rgba(166, 227, 161, 0.15);
+    border-color: #a6e3a1;
+    box-shadow:
+      0 0 0 3px rgba(166, 227, 161, 0.3),
+      0 0 12px rgba(166, 227, 161, 0.2);
+    opacity: 1;
+  }
+  100% {
+    background: rgba(180, 190, 254, 0.1);
+    border-color: #b4befe;
+    box-shadow: 0 0 0 2px rgba(180, 190, 254, 0.2);
+    opacity: 0.8;
+  }
+}
+
+.fp-node--sim-departing {
+  border-width: 2px;
+  animation: fp-sim-depart 0.3s ease-out var(--fp-sim-depart-delay, 0ms) both;
+}
+
+@keyframes fp-sim-edge-fadeout {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .fp-node--sim-error {

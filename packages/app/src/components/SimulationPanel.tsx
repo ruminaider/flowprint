@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { UseSimulationReturn } from '../hooks/useSimulation'
+import type { TemplateScenario } from '../data/template-scenarios'
 
 export interface SimulationPanelProps {
   simulation: UseSimulationReturn
+  scenarios?: TemplateScenario[]
+  onSelectScenario?: (scenario: TemplateScenario | null) => void
 }
 
 const panelStyle: React.CSSProperties = {
@@ -103,23 +106,91 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function buildCumulativeContext(
-  steps: { stepOutput?: { nodeId: string; value: unknown } }[],
+  steps: {
+    stepOutput?: { nodeId: string; value: unknown }
+    branchOutputs?: Record<string, unknown>
+  }[],
   upToIndex: number,
 ): Record<string, unknown> {
   const ctx: Record<string, unknown> = {}
   for (let i = 0; i <= upToIndex; i++) {
-    const out = steps[i]?.stepOutput
-    if (out) ctx[out.nodeId] = out.value
+    const step = steps[i]
+    if (step?.stepOutput) ctx[step.stepOutput.nodeId] = step.stepOutput.value
+    if (step?.branchOutputs) {
+      for (const [branchId, value] of Object.entries(step.branchOutputs)) {
+        ctx[branchId] = value
+      }
+    }
   }
   return ctx
 }
 
-export function SimulationPanel({ simulation }: SimulationPanelProps) {
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '6px 8px',
+  fontSize: 12,
+  fontFamily: 'var(--fp-font-sans, system-ui, sans-serif)',
+  background: '#1C1B25',
+  color: '#E8E7F4',
+  border: '1px solid #2E2D3D',
+  borderRadius: 6,
+  cursor: 'pointer',
+}
+
+export function SimulationPanel({ simulation, scenarios, onSelectScenario }: SimulationPanelProps) {
   const [inputText, setInputText] = useState('{}')
   const [fixturesText, setFixturesText] = useState('')
   const [showFixtures, setShowFixtures] = useState(false)
   const [showContext, setShowContext] = useState(false)
   const [inputError, setInputError] = useState<string | null>(null)
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null)
+
+  const hasScenarios = scenarios && scenarios.length > 0
+  const selectedScenario = hasScenarios
+    ? scenarios.find((s) => s.id === selectedScenarioId) ?? null
+    : null
+
+  const handleSelectScenario = useCallback(
+    (scenarioId: string) => {
+      if (scenarioId === '') {
+        setSelectedScenarioId(null)
+        onSelectScenario?.(null)
+        return
+      }
+      const scenario = scenarios?.find((s) => s.id === scenarioId)
+      if (!scenario) return
+      setSelectedScenarioId(scenarioId)
+      setInputText(JSON.stringify(scenario.input, null, 2))
+      setFixturesText(JSON.stringify(scenario.fixtures ?? {}, null, 2))
+      if (scenario.fixtures && Object.keys(scenario.fixtures).length > 0) {
+        setShowFixtures(true)
+      }
+      setInputError(null)
+      onSelectScenario?.(scenario)
+    },
+    [scenarios, onSelectScenario],
+  )
+
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setInputText(value)
+      // Clear the scenario label but keep rules — user is customizing the input
+      if (selectedScenarioId) {
+        setSelectedScenarioId(null)
+      }
+    },
+    [selectedScenarioId],
+  )
+
+  const handleFixturesChange = useCallback(
+    (value: string) => {
+      setFixturesText(value)
+      if (selectedScenarioId) {
+        setSelectedScenarioId(null)
+      }
+    },
+    [selectedScenarioId],
+  )
 
   const {
     isActive,
@@ -136,6 +207,8 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
     reset,
     setAutoPlay,
     isAutoPlaying,
+    playbackSpeed,
+    setPlaybackSpeed,
   } = simulation
 
   const handleRun = useCallback(() => {
@@ -207,13 +280,38 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
           </button>
         </div>
 
+        {hasScenarios && (
+          <div style={inputAreaStyle}>
+            <label style={{ display: 'block', fontSize: 11, marginBottom: 4, color: '#8887A5' }}>
+              Example Scenario
+            </label>
+            <select
+              value={selectedScenarioId ?? ''}
+              onChange={(e) => { handleSelectScenario(e.target.value) }}
+              style={selectStyle}
+            >
+              <option value="">Custom input</option>
+              {scenarios.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            {selectedScenario && (
+              <div style={{ fontSize: 11, color: '#8887A5', marginTop: 4 }}>
+                {selectedScenario.description}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={inputAreaStyle}>
           <label style={{ display: 'block', fontSize: 11, marginBottom: 4, color: '#8887A5' }}>
             Input JSON
           </label>
           <textarea
             value={inputText}
-            onChange={(e) => { setInputText(e.target.value) }}
+            onChange={(e) => { handleInputChange(e.target.value) }}
             style={textareaStyle}
             placeholder='{"key": "value"}'
           />
@@ -236,7 +334,7 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
             </label>
             <textarea
               value={fixturesText}
-              onChange={(e) => { setFixturesText(e.target.value) }}
+              onChange={(e) => { handleFixturesChange(e.target.value) }}
               style={textareaStyle}
               placeholder='{"wait_node_id": {"event": "data"}}'
             />
@@ -306,6 +404,21 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
         >
           {isAutoPlaying ? 'Pause' : 'Play'}
         </button>
+
+        {/* Speed buttons */}
+        <span style={{ color: '#8887A5', fontSize: 10, marginLeft: 4 }}>Speed:</span>
+        {[0.5, 1, 2, 4].map((speed) => (
+          <button
+            key={speed}
+            type="button"
+            onClick={() => { setPlaybackSpeed(speed) }}
+            style={playbackSpeed === speed ? btnActiveStyle : btnStyle}
+            title={`${String(speed)}x speed`}
+          >
+            {speed}x
+          </button>
+        ))}
+
         <button type="button" onClick={stop} style={{ ...btnStyle, color: '#f38ba8' }}>
           Stop
         </button>

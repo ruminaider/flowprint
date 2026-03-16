@@ -200,8 +200,9 @@ describe('simulateGraph', () => {
 
       const trace = await simulateGraph(doc, makeOptions())
 
-      expect(trace.steps[0]?.status).toBe('error')
-      expect(trace.steps[0]?.error).toContain('not found in rulesData')
+      // Missing rules are skipped gracefully — node completes with empty output
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.steps).toHaveLength(2) // proceeds to 'done' terminal
     })
   })
 
@@ -249,6 +250,102 @@ describe('simulateGraph', () => {
     })
   })
 
+  describe('switch fixture data', () => {
+    it('matches fixture string against case.when labels', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'Approved', next: 'approve' },
+            { when: 'Rejected', next: 'reject' },
+          ],
+          default: 'fallback',
+        },
+        approve: { type: 'terminal', lane: 'default', label: 'Approve', outcome: 'success' },
+        reject: { type: 'terminal', lane: 'default', label: 'Reject', outcome: 'failure' },
+        fallback: { type: 'terminal', lane: 'default', label: 'Fallback', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        fixtures: { check: 'Approved' },
+      }))
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'approve'])
+      expect(trace.steps[0]?.status).toBe('matched')
+      expect(trace.steps[0]?.matched_case).toBe(0)
+      expect(trace.steps[0]?.stepOutput).toEqual({ nodeId: 'check', value: 'Approved' })
+    })
+
+    it('routes to default when fixture is "default"', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [{ when: 'Express', next: 'fast' }],
+          default: 'slow',
+        },
+        fast: { type: 'terminal', lane: 'default', label: 'Fast', outcome: 'success' },
+        slow: { type: 'terminal', lane: 'default', label: 'Slow', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        fixtures: { check: 'default' },
+      }))
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'slow'])
+      expect(trace.steps[0]?.status).toBe('default')
+    })
+
+    it('falls through to expression evaluation when fixture does not match any label', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'input.amount > 100', next: 'high' },
+          ],
+          default: 'low',
+        },
+        high: { type: 'terminal', lane: 'default', label: 'High', outcome: 'success' },
+        low: { type: 'terminal', lane: 'default', label: 'Low', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions({
+        input: { amount: 200 },
+        fixtures: { check: 'NoMatch' },
+      }))
+
+      // Fixture "NoMatch" doesn't match any case label, so falls through to expression eval
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'high'])
+    })
+
+    it('does not interfere when no fixture provided', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [
+            { when: 'Approved', next: 'approve' },
+          ],
+          default: 'fallback',
+        },
+        approve: { type: 'terminal', lane: 'default', label: 'Approve', outcome: 'success' },
+        fallback: { type: 'terminal', lane: 'default', label: 'Fallback', outcome: 'success' },
+      })
+
+      // Label-style when values are not valid expressions, so falls through to default
+      const trace = await simulateGraph(doc, makeOptions())
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['check', 'fallback'])
+      expect(trace.steps[0]?.status).toBe('default')
+    })
+  })
+
   describe('fixture data', () => {
     it('uses fixture for entry-point action', async () => {
       const doc = makeDoc({
@@ -292,7 +389,7 @@ describe('simulateGraph', () => {
   })
 
   describe('parallel node', () => {
-    it('traces branches sequentially with fixtures', async () => {
+    it('collapses branches into grouped step with branchNodeIds', async () => {
       const doc = makeDoc({
         par: {
           type: 'parallel',
@@ -321,12 +418,12 @@ describe('simulateGraph', () => {
       }))
 
       expect(trace.status).toBe('success')
-      // Branch steps are pushed by onParallel, plus the parallel step itself, plus terminal
       const nodeIds = trace.steps.map((s) => s.node_id)
-      expect(nodeIds).toContain('b1')
-      expect(nodeIds).toContain('b2')
-      expect(nodeIds).toContain('par')
-      expect(nodeIds).toContain('done')
+      expect(nodeIds).toEqual(['par', 'par', 'done'])
+      expect(trace.steps[0]?.status).toBe('entered')
+      expect(trace.steps[1]?.status).toBe('completed')
+      expect(trace.steps[1]?.branchNodeIds).toEqual(['b1', 'b2'])
+      expect(trace.steps[1]?.branchOutputs).toEqual({ b1: 'result1', b2: 'result2' })
     })
   })
 
@@ -510,6 +607,71 @@ describe('simulateGraph', () => {
       const switchStep = trace.steps.find((s) => s.node_id === 'check')
       expect(switchStep).toBeDefined()
       expect(switchStep?.status).toBe('default')
+    })
+  })
+
+  describe('error.catch routing', () => {
+    const makeErrorDoc = (withCatch: boolean) =>
+      makeDoc({
+        risky: {
+          type: 'action',
+          lane: 'default',
+          label: 'Risky',
+          entry_points: [{ file: 'a.ts', symbol: 'fn' }],
+          next: 'done',
+          ...(withCatch ? { error: { catch: 'handler' } } : {}),
+        },
+        handler: {
+          type: 'error',
+          lane: 'default',
+          label: 'Handle Error',
+          next: 'failed',
+        },
+        failed: { type: 'terminal', lane: 'default', label: 'Failed', outcome: 'failure' },
+        done: { type: 'terminal', lane: 'default', label: 'Done', outcome: 'success' },
+      })
+
+    it('_error string routes to catch target', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: '_error' } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'handler', 'failed'])
+      expect(trace.steps[0]?.status).toBe('error-caught')
+      expect(trace.status).toBe('failure')
+    })
+
+    it('{ _error: true } object routes to catch target', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: { _error: true, msg: 'boom' } } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'handler', 'failed'])
+      expect(trace.steps[0]?.status).toBe('error-caught')
+    })
+
+    it('normal fixture routes to next', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(true),
+        makeOptions({ fixtures: { risky: { ok: true } } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'done'])
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.status).toBe('success')
+    })
+
+    it('_error without error.catch routes to next', async () => {
+      const trace = await simulateGraph(
+        makeErrorDoc(false),
+        makeOptions({ fixtures: { risky: '_error' } }),
+      )
+
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['risky', 'done'])
+      expect(trace.steps[0]?.status).toBe('completed')
+      expect(trace.status).toBe('success')
     })
   })
 

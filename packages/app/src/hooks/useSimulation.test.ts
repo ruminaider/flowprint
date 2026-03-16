@@ -35,6 +35,18 @@ const mockTrace = {
   ],
 }
 
+const threeNodeDoc: FlowprintDocument = {
+  schema: 'flowprint/1.0',
+  name: 'test-3',
+  version: '0.1.0',
+  lanes: { main: { label: 'Main' } },
+  nodes: {
+    a: { type: 'action', lane: 'main', label: 'A', next: 'b' },
+    b: { type: 'action', lane: 'main', label: 'B', next: 'c' },
+    c: { type: 'terminal', lane: 'main', label: 'C', outcome: 'success' },
+  },
+}
+
 const threeStepTrace = {
   status: 'success' as const,
   duration_ms: 15,
@@ -231,20 +243,81 @@ describe('useSimulation', () => {
     // Step 0: a is active
     expect(result.current.nodeHighlights).toEqual({ a: 'active' })
 
-    // Step 1: a is visited, b is active
+    // Step 1: a is departing (immediately previous), b is active
     act(() => {
       result.current.stepForward()
     })
-    expect(result.current.nodeHighlights).toEqual({ a: 'visited', b: 'active' })
+    expect(result.current.nodeHighlights).toEqual({ a: 'departing', b: 'active' })
 
-    // Step 2: a and b visited, c is active
+    // Step 2: a is visited, b is departing (immediately previous), c is active
     act(() => {
       result.current.stepForward()
     })
     expect(result.current.nodeHighlights).toEqual({
       a: 'visited',
-      b: 'visited',
+      b: 'departing',
       c: 'active',
+    })
+  })
+
+  it('parallel branches highlighted simultaneously at completed step', async () => {
+    const parallelTrace = {
+      status: 'success' as const,
+      duration_ms: 10,
+      steps: [
+        { node_id: 'start', type: 'action', status: 'completed', next: 'par' },
+        { node_id: 'par', type: 'parallel', status: 'entered' },
+        {
+          node_id: 'par',
+          type: 'parallel',
+          status: 'completed',
+          next: 'join',
+          branchNodeIds: ['b1', 'b2', 'b3'],
+          branchOutputs: { b1: 'r1', b2: 'r2', b3: 'r3' },
+          stepOutput: { nodeId: 'par', value: { b1: 'r1', b2: 'r2', b3: 'r3' } },
+        },
+        { node_id: 'join', type: 'terminal', status: 'reached', outcome: 'success' },
+      ],
+    }
+    mockSimulateGraph.mockResolvedValue(parallelTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Step 0: start is active
+    expect(result.current.nodeHighlights).toEqual({ start: 'active' })
+
+    // Step 1: par entered — hub active, start departing (immediately previous)
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'departing',
+      par: 'active',
+    })
+
+    // Step 2: par completed — hub + all branches active, start visited
+    // Previous step (par entered) has same node_id as current (par completed),
+    // so 'departing' is overwritten by 'active'
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'visited',
+      par: 'active',
+      b1: 'active',
+      b2: 'active',
+      b3: 'active',
+    })
+
+    // Step 3: join — par + branches departing (immediately previous), join active
+    act(() => { result.current.stepForward() })
+    expect(result.current.nodeHighlights).toEqual({
+      start: 'visited',
+      par: 'departing',
+      b1: 'departing',
+      b2: 'departing',
+      b3: 'departing',
+      join: 'active',
     })
   })
 
@@ -304,15 +377,15 @@ describe('useSimulation', () => {
     expect(result.current.isAutoPlaying).toBe(true)
     expect(result.current.currentStep).toBe(0)
 
-    // Advance one tick
+    // Advance one tick (at 1x: particle 1200ms + 500ms settle = 1700ms)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
 
     // Advance another tick
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(2)
   })
@@ -332,13 +405,13 @@ describe('useSimulation', () => {
 
     // First tick: step 0 → 1 (last step)
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
 
     // Second tick: should stop
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1500)
+      await vi.advanceTimersByTimeAsync(1700)
     })
     expect(result.current.currentStep).toBe(1)
     expect(result.current.isAutoPlaying).toBe(false)
@@ -354,5 +427,127 @@ describe('useSimulation', () => {
 
     expect(mockSimulateGraph).not.toHaveBeenCalled()
     expect(result.current.isActive).toBe(false)
+  })
+
+  it('playbackSpeed defaults to 1 and can be changed', () => {
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+    expect(result.current.playbackSpeed).toBe(1)
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    expect(result.current.playbackSpeed).toBe(4)
+  })
+
+  it('stop() resets playbackSpeed to 1', async () => {
+    mockSimulateGraph.mockResolvedValue(mockTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    expect(result.current.playbackSpeed).toBe(4)
+
+    act(() => {
+      result.current.stop()
+    })
+    expect(result.current.playbackSpeed).toBe(1)
+  })
+
+  it('auto-play speed scales with playbackSpeed', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    act(() => {
+      result.current.setPlaybackSpeed(2)
+      result.current.setAutoPlay(true)
+    })
+
+    // At 2x speed, interval = particle(600ms) + settle(500ms) = 1100ms
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1100)
+    })
+    expect(result.current.currentStep).toBe(1)
+  })
+
+  it('edgeHighlights computed correctly at each step', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Step 0 (node a): no incoming edge (first node)
+    expect(result.current.edgeHighlights).toEqual({})
+
+    // Step 1 (node b): incoming edge a->b is traversing
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.edgeHighlights).toHaveProperty('e-a-b-0', 'traversing')
+
+    // Step 2 (node c): incoming edge b->c is traversing
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.edgeHighlights).toHaveProperty('e-b-c-1', 'traversing')
+    // a->b is no longer highlighted
+    expect(result.current.edgeHighlights).not.toHaveProperty('e-a-b-0')
+  })
+
+  it('simulationAnimation tracks forward/backward steps', async () => {
+    mockSimulateGraph.mockResolvedValue(threeStepTrace)
+    const { result } = renderHook(() => useSimulation(threeNodeDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // Initial state after start(): isForwardStep is false (no animation until user steps)
+    expect(result.current.simulationAnimation.isForwardStep).toBe(false)
+
+    // Step forward: 1 > 0 = true
+    act(() => {
+      result.current.stepForward()
+    })
+    expect(result.current.simulationAnimation.isForwardStep).toBe(true)
+
+    // Step back: 0 > 1 = false
+    act(() => {
+      result.current.stepBack()
+    })
+    expect(result.current.simulationAnimation.isForwardStep).toBe(false)
+  })
+
+  it('particleDurationMs scales with playbackSpeed', async () => {
+    mockSimulateGraph.mockResolvedValue(mockTrace)
+    const { result } = renderHook(() => useSimulation(minimalDoc, emptyRules))
+
+    await act(async () => {
+      result.current.start({})
+      await vi.runAllTimersAsync()
+    })
+
+    // At 1x: max(400, 1200/1) = 1200
+    expect(result.current.simulationAnimation.particleDurationMs).toBe(1200)
+
+    act(() => {
+      result.current.setPlaybackSpeed(4)
+    })
+    // At 4x: max(400, 1200/4) = 400
+    expect(result.current.simulationAnimation.particleDurationMs).toBe(400)
   })
 })

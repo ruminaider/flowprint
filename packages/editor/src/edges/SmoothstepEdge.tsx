@@ -5,6 +5,7 @@ import {
   getSmoothStepPath,
   type EdgeProps,
 } from '@xyflow/react'
+import { EdgeSimulationOverlay } from './EdgeSimulationOverlay'
 
 function SmoothstepEdge({
   id,
@@ -56,6 +57,7 @@ function SmoothstepEdge({
           pointerEvents: 'none',
         }}
       />
+      <EdgeSimulationOverlay edgeId={id} edgePath={edgePath} />
       <EdgeLabelRenderer>
         <button
           type="button"

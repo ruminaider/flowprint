@@ -54,8 +54,16 @@ import type { ThemeMode } from '../hooks/useTheme'
 import type { SymbolSearchProvider } from '../symbols/types'
 import { RulesDataProvider } from '../contexts/RulesDataContext'
 import type { RulesDataMap } from '../contexts/RulesDataContext'
-import { SimulationProvider } from '../contexts/SimulationContext'
-import type { NodeHighlightMap } from '../contexts/SimulationContext'
+import {
+  SimulationProvider,
+  EdgeSimulationProvider,
+  SimulationAnimationProvider,
+} from '../contexts/SimulationContext'
+import type {
+  NodeHighlightMap,
+  EdgeHighlightMap,
+  SimulationAnimationConfig,
+} from '../contexts/SimulationContext'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,10 +83,18 @@ export interface FlowprintEditorProps {
   showExportButton?: boolean
   rulesDataMap?: RulesDataMap
   nodeHighlights?: NodeHighlightMap
+  edgeHighlights?: EdgeHighlightMap
+  simulationAnimation?: SimulationAnimationConfig
 }
 
 const emptyRulesDataMap: RulesDataMap = {}
 const emptyHighlights: NodeHighlightMap = {}
+const emptyEdgeHighlights: EdgeHighlightMap = {}
+const defaultAnimationConfig: SimulationAnimationConfig = {
+  isForwardStep: true,
+  particleDurationMs: 600,
+  stepKey: 0,
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -209,6 +225,8 @@ export function FlowprintEditor({
   theme = 'system',
   rulesDataMap,
   nodeHighlights,
+  edgeHighlights,
+  simulationAnimation,
 }: FlowprintEditorProps) {
   const resolvedTheme = useTheme(theme)
   const state = useFlowprintState({ initialDoc: value, onChange })
@@ -552,6 +570,8 @@ export function FlowprintEditor({
     <ErrorBoundary doc={state.doc}>
       <RulesDataProvider value={rulesDataMap ?? emptyRulesDataMap}>
       <SimulationProvider value={nodeHighlights ?? emptyHighlights}>
+      <EdgeSimulationProvider value={edgeHighlights ?? emptyEdgeHighlights}>
+      <SimulationAnimationProvider value={simulationAnimation ?? defaultAnimationConfig}>
       <ReactFlowProvider>
         <div
           className={`fp-editor${className ? ` ${className}` : ''}`}
@@ -701,6 +721,8 @@ export function FlowprintEditor({
           )}
         </div>
       </ReactFlowProvider>
+      </SimulationAnimationProvider>
+      </EdgeSimulationProvider>
       </SimulationProvider>
       </RulesDataProvider>
     </ErrorBoundary>

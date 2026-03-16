@@ -59,11 +59,17 @@ export async function simulateGraph(
     }
     const rulesDoc = options.rulesData[rulesRef.file]
     if (!rulesDoc) {
+      // Missing rules: continue simulation with empty output instead of halting.
+      // This allows templates to be simulated without providing rules files.
+      ctx.results.set(nodeId, {})
       return {
-        node_id: nodeId,
-        type: 'action',
-        status: 'error',
-        error: `Rules file "${rulesRef.file}" not found in rulesData`,
+        detail: {
+          file: rulesRef.file,
+          hitPolicy: 'none',
+          matchedCount: 0,
+          output: {},
+        },
+        output: {},
       }
     }
     const execCtx: ExecutionContext = { input: options.input, results: ctx.results }
@@ -99,16 +105,58 @@ export async function simulateGraph(
       // Entry-point action — use fixture or undefined
       const fixture = options.fixtures?.[nodeId]
       ctx.results.set(nodeId, fixture)
+
+      // Check if fixture signals an error and node has error.catch
+      const isErrorFixture =
+        fixture === '_error' ||
+        (typeof fixture === 'object' &&
+          fixture !== null &&
+          '_error' in (fixture as Record<string, unknown>) &&
+          (fixture as Record<string, unknown>)._error === true)
+      const catchTarget = node.error?.catch
+      const next = isErrorFixture && catchTarget ? catchTarget : node.next
+
       return {
         node_id: nodeId,
         type: 'action',
-        status: 'completed',
-        next: node.next,
+        status: isErrorFixture && catchTarget ? 'error-caught' : 'completed',
+        next,
         stepOutput: { nodeId, value: fixture },
       }
     },
 
     onSwitch(nodeId, node, ctx) {
+      // Switch fixture support: match fixture string against case labels
+      const switchFixture = options.fixtures?.[nodeId]
+      if (switchFixture != null && typeof switchFixture === 'string') {
+        for (let i = 0; i < (node.cases?.length ?? 0); i++) {
+          const c = node.cases?.[i]
+          if (!c) continue
+          if (c.when === switchFixture) {
+            ctx.results.set(nodeId, switchFixture)
+            return {
+              node_id: nodeId,
+              type: 'switch',
+              status: 'matched',
+              matched_case: i,
+              next: c.next,
+              stepOutput: { nodeId, value: switchFixture },
+            }
+          }
+        }
+        if (switchFixture === 'default' && node.default) {
+          ctx.results.set(nodeId, switchFixture)
+          return {
+            node_id: nodeId,
+            type: 'switch',
+            status: 'default',
+            next: node.default,
+            stepOutput: { nodeId, value: switchFixture },
+          }
+        }
+        // No label match → fall through to normal rules/expression evaluation
+      }
+
       if (node.rules) {
         const rulesResult = evaluateNodeRules(nodeId, node.rules, ctx)
         if ('node_id' in rulesResult) {
@@ -168,28 +216,29 @@ export async function simulateGraph(
     },
 
     onParallel(nodeId, node, ctx) {
-      // Visit all branches sequentially (traces each path with fixtures)
+      ctx.steps.push({
+        node_id: nodeId,
+        type: 'parallel',
+        status: 'entered',
+      })
+
+      // Process branches for results/fixtures without pushing individual steps
+      const branchOutputs: Record<string, unknown> = {}
       for (const branchId of node.branches) {
         const fixture = options.fixtures?.[branchId]
         ctx.results.set(branchId, fixture)
-        ctx.steps.push({
-          node_id: branchId,
-          type: 'action',
-          status: 'completed',
-          stepOutput: { nodeId: branchId, value: fixture },
-        })
+        branchOutputs[branchId] = fixture
       }
-      const branchResults: Record<string, unknown> = {}
-      for (const branchId of node.branches) {
-        branchResults[branchId] = ctx.results.get(branchId)
-      }
-      ctx.results.set(nodeId, branchResults)
+      ctx.results.set(nodeId, branchOutputs)
+
       return {
         node_id: nodeId,
         type: 'parallel',
         status: 'completed',
         next: node.join,
-        stepOutput: { nodeId, value: branchResults },
+        branchNodeIds: [...node.branches],
+        branchOutputs,
+        stepOutput: { nodeId, value: branchOutputs },
       }
     },
 

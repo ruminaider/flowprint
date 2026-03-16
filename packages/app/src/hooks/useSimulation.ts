@@ -7,7 +7,9 @@ import type {
   RulesDocument,
 } from '@ruminaider/flowprint-engine/browser'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
+import { getEdges } from '@ruminaider/flowprint-schema'
 import type { NodeHighlightMap } from '@ruminaider/flowprint-editor'
+import type { EdgeHighlightMap, SimulationAnimationConfig } from '@ruminaider/flowprint-editor'
 import type { RulesDataMap } from '@ruminaider/flowprint-editor'
 
 export interface UseSimulationReturn {
@@ -28,11 +30,35 @@ export interface UseSimulationReturn {
   reset: () => void
   setAutoPlay: (enabled: boolean) => void
   isAutoPlaying: boolean
+  playbackSpeed: number
+  setPlaybackSpeed: (speed: number) => void
+  edgeHighlights: EdgeHighlightMap
+  simulationAnimation: SimulationAnimationConfig
 }
 
 interface TraceSnapshots {
   highlights: NodeHighlightMap[]
+  edgeHighlights: EdgeHighlightMap[]
   contexts: Record<string, unknown>[]
+}
+
+/**
+ * Build a lookup from "source->target" to React Flow edge ID.
+ * Mirrors the ID pattern in layout-engine.ts: `e-${source}-${target}-${index}`
+ */
+function buildEdgeLookup(doc: FlowprintDocument): Map<string, string> {
+  const schemaEdges = getEdges(doc)
+  const lookup = new Map<string, string>()
+  for (let i = 0; i < schemaEdges.length; i++) {
+    const edge = schemaEdges[i]
+    if (!edge) continue
+    const key = `${edge.source}->${edge.target}`
+    // First occurrence wins (matches computeEdges index ordering)
+    if (!lookup.has(key)) {
+      lookup.set(key, `e-${edge.source}-${edge.target}-${String(i)}`)
+    }
+  }
+  return lookup
 }
 
 /**
@@ -40,8 +66,12 @@ interface TraceSnapshots {
  * One-time O(n) pass when trace arrives, then O(1) access per step.
  * Each entry is a point-in-time snapshot (Review #36).
  */
-function buildTraceSnapshots(steps: SimulationStep[]): TraceSnapshots {
+function buildTraceSnapshots(
+  steps: SimulationStep[],
+  edgeLookup: Map<string, string>,
+): TraceSnapshots {
   const highlights: NodeHighlightMap[] = []
+  const edgeHighlights: EdgeHighlightMap[] = []
   const contexts: Record<string, unknown>[] = []
   const cumulativeCtx: Record<string, unknown> = {}
 
@@ -49,27 +79,99 @@ function buildTraceSnapshots(steps: SimulationStep[]): TraceSnapshots {
     const step = steps[i]
     if (!step) continue
     const snapshot: NodeHighlightMap = {}
+    const edgeSnapshot: EdgeHighlightMap = {}
 
     // Mark all previously visited nodes
     for (let j = 0; j < i; j++) {
       const prev = steps[j]
       if (!prev) continue
       snapshot[prev.node_id] = prev.status === 'error' ? 'error' : 'visited'
+      if (prev.branchNodeIds) {
+        for (const branchId of prev.branchNodeIds) {
+          snapshot[branchId] = 'visited'
+        }
+      }
+    }
+
+    // Mark the incoming edge (previous → current) as traversing.
+    // Skip edge animation for parallel "completed" steps — the hub was
+    // already visited via the "entered" step, so re-animating an edge
+    // into it would show the wrong visual.
+    // Also skip for the join target (step after parallel "completed") — the
+    // hub→join edge crosses over branch nodes, making the particle look wrong.
+    const isParallelRevisit = step.type === 'parallel' && step.status === 'completed'
+    const prevStep = i > 0 ? steps[i - 1] : undefined
+    const isParallelJoin =
+      prevStep?.type === 'parallel' && prevStep?.status === 'completed'
+    if (i > 0 && !isParallelRevisit && !isParallelJoin && prevStep) {
+      // Strategy 1: direct edge from previous step
+      let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
+
+      // Strategy 2: edge via previous step's routing target
+      if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
+        edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
+      }
+
+      // Strategy 3: find any edge targeting this node in the schema
+      if (!edgeId) {
+        for (const [key, eid] of edgeLookup.entries()) {
+          if (key.endsWith(`->${step.node_id}`)) {
+            edgeId = eid
+            break
+          }
+        }
+      }
+
+      if (edgeId) {
+        edgeSnapshot[edgeId] = 'traversing'
+      }
+    }
+
+    // Fan-out edges for parallel branches (all animate simultaneously)
+    if (step.branchNodeIds) {
+      for (const branchId of step.branchNodeIds) {
+        const fanOutEdgeId = edgeLookup.get(`${step.node_id}->${branchId}`)
+        if (fanOutEdgeId) edgeSnapshot[fanOutEdgeId] = 'traversing'
+      }
+    }
+
+    // Previous step's node holds active appearance during particle transit
+    if (i > 0) {
+      const prevNode = steps[i - 1]
+      if (prevNode && prevNode.status !== 'error') {
+        snapshot[prevNode.node_id] = 'departing'
+        if (prevNode.branchNodeIds) {
+          for (const branchId of prevNode.branchNodeIds) {
+            snapshot[branchId] = 'departing'
+          }
+        }
+      }
     }
 
     // Mark current node
     snapshot[step.node_id] = step.status === 'error' ? 'error' : 'active'
+    if (step.branchNodeIds) {
+      for (const branchId of step.branchNodeIds) {
+        snapshot[branchId] = 'active'
+      }
+    }
 
     highlights.push(snapshot)
+    edgeHighlights.push(edgeSnapshot)
 
     // Build cumulative context
     if (step.stepOutput) {
       cumulativeCtx[step.stepOutput.nodeId] = step.stepOutput.value
     }
+    if (step.branchOutputs) {
+      for (const [branchId, value] of Object.entries(step.branchOutputs)) {
+        cumulativeCtx[branchId] = value
+      }
+    }
     contexts.push({ ...cumulativeCtx })
   }
 
-  return { highlights, contexts }
+  return { highlights, edgeHighlights, contexts }
 }
 
 /**
@@ -86,6 +188,7 @@ function convertRulesData(map: RulesDataMap): Record<string, RulesDocument> {
 }
 
 const emptyHighlights: NodeHighlightMap = {}
+const emptyEdgeHighlightsMap: EdgeHighlightMap = {}
 
 export function useSimulation(
   doc: FlowprintDocument | null,
@@ -95,21 +198,40 @@ export function useSimulation(
   const [currentStep, setCurrentStep] = useState(0)
   const [isAutoPlaying, setIsAutoPlayingState] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const autoPlayRef = useRef(false)
+  const playbackSpeedRef = useRef(1)
 
   const isActive = trace !== null
   const totalSteps = trace?.steps.length ?? 0
   const currentStepData = trace?.steps[currentStep]
   const currentNodeId = currentStepData?.node_id
 
+  // Build edge lookup once when doc changes
+  const edgeLookup = useMemo(() => (doc ? buildEdgeLookup(doc) : new Map<string, string>()), [doc])
+
   // Pre-compute snapshots once when trace changes (Review #19/#25/#34)
   const snapshots = useMemo<TraceSnapshots | null>(() => {
     if (!trace) return null
-    return buildTraceSnapshots(trace.steps)
-  }, [trace])
+    return buildTraceSnapshots(trace.steps, edgeLookup)
+  }, [trace, edgeLookup])
 
   // O(1) lookup per step (Review #19)
   const nodeHighlights = snapshots?.highlights[currentStep] ?? emptyHighlights
+
+  // Track step direction for particle animation
+  const [isForwardStep, setIsForwardStep] = useState(false)
+
+  const edgeHighlights: EdgeHighlightMap =
+    snapshots?.edgeHighlights[currentStep] ?? emptyEdgeHighlightsMap
+  const simulationAnimation: SimulationAnimationConfig = useMemo(
+    () => ({
+      isForwardStep,
+      particleDurationMs: Math.max(400, 1200 / playbackSpeed),
+      stepKey: currentStep,
+    }),
+    [isForwardStep, playbackSpeed, currentStep],
+  )
 
   const start = useCallback(
     (input: unknown, fixtures?: Record<string, unknown>) => {
@@ -142,25 +264,35 @@ export function useSimulation(
     setCurrentStep(0)
     setIsAutoPlayingState(false)
     autoPlayRef.current = false
+    setPlaybackSpeed(1)
+    playbackSpeedRef.current = 1
+    setIsForwardStep(false)
     setError(null)
   }, [])
 
   const stepForward = useCallback(() => {
+    setIsForwardStep(true)
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1))
   }, [totalSteps])
 
   const stepBack = useCallback(() => {
+    setIsForwardStep(false)
     setCurrentStep((prev) => Math.max(prev - 1, 0))
   }, [])
 
   const goToStep = useCallback(
     (step: number) => {
-      setCurrentStep(Math.max(0, Math.min(step, totalSteps - 1)))
+      setCurrentStep((prev) => {
+        const clamped = Math.max(0, Math.min(step, totalSteps - 1))
+        setIsForwardStep(clamped > prev)
+        return clamped
+      })
     },
     [totalSteps],
   )
 
   const reset = useCallback(() => {
+    setIsForwardStep(false)
     setCurrentStep(0)
     setIsAutoPlayingState(false)
     autoPlayRef.current = false
@@ -171,28 +303,42 @@ export function useSimulation(
     autoPlayRef.current = enabled
   }, [])
 
-  // Review #22: chained setTimeout instead of setInterval for auto-play
+  const handleSetPlaybackSpeed = useCallback((speed: number) => {
+    setPlaybackSpeed(speed)
+    playbackSpeedRef.current = speed
+  }, [])
+
+  // Auto-play: automated step-through using the same stepForward() path as
+  // manual stepping. This guarantees identical animation behavior.
+  const stepForwardRef = useRef(stepForward)
+  stepForwardRef.current = stepForward
+  const currentStepRef = useRef(currentStep)
+  currentStepRef.current = currentStep
+
   useEffect(() => {
     if (!isAutoPlaying || !trace) return
 
     let timeoutId: ReturnType<typeof setTimeout>
     const stepsLength = trace.steps.length
 
-    function tick() {
-      setCurrentStep((prev) => {
-        const next = prev + 1
-        if (next >= stepsLength) {
-          setIsAutoPlayingState(false)
-          autoPlayRef.current = false
-          return prev
-        }
-        // Schedule next tick after completing this one
-        timeoutId = setTimeout(tick, 1500)
-        return next
-      })
+    function stepInterval(): number {
+      const speed = playbackSpeedRef.current
+      const particleDur = Math.max(400, 1200 / speed)
+      const glowSettleMs = 500 // 300ms CSS transition + 200ms visible glow
+      return particleDur + glowSettleMs
     }
 
-    timeoutId = setTimeout(tick, 1500)
+    function tick() {
+      if (currentStepRef.current + 1 >= stepsLength) {
+        setIsAutoPlayingState(false)
+        autoPlayRef.current = false
+        return
+      }
+      stepForwardRef.current()
+      timeoutId = setTimeout(tick, stepInterval())
+    }
+
+    timeoutId = setTimeout(tick, stepInterval())
 
     return () => {
       clearTimeout(timeoutId)
@@ -216,5 +362,9 @@ export function useSimulation(
     reset,
     setAutoPlay,
     isAutoPlaying,
+    playbackSpeed,
+    setPlaybackSpeed: handleSetPlaybackSpeed,
+    edgeHighlights,
+    simulationAnimation,
   }
 }

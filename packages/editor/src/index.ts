@@ -63,8 +63,21 @@ export { RulesDataProvider, useRulesData } from './contexts/RulesDataContext'
 export type { RulesDataMap, RulesDataEntry } from './contexts/RulesDataContext'
 
 // Simulation context
-export { SimulationProvider, useNodeHighlight } from './contexts/SimulationContext'
-export type { NodeHighlightState, NodeHighlightMap } from './contexts/SimulationContext'
+export {
+  SimulationProvider,
+  useNodeHighlight,
+  EdgeSimulationProvider,
+  useEdgeHighlight,
+  SimulationAnimationProvider,
+  useSimulationAnimation,
+} from './contexts/SimulationContext'
+export type {
+  NodeHighlightState,
+  NodeHighlightMap,
+  EdgeHighlightState,
+  EdgeHighlightMap,
+  SimulationAnimationConfig,
+} from './contexts/SimulationContext'
 
 // Theme
 export { useTheme } from './hooks/useTheme'

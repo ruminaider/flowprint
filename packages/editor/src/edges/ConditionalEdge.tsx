@@ -5,6 +5,7 @@ import {
   getSmoothStepPath,
   type EdgeProps,
 } from '@xyflow/react'
+import { EdgeSimulationOverlay } from './EdgeSimulationOverlay'
 
 function ConditionalEdge({
   id,
@@ -59,6 +60,7 @@ function ConditionalEdge({
           pointerEvents: 'none',
         }}
       />
+      <EdgeSimulationOverlay edgeId={id} edgePath={edgePath} />
       <EdgeLabelRenderer>
         {label && (
           <div
