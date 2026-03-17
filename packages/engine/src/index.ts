@@ -1,11 +1,19 @@
 // Expressions
-export { parseExpression, validateExpressions } from './expressions/index.js'
+export {
+  parseExpression,
+  clearParseCache,
+  validateExpressions,
+  interpretExpression,
+  InterpreterError,
+  LRUCache,
+} from './expressions/index.js'
 export type {
   ParseResult,
   ExpressionError,
   ParsedExpression,
   ExpressionValidationResult,
   ExpressionValidationError,
+  InterpreterContext,
 } from './expressions/index.js'
 
 // Runner
