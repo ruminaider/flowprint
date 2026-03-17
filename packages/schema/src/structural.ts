@@ -41,13 +41,36 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
     const type = node.type as string
 
-    // Mutual exclusion: rules vs entry_points/cases
-    if (type === 'action' && node.rules !== undefined && node.entry_points !== undefined) {
-      errors.push({
-        path: `/nodes/${nodeId}`,
-        message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
-        severity: 'error',
-      })
+    // Mutual exclusion: expressions vs rules vs entry_points on action nodes
+    if (type === 'action') {
+      const hasRules = node.rules !== undefined
+      const hasEntryPoints = node.entry_points !== undefined
+      const hasExpressions = node.expressions !== undefined
+
+      if (hasExpressions && hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message:
+            'Action node cannot have both "expressions" and "rules". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (hasExpressions && hasEntryPoints) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message:
+            'Action node cannot have both "expressions" and "entry_points". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (hasRules && hasEntryPoints) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message:
+            'Action node cannot have both "rules" and "entry_points". Use one or the other',
+          severity: 'error',
+        })
+      }
     }
     if (type === 'switch') {
       const hasCases = node.cases !== undefined
