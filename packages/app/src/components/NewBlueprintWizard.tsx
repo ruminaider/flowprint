@@ -119,14 +119,16 @@ function WizardForm({
   }, [name, description, schemaVersion, lanes, onCreate])
 
   return (
-    <>
-      <h2>New Blueprint</h2>
+    <div className="fp-modal-body">
+      <h2 className="fp-modal-title">New Blueprint</h2>
 
-      <div style={{ marginBottom: 12 }}>
-        <label htmlFor="fp-wizard-name">Blueprint name</label>
-        <br />
+      <div className="fp-modal-field">
+        <label className="fp-modal-label" htmlFor="fp-wizard-name">
+          Blueprint name
+        </label>
         <input
           id="fp-wizard-name"
+          className="fp-modal-input"
           type="text"
           value={name}
           onChange={(e) => {
@@ -134,34 +136,36 @@ function WizardForm({
             setNameError(null)
           }}
           placeholder="my-service-flow"
-          style={{ width: '100%' }}
         />
         {nameError ? (
-          <div role="alert" style={{ color: 'red', fontSize: 12, marginTop: 4 }}>
+          <div role="alert" className="fp-modal-error">
             {nameError}
           </div>
         ) : null}
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label htmlFor="fp-wizard-description">Description</label>
-        <br />
+      <div className="fp-modal-field">
+        <label className="fp-modal-label" htmlFor="fp-wizard-description">
+          Description
+        </label>
         <textarea
           id="fp-wizard-description"
+          className="fp-modal-textarea"
           value={description}
           onChange={(e) => {
             setDescription(e.target.value)
           }}
           rows={3}
-          style={{ width: '100%' }}
         />
       </div>
 
-      <div style={{ marginBottom: 12 }}>
-        <label htmlFor="fp-wizard-version">Schema version</label>
-        <br />
+      <div className="fp-modal-field">
+        <label className="fp-modal-label" htmlFor="fp-wizard-version">
+          Schema version
+        </label>
         <select
           id="fp-wizard-version"
+          className="fp-modal-select"
           value={schemaVersion}
           onChange={(e) => {
             setSchemaVersion(e.target.value)
@@ -175,18 +179,10 @@ function WizardForm({
         </select>
       </div>
 
-      <fieldset style={{ marginBottom: 12 }}>
+      <fieldset className="fp-modal-fieldset">
         <legend>Lanes</legend>
         {lanes.map((lane, index) => (
-          <div
-            key={index}
-            style={{
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              marginBottom: 8,
-            }}
-          >
+          <div key={index} className="fp-modal-lane-row">
             <input
               type="text"
               value={lane.id}
@@ -195,7 +191,6 @@ function WizardForm({
               }}
               placeholder="Lane ID"
               aria-label={`Lane ${String(index + 1)} ID`}
-              style={{ flex: 1 }}
             />
             <input
               type="text"
@@ -205,34 +200,36 @@ function WizardForm({
               }}
               placeholder="Label"
               aria-label={`Lane ${String(index + 1)} label`}
-              style={{ flex: 1 }}
             />
-            <label>
-              <input
-                type="radio"
-                name={`lane-vis-${String(index)}`}
-                value="external"
-                checked={lane.visibility === 'external'}
-                onChange={() => {
-                  handleLaneChange(index, 'visibility', 'external')
-                }}
-              />{' '}
-              External
-            </label>
-            <label>
-              <input
-                type="radio"
-                name={`lane-vis-${String(index)}`}
-                value="internal"
-                checked={lane.visibility === 'internal'}
-                onChange={() => {
-                  handleLaneChange(index, 'visibility', 'internal')
-                }}
-              />{' '}
-              Internal
-            </label>
+            <div className="fp-modal-radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name={`lane-vis-${String(index)}`}
+                  value="external"
+                  checked={lane.visibility === 'external'}
+                  onChange={() => {
+                    handleLaneChange(index, 'visibility', 'external')
+                  }}
+                />{' '}
+                External
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name={`lane-vis-${String(index)}`}
+                  value="internal"
+                  checked={lane.visibility === 'internal'}
+                  onChange={() => {
+                    handleLaneChange(index, 'visibility', 'internal')
+                  }}
+                />{' '}
+                Internal
+              </label>
+            </div>
             <button
               type="button"
+              className="fp-modal-btn fp-modal-btn-sm fp-modal-btn-danger"
               onClick={() => {
                 handleRemoveLane(index)
               }}
@@ -242,20 +239,20 @@ function WizardForm({
             </button>
           </div>
         ))}
-        <button type="button" onClick={handleAddLane}>
+        <button type="button" className="fp-modal-btn fp-modal-btn-sm" onClick={handleAddLane}>
           Add Lane
         </button>
       </fieldset>
 
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-        <button type="button" onClick={onCancel}>
+      <div className="fp-modal-actions">
+        <button type="button" className="fp-modal-btn" onClick={onCancel}>
           Cancel
         </button>
-        <button type="button" onClick={handleCreate}>
+        <button type="button" className="fp-modal-btn fp-modal-btn-primary" onClick={handleCreate}>
           Create
         </button>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -263,7 +260,7 @@ export function NewBlueprintWizard({ open, onClose, onCreate }: NewBlueprintWiza
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   return (
-    <dialog ref={dialogRef} onCancel={onClose}>
+    <dialog ref={dialogRef} className="fp-modal" onCancel={onClose}>
       {open && <WizardForm dialogRef={dialogRef} onCreate={onCreate} onCancel={onClose} />}
     </dialog>
   )

@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from 'react'
 import { Handle, Position } from '@xyflow/react'
 import { MoreHorizontal } from 'lucide-react'
+import { useNodeHighlight } from '../contexts/SimulationContext'
 
 export interface NodeShellProps {
   nodeId: string
@@ -29,11 +30,16 @@ export function NodeShell({
   onMenuClick,
   children,
 }: NodeShellProps) {
+  const simState = useNodeHighlight(nodeId)
+
   const classNames = [
     'fp-node',
     selected && 'fp-node--selected',
     isUnassigned && 'fp-node--unassigned',
     hasError && 'fp-node--error',
+    simState === 'active' && 'fp-node--sim-active',
+    simState === 'visited' && 'fp-node--sim-visited',
+    simState === 'error' && 'fp-node--sim-error',
   ]
     .filter(Boolean)
     .join(' ')

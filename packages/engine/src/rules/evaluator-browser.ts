@@ -6,6 +6,7 @@
  * imports these helpers and adds file-loading + labeled expression support.
  */
 
+import { BLOCKED_PROPERTY_NAMES } from '../expressions/allowlist.js'
 import type {
   RulesDocument,
   Rule,
@@ -73,6 +74,9 @@ export function resolveDotPath(path: string, context: Record<string, unknown>): 
   let current: unknown = context
 
   for (const part of parts) {
+    if (BLOCKED_PROPERTY_NAMES.has(part)) {
+      return undefined
+    }
     if (typeof current !== 'object' || current === null) {
       return undefined
     }

@@ -1,4 +1,5 @@
 export { loadRulesFile, evaluateRules } from './evaluator.js'
+export type { ExpressionEvaluator } from './evaluator.js'
 export { runRulesTests } from './test-runner.js'
 export type { RulesTestCase, RulesTestResult } from './test-runner.js'
 export type {

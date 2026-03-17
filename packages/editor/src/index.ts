@@ -62,6 +62,10 @@ export type { ConditionBuilderProps } from './components/ConditionBuilder'
 export { RulesDataProvider, useRulesData } from './contexts/RulesDataContext'
 export type { RulesDataMap, RulesDataEntry } from './contexts/RulesDataContext'
 
+// Simulation context
+export { SimulationProvider, useNodeHighlight } from './contexts/SimulationContext'
+export type { NodeHighlightState, NodeHighlightMap } from './contexts/SimulationContext'
+
 // Theme
 export { useTheme } from './hooks/useTheme'
 export type { ThemeMode, ResolvedTheme } from './hooks/useTheme'

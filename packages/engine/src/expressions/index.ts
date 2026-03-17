@@ -9,4 +9,6 @@ export {
   ALLOWED_UNARY_OPS,
   ALLOWED_METHODS,
   ALLOWED_MATH_MEMBERS,
+  BLOCKED_PROPERTY_NAMES,
 } from './allowlist.js'
+export { interpretExpression, buildSafeMath } from './interpreter.js'

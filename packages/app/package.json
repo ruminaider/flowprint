@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@ruminaider/flowprint-editor": "workspace:*",
+    "@ruminaider/flowprint-engine": "workspace:*",
     "@ruminaider/flowprint-schema": "workspace:*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
