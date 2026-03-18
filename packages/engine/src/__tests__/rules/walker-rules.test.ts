@@ -81,7 +81,9 @@ describe('walker with rules', () => {
       expect(trace.steps).toHaveLength(2)
       expect(trace.steps[0]?.node_id).toBe('compute')
       expect(trace.steps[0]?.status).toBe('completed')
-      expect(trace.output).toEqual({ discount_percent: 20, shipping: 'free' })
+      // Output includes node-keyed result and flat-merged fields
+      expect(trace.output).toMatchObject({ discount_percent: 20, shipping: 'free' })
+      expect(trace.output).toHaveProperty('compute', { discount_percent: 20, shipping: 'free' })
       expect(mockedLoadRulesFile).toHaveBeenCalledWith('discount.rules.yaml', '/tmp/test')
       expect(mockedLoadEntryPoint).not.toHaveBeenCalled()
     })
@@ -171,8 +173,8 @@ describe('walker with rules', () => {
 
       expect(trace.status).toBe('success')
       expect(trace.steps).toHaveLength(3)
-      // The process node received the discount from compute's rules result
-      expect(trace.output).toEqual({ applied: { discount: 15 } })
+      // Output includes node-keyed results and flat-merged fields
+      expect(trace.output).toMatchObject({ process: { applied: { discount: 15 } } })
     })
 
     it('rejects unknown evaluator plugin', async () => {
@@ -347,7 +349,8 @@ describe('walker with rules', () => {
       const trace = await runGraph(doc, makeOptions())
 
       expect(trace.status).toBe('success')
-      expect(trace.output).toEqual({ tier: 'gold' })
+      // Output includes node-keyed results (route, process) and flat-merged fields
+      expect(trace.output).toMatchObject({ tier: 'gold' })
     })
 
     it('rejects unknown evaluator plugin on switch', async () => {
@@ -429,12 +432,7 @@ describe('walker with rules', () => {
       const trace = await runGraph(doc, makeOptions())
 
       expect(trace.status).toBe('success')
-      expect(trace.steps.map((s) => s.node_id)).toEqual([
-        'classify',
-        'route',
-        'urgent',
-        'done',
-      ])
+      expect(trace.steps.map((s) => s.node_id)).toEqual(['classify', 'route', 'urgent', 'done'])
     })
 
     it('handles flow with rules-driven switch and cases-driven switch', async () => {
