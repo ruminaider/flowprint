@@ -50,8 +50,7 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
       if (hasExpressions && hasRules) {
         errors.push({
           path: `/nodes/${nodeId}`,
-          message:
-            'Action node cannot have both "expressions" and "rules". Use one or the other',
+          message: 'Action node cannot have both "expressions" and "rules". Use one or the other',
           severity: 'error',
         })
       }
@@ -66,8 +65,7 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
       if (hasRules && hasEntryPoints) {
         errors.push({
           path: `/nodes/${nodeId}`,
-          message:
-            'Action node cannot have both "rules" and "entry_points". Use one or the other',
+          message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
           severity: 'error',
         })
       }

@@ -120,9 +120,7 @@ const LANE_KEY_ORDER = ['label', 'visibility', 'order', 'data_class', 'height'] 
 /**
  * Serialize the lanes map with deterministic key ordering per lane.
  */
-function serializeLanes(
-  lanes: Record<string, import('./types.js').Lane>,
-): YAMLMap {
+function serializeLanes(lanes: Record<string, import('./types.js').Lane>): YAMLMap {
   const lanesMap = new YAMLMap()
 
   for (const [laneId, lane] of Object.entries(lanes)) {
