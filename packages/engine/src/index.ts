@@ -43,6 +43,9 @@ export type {
   WalkResult,
 } from './walker/index.js'
 
+// Security
+export { assertWithinProject } from './security/index.js'
+
 // Codegen
 export { generateCode } from './codegen/index.js'
 export type { GenerateResult, GenerateOptions, GeneratedFile } from './codegen/index.js'
