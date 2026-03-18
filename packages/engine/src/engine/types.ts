@@ -1,5 +1,6 @@
 import type { ExecutionContext, NodeExecutionRecord } from '../walker/types.js'
 import type { ExecutionAdapter } from '../adapters/types.js'
+import type { Clock } from './clock.js'
 
 /** How a node's handler was resolved at load() time. */
 export type ResolvedHandler =
@@ -8,6 +9,9 @@ export type ResolvedHandler =
   | { type: 'rules'; rulesFile: string }
   | { type: 'entry_point'; fn: (ctx: ExecutionContext) => Promise<unknown> }
   | { type: 'native' } // terminals, triggers, switches, waits, parallels, errors
+
+/** Signal validation function. Throw to reject a signal. */
+export type ValidateSignalFn = (eventName: string, data: unknown) => void
 
 /** Observability hooks. Called synchronously. Must not throw. */
 export interface EngineHooks {
@@ -28,6 +32,12 @@ export interface EngineOptions {
   hooks?: EngineHooks
   /** Execution adapter for action handlers. Defaults to PlainAdapter. */
   adapter?: ExecutionAdapter
+  /** Clock implementation for time-dependent operations. Defaults to RealClock. */
+  clock?: Clock
+  /** Signal validation function. Called before delivering a signal to a wait node. */
+  validateSignal?: ValidateSignalFn
+  /** TTL for paused executions in ms. Default: 3600000 (1 hour). */
+  pausedExecutionTTL?: number
 }
 
 /** Result of a successful execution. */
