@@ -27,7 +27,7 @@
   /* ── Shadows ───────────────────────────────── */
   --fp-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --fp-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --fp-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --fp-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
   --fp-shadow-island: 0 2px 12px rgba(0, 0, 0, 0.08);
 
   /* ── Z-Index Hierarchy ─────────────────────── */
@@ -48,6 +48,12 @@
   --fp-transition-fast: 100ms ease;
   --fp-transition-base: 150ms ease;
   --fp-transition-slow: 250ms ease;
+
+  /* ── Data Classification Badge Colors ────────── */
+  --fp-badge-pii: #e879f9;
+  --fp-badge-financial: #34d399;
+  --fp-badge-credentials: #fb923c;
+  --fp-badge-internal: #60a5fa;
 }
 
 /* ── Light Theme ─────────────────────────────── */
@@ -80,64 +86,64 @@
   --fp-bg-grid-dot: #94a3b8;
 
   /* Node type colors (light) */
-  --fp-node-orange: #FF9243;
-  --fp-node-orange-subtle: rgba(255, 146, 67, 0.10);
-  --fp-node-purple: #A374FF;
-  --fp-node-purple-subtle: rgba(163, 116, 255, 0.10);
+  --fp-node-orange: #ff9243;
+  --fp-node-orange-subtle: rgba(255, 146, 67, 0.1);
+  --fp-node-purple: #a374ff;
+  --fp-node-purple-subtle: rgba(163, 116, 255, 0.1);
   --fp-node-cyan: #06b6d4;
-  --fp-node-cyan-subtle: rgba(6, 182, 212, 0.10);
+  --fp-node-cyan-subtle: rgba(6, 182, 212, 0.1);
   --fp-node-yellow: #ca8a04;
-  --fp-node-yellow-subtle: rgba(202, 138, 4, 0.10);
+  --fp-node-yellow-subtle: rgba(202, 138, 4, 0.1);
   --fp-node-red: #ef4444;
-  --fp-node-red-subtle: rgba(239, 68, 68, 0.10);
+  --fp-node-red-subtle: rgba(239, 68, 68, 0.1);
   --fp-node-green: #22c55e;
-  --fp-node-green-subtle: rgba(34, 197, 94, 0.10);
+  --fp-node-green-subtle: rgba(34, 197, 94, 0.1);
   --fp-node-blue: #3b82f6;
-  --fp-node-blue-subtle: rgba(59, 130, 246, 0.10);
+  --fp-node-blue-subtle: rgba(59, 130, 246, 0.1);
 }
 
 /* ── Dark Theme ──────────────────────────────── */
 [data-fp-theme='dark'] {
-  --fp-bg-canvas: #101415;        /* Slate Shadow */
-  --fp-bg-surface: #190B14;       /* Velvet Aubergine */
+  --fp-bg-canvas: #101415; /* Slate Shadow */
+  --fp-bg-surface: #190b14; /* Velvet Aubergine */
   --fp-bg-island: rgba(16, 20, 21, 0.88);
-  --fp-bg-elevated: #262020;      /* Chocolate Noir */
-  --fp-bg-muted: #110904;         /* Earthly Mocha */
-  --fp-bg-node: #262020;          /* Chocolate Noir */
-  --fp-bg-tab-bar: #0E1514;       /* Forest Shadow */
-  --fp-bg-bottom-panel: #0B1623;  /* Midnight Sapphire */
-  --fp-bg-lane-header: #110904;   /* Earthly Mocha */
+  --fp-bg-elevated: #262020; /* Chocolate Noir */
+  --fp-bg-muted: #110904; /* Earthly Mocha */
+  --fp-bg-node: #262020; /* Chocolate Noir */
+  --fp-bg-tab-bar: #0e1514; /* Forest Shadow */
+  --fp-bg-bottom-panel: #0b1623; /* Midnight Sapphire */
+  --fp-bg-lane-header: #110904; /* Earthly Mocha */
 
-  --fp-text-primary: #C3C3C3;
+  --fp-text-primary: #c3c3c3;
   --fp-text-secondary: rgba(195, 195, 195, 0.65);
   --fp-text-tertiary: rgba(195, 195, 195, 0.4);
   --fp-text-on-accent: #110904;
 
   --fp-border-default: rgba(195, 195, 195, 0.12);
   --fp-border-strong: rgba(195, 195, 195, 0.22);
-  --fp-border-focus: #A374FF;
+  --fp-border-focus: #a374ff;
 
-  --fp-color-primary: #A374FF;
+  --fp-color-primary: #a374ff;
   --fp-color-primary-subtle: rgba(163, 116, 255, 0.12);
-  --fp-color-success: #3FDC77;
-  --fp-color-warning: #FEF455;
-  --fp-color-error: #FF362B;
-  --fp-color-info: #A8FFFD;
+  --fp-color-success: #3fdc77;
+  --fp-color-warning: #fef455;
+  --fp-color-error: #ff362b;
+  --fp-color-info: #a8fffd;
 
   --fp-bg-grid-dot: #585b70;
 
   /* Node type colors (dark) */
-  --fp-node-orange: #FF9243;
+  --fp-node-orange: #ff9243;
   --fp-node-orange-subtle: rgba(255, 146, 67, 0.15);
-  --fp-node-purple: #A374FF;
+  --fp-node-purple: #a374ff;
   --fp-node-purple-subtle: rgba(163, 116, 255, 0.15);
-  --fp-node-cyan: #A8FFFD;
+  --fp-node-cyan: #a8fffd;
   --fp-node-cyan-subtle: rgba(168, 255, 253, 0.12);
-  --fp-node-yellow: #FEF455;
+  --fp-node-yellow: #fef455;
   --fp-node-yellow-subtle: rgba(254, 244, 85, 0.12);
-  --fp-node-red: #FF362B;
+  --fp-node-red: #ff362b;
   --fp-node-red-subtle: rgba(255, 54, 43, 0.15);
-  --fp-node-green: #3FDC77;
+  --fp-node-green: #3fdc77;
   --fp-node-green-subtle: rgba(63, 220, 119, 0.12);
   --fp-node-blue: #60a5fa;
   --fp-node-blue-subtle: rgba(96, 165, 250, 0.15);

@@ -1,11 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { GripVertical, ChevronDown, ChevronRight } from 'lucide-react'
+import { DataClassBadges } from './DataClassBadges'
+import type { DataClass } from './DataClassBadges'
 
 export interface LaneHeaderProps {
   laneId: string
   name: string
   color: string
   collapsed: boolean
+  dataClass?: DataClass[]
   onToggleCollapse: (laneId: string) => void
   onRename: (laneId: string, newName: string) => void
   onDragStart?: (e: React.DragEvent, laneId: string) => void
@@ -18,6 +21,7 @@ export function LaneHeader({
   name,
   color,
   collapsed,
+  dataClass,
   onToggleCollapse,
   onRename,
   onDragStart,
@@ -74,10 +78,7 @@ export function LaneHeader({
   const CollapseIcon = collapsed ? ChevronRight : ChevronDown
 
   return (
-    <div
-      className="fp-lane__header nopan"
-      style={{ '--lane-color': color } as React.CSSProperties}
-    >
+    <div className="fp-lane__header nopan" style={{ '--lane-color': color } as React.CSSProperties}>
       <div
         className="fp-lane__drag-handle"
         draggable
@@ -93,23 +94,27 @@ export function LaneHeader({
           ref={inputRef}
           className="fp-lane__name-input"
           value={editValue}
-          onChange={(e) => { setEditValue(e.target.value) }}
+          onChange={(e) => {
+            setEditValue(e.target.value)
+          }}
           onBlur={commitRename}
           onKeyDown={handleKeyDown}
           aria-label="Lane name"
         />
       ) : (
-        <span
-          className="fp-lane__name"
-          onDoubleClick={handleDoubleClick}
-        >
-          {name}
-        </span>
+        <div className="fp-lane__name-group">
+          <span className="fp-lane__name" onDoubleClick={handleDoubleClick}>
+            {name}
+          </span>
+          {dataClass && dataClass.length > 0 && <DataClassBadges explicit={dataClass} />}
+        </div>
       )}
 
       <button
         className="fp-lane__chevron"
-        onClick={() => { onToggleCollapse(laneId) }}
+        onClick={() => {
+          onToggleCollapse(laneId)
+        }}
         aria-label={collapsed ? 'Expand lane' : 'Collapse lane'}
         type="button"
       >

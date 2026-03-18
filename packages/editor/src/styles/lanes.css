@@ -35,6 +35,13 @@
   cursor: grabbing;
 }
 
+.fp-lane__name-group {
+  display: flex;
+  align-items: center;
+  gap: var(--fp-space-2);
+  min-width: 0;
+}
+
 .fp-lane__name {
   font-size: var(--fp-text-sm);
   font-weight: 500;
