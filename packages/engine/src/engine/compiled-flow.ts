@@ -8,14 +8,20 @@ import type {
   TriggerNode,
   TerminalNode,
 } from '@ruminaider/flowprint-schema'
-import { walkGraph, walkBranch } from '../walker/walk.js'
-import type { WalkGraphCallbacks } from '../walker/walk.js'
+import { walkGraph, walkBranch, runCompensationStack } from '../walker/walk.js'
+import type {
+  WalkGraphCallbacks,
+  CompensationEntry,
+  CompensationResult,
+  BranchResult,
+} from '../walker/walk.js'
 import type { ExecutionContext, NodeExecutionRecord } from '../walker/types.js'
 import { evaluateExpression } from '../runner/evaluator.js'
 import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
 import { PlainAdapter } from '../adapters/plain.js'
 import type { ExecutionAdapter } from '../adapters/types.js'
 import { buildLegacyContext } from './engine.js'
+import { ExecutionError } from './errors.js'
 import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
 
 /**
@@ -40,13 +46,18 @@ export class CompiledFlow {
    *
    * Each call creates independent state — multiple concurrent executions
    * on the same CompiledFlow instance do not interfere.
+   *
+   * On failure, throws `ExecutionError` with trace, failedNode, compensated,
+   * and compensationErrors fields.
    */
   async execute(input: Record<string, unknown>): Promise<ExecutionResult> {
     const hooks = this.options.hooks
     const projectRoot = this.options.projectRoot ?? process.cwd()
     const expressionTimeout = this.options.expressionTimeout
 
-    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout)
+    // Externally tracked trace — survives even if walkGraph throws
+    const externalTrace: NodeExecutionRecord[] = []
+    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, externalTrace)
 
     try {
       const result = await walkGraph(this.doc, input, callbacks)
@@ -58,7 +69,22 @@ export class CompiledFlow {
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err))
       safeCallHook(() => hooks?.onFlowError?.(error))
-      throw err
+
+      // Extract compensation result attached by walkGraph
+      const compResult = (err as { __compensationResult?: CompensationResult })
+        ?.__compensationResult
+
+      // Find the failed node from the trace
+      const failedRecord = [...externalTrace].reverse().find((r) => r.error)
+      const failedNode = failedRecord?.nodeId ?? 'unknown'
+
+      throw new ExecutionError(
+        error.message,
+        externalTrace,
+        failedNode,
+        compResult?.compensated ?? [],
+        compResult?.compensationErrors ?? [],
+      )
     }
   }
 
@@ -74,6 +100,7 @@ export class CompiledFlow {
     hooks: EngineHooks | undefined,
     projectRoot: string,
     expressionTimeout: number | undefined,
+    externalTrace: NodeExecutionRecord[],
   ): WalkGraphCallbacks<NodeExecutionRecord> {
     const resolvedHandlers = this.resolvedHandlers
     const doc = this.doc
@@ -87,6 +114,7 @@ export class CompiledFlow {
      * replaced with its trace-collecting interceptor.
      */
     const recordStep = (record: NodeExecutionRecord): void => {
+      externalTrace.push(record)
       callbacks.onStep(record)
     }
 
@@ -256,6 +284,10 @@ export class CompiledFlow {
         const strategy = node.join_strategy ?? 'all'
         const joinNodeId = node.join
 
+        // Track per-branch compensation sub-stacks for completed branches.
+        // On failure, only completed branches' sub-stacks are unwound.
+        const completedBranchStacks: CompensationEntry[][] = []
+
         // Build a branch function for each branch ID.
         // Each branch gets an isolated copy of the parent state.
         const branchFns = node.branches.map((branchId) => {
@@ -275,41 +307,97 @@ export class CompiledFlow {
             }
 
             // Walk the branch subgraph from branchId until joinNodeId
-            const finalState = await walkBranch(doc, branchId, joinNodeId, branchCtx, callbacks)
-            return { branchId, state: finalState }
+            const branchResult: BranchResult = await walkBranch(
+              doc,
+              branchId,
+              joinNodeId,
+              branchCtx,
+              callbacks,
+            )
+
+            // Record this branch's compensation sub-stack as completed
+            completedBranchStacks.push(branchResult.compensationStack)
+
+            return { branchId, state: branchResult.state }
           }
         })
 
-        // Execute branches through the adapter's parallel strategy
-        const rawResults = await adapter.executeParallel(
-          branchFns.map((fn) => fn as () => Promise<unknown>),
-          strategy,
-        )
+        try {
+          // Execute branches through the adapter's parallel strategy
+          const rawResults = await adapter.executeParallel(
+            branchFns.map((fn) => fn as () => Promise<unknown>),
+            strategy,
+          )
 
-        // Merge results: namespace by branch ID
-        const resultMap: Record<string, unknown> = {}
-        for (const raw of rawResults) {
-          const result = raw as { branchId: string; state: Record<string, unknown> }
-          resultMap[result.branchId] = result.state
+          // Merge results: namespace by branch ID
+          const resultMap: Record<string, unknown> = {}
+          for (const raw of rawResults) {
+            const result = raw as { branchId: string; state: Record<string, unknown> }
+            resultMap[result.branchId] = result.state
+          }
+
+          // Write merged results into parent context
+          Object.assign(ctx.state, resultMap)
+
+          const parallelResult = resultMap
+
+          const record: NodeExecutionRecord = {
+            nodeId,
+            type: node.type,
+            lane: node.lane,
+            startedAt,
+            completedAt: performance.now(),
+            output: parallelResult,
+            handler: 'native',
+          }
+          safeCallHook(() => hooks?.onNodeComplete?.(record))
+          recordStep(record)
+
+          // On success, promote all branch compensation sub-stacks to the parent.
+          // walkGraph's main compensation stack will unwind these if a later node fails.
+          // We attach them as a __branchCompensation property on the error object,
+          // but since this is the success path, we need to forward them upward.
+          // The walkGraph compensation stack is managed by walkGraph itself via
+          // onCompensation callbacks on action nodes. Since walkBranch now handles
+          // its own compensation tracking, we need to re-register these entries
+          // with the parent. We do this by returning a special result that
+          // walkGraph can pick up.
+          //
+          // Actually, the parent walkGraph's onAction already pushes compensation
+          // entries for individual action nodes. But since walkBranch creates its
+          // own separate stacks, we need to promote them.
+          //
+          // The cleanest approach: attach branch stacks to the result for the parent
+          // to pick up. We'll use a convention: the result carries __branchCompensationStacks.
+          const resultWithMeta = Object.assign(parallelResult, {
+            __branchCompensationStacks: completedBranchStacks,
+          })
+
+          return resultWithMeta
+        } catch (err: unknown) {
+          // A branch failed. Compensate all COMPLETED branches' sub-stacks
+          // in reverse order (last completed first). The failed branch's
+          // sub-stack is NOT included because it never completed.
+          const allCompensated: string[] = []
+          const allCompensationErrors: { nodeId: string; error: Error }[] = []
+
+          // Process completed branches in reverse order
+          for (const branchStack of [...completedBranchStacks].reverse()) {
+            const result = await runCompensationStack(branchStack, callbacks)
+            allCompensated.push(...result.compensated)
+            allCompensationErrors.push(...result.compensationErrors)
+          }
+
+          // Attach compensation results to the error so walkGraph can forward it
+          if (err instanceof Error) {
+            ;(err as Error & { __compensationResult?: CompensationResult }).__compensationResult = {
+              compensated: allCompensated,
+              compensationErrors: allCompensationErrors,
+            }
+          }
+
+          throw err
         }
-
-        // Write merged results into parent context
-        Object.assign(ctx.state, resultMap)
-
-        const parallelResult = resultMap
-
-        const record: NodeExecutionRecord = {
-          nodeId,
-          type: node.type,
-          lane: node.lane,
-          startedAt,
-          completedAt: performance.now(),
-          output: parallelResult,
-          handler: 'native',
-        }
-        safeCallHook(() => hooks?.onNodeComplete?.(record))
-        recordStep(record)
-        return parallelResult
       },
 
       onWait: async (
@@ -399,6 +487,55 @@ export class CompiledFlow {
       onStep: (_record: NodeExecutionRecord): void => {
         // No-op: walkGraph replaces this with its trace-collecting interceptor.
         // The original must be a no-op to prevent infinite recursion.
+      },
+
+      onCompensation: (
+        nodeId: string,
+        compensation: { file: string; symbol: string },
+        _result: unknown,
+      ): (() => Promise<void>) => {
+        // Return a compensation handler. The actual implementation would load
+        // the compensation entry point, but for now we use a basic handler
+        // that the adapter can override.
+        return async () => {
+          const handler = resolvedHandlers.get(nodeId)
+          if (handler && (handler.type === 'entry_point' || handler.type === 'registered')) {
+            // Re-invoke the handler as a compensation (in a real system,
+            // this would call the compensation-specific entry point).
+            // For now, this is a placeholder that records compensation.
+          }
+          // The compensation field { file, symbol } can be loaded at runtime
+          // similar to entry_points. This will be fully implemented when
+          // the adapter supports compensation loading.
+          void compensation
+        }
+      },
+
+      onCompensationStep: (nodeId: string, error?: Error): void => {
+        safeCallHook(() => {
+          if (error) {
+            hooks?.onNodeComplete?.({
+              nodeId: `${nodeId}:compensate`,
+              type: 'compensation',
+              lane: '',
+              startedAt: performance.now(),
+              completedAt: performance.now(),
+              output: {},
+              handler: 'native',
+              error: { message: error.message, stack: error.stack },
+            })
+          } else {
+            hooks?.onNodeComplete?.({
+              nodeId: `${nodeId}:compensate`,
+              type: 'compensation',
+              lane: '',
+              startedAt: performance.now(),
+              completedAt: performance.now(),
+              output: {},
+              handler: 'native',
+            })
+          }
+        })
       },
     }
 
