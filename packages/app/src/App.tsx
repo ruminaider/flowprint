@@ -1,13 +1,15 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import {
   FlowprintEditor,
   MigrationBanner,
+  MigrationModal,
   useTheme,
   useSymbolSearch,
 } from '@ruminaider/flowprint-editor'
 import type { RulesDataMap } from '@ruminaider/flowprint-editor'
 import '@ruminaider/flowprint-editor/styles.css'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
+import { isMajorBump } from '@ruminaider/flowprint-schema'
 import { Header } from './components/Header'
 import { WelcomeScreen } from './components/WelcomeScreen'
 import { NewBlueprintWizard } from './components/NewBlueprintWizard'
@@ -26,6 +28,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rulesDataMap, setRulesDataMap] = useState<RulesDataMap>({})
+  const [migrationAccepted, setMigrationAccepted] = useState(false)
 
   const settingsHook = useSettings()
   const { settings } = settingsHook
@@ -118,6 +121,27 @@ export function App() {
     fileManager.clearMigrationResult()
     projectDirectory.clearMigrationResult()
   }, [fileManager, projectDirectory])
+
+  const needsMigrationModal = useMemo(() => {
+    if (!activeMigrationResult || activeMigrationResult.status !== 'migrated') return false
+    const hasRequiredOrNotable = activeMigrationResult.changelog.entries.some(
+      (e) => e.required || e.notable,
+    )
+    const isMajor = isMajorBump(
+      activeMigrationResult.fromVersion,
+      activeMigrationResult.toVersion,
+    )
+    return hasRequiredOrNotable || isMajor
+  }, [activeMigrationResult])
+
+  const isForcedUpgrade = useMemo(() => {
+    if (!activeMigrationResult || activeMigrationResult.status !== 'migrated') return false
+    return isMajorBump(activeMigrationResult.fromVersion, activeMigrationResult.toVersion)
+  }, [activeMigrationResult])
+
+  useEffect(() => {
+    setMigrationAccepted(false)
+  }, [activeMigrationResult])
 
   const handleClose = useCallback(() => {
     if (fileManager.dirty) {
@@ -213,10 +237,21 @@ export function App() {
               setSettingsOpen(true)
             }}
             onClose={handleClose}
-            saveDisabled={activeMigrationResult?.status === 'future_version'}
+            saveDisabled={
+              activeMigrationResult?.status === 'future_version' ||
+              (needsMigrationModal && !migrationAccepted)
+            }
           />
           {activeMigrationResult && activeMigrationResult.status !== 'current' && (
             <MigrationBanner result={activeMigrationResult} onDismiss={dismissMigration} />
+          )}
+          {needsMigrationModal && activeMigrationResult?.status === 'migrated' && (
+            <MigrationModal
+              open={!migrationAccepted}
+              changelog={activeMigrationResult.changelog}
+              forced={isForcedUpgrade}
+              onAccept={() => setMigrationAccepted(true)}
+            />
           )}
           <div style={{ flex: 1, minHeight: 0 }}>
             <FlowprintEditor
@@ -225,7 +260,10 @@ export function App() {
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
               rulesDataMap={rulesDataMap}
-              readOnly={activeMigrationResult?.status === 'future_version'}
+              readOnly={
+                activeMigrationResult?.status === 'future_version' ||
+                (needsMigrationModal && !migrationAccepted)
+              }
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}
