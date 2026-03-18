@@ -58,8 +58,14 @@ export type {
 export { assertWithinProject } from './security/index.js'
 
 // Engine
-export { FlowprintEngine, CompiledFlow } from './engine/index.js'
-export type { EngineOptions, EngineHooks, ExecutionResult } from './engine/index.js'
+export { FlowprintEngine, CompiledFlow, RealClock, TestClock, parseDuration } from './engine/index.js'
+export type {
+  Clock,
+  EngineOptions,
+  EngineHooks,
+  ExecutionResult,
+  ValidateSignalFn,
+} from './engine/index.js'
 
 // Adapters
 export { PlainAdapter, ActionTimeoutError } from './adapters/index.js'
