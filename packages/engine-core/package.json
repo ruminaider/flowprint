@@ -1,5 +1,5 @@
 {
-  "name": "@ruminaider/flowprint-engine",
+  "name": "@ruminaider/flowprint-engine-core",
   "version": "0.0.0",
   "description": "Expression parser, dev runner, and code generator for Flowprint execution engine",
   "type": "module",

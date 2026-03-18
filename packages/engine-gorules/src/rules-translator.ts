@@ -11,7 +11,7 @@ import type {
   Rule,
   Condition,
   OperatorCondition,
-} from '@ruminaider/flowprint-engine'
+} from '@ruminaider/flowprint-engine-core'
 
 /** JDM decision table input column */
 interface JDMInput {

@@ -2,7 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/schema" },
-    { "path": "packages/engine" },
+    { "path": "packages/engine-core" },
     { "path": "packages/editor" },
     { "path": "packages/cli" }
   ]

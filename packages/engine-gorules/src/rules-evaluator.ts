@@ -1,5 +1,5 @@
 import { ZenEngine } from '@gorules/zen-engine'
-import type { RulesDocument } from '@ruminaider/flowprint-engine'
+import type { RulesDocument } from '@ruminaider/flowprint-engine-core'
 import { translateToJDM } from './rules-translator.js'
 
 /** Result of evaluating a rules document via GoRules ZEN */
