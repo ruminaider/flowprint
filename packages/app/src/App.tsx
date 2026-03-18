@@ -213,6 +213,7 @@ export function App() {
               setSettingsOpen(true)
             }}
             onClose={handleClose}
+            saveDisabled={activeMigrationResult?.status === 'future_version'}
           />
           {activeMigrationResult && activeMigrationResult.status !== 'current' && (
             <MigrationBanner result={activeMigrationResult} onDismiss={dismissMigration} />
@@ -224,6 +225,7 @@ export function App() {
               theme={settings.theme}
               symbolSearch={symbolSearch ?? undefined}
               rulesDataMap={rulesDataMap}
+              readOnly={activeMigrationResult?.status === 'future_version'}
               showYamlPreview
               showExportButton
               style={{ width: '100%', height: '100%' }}

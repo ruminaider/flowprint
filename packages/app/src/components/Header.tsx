@@ -13,6 +13,7 @@ export interface HeaderProps {
   onSaveAs: () => void
   onSettings: () => void
   onClose?: () => void
+  saveDisabled?: boolean
 }
 
 const THEME_LABELS: Record<ThemeMode, string> = {
@@ -34,9 +35,11 @@ const btnStyle: React.CSSProperties = {
 function HeaderButton({
   onClick,
   children,
+  disabled,
 }: {
   onClick: () => void
   children: React.ReactNode
+  disabled?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -45,9 +48,12 @@ function HeaderButton({
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      disabled={disabled}
       style={{
         ...btnStyle,
-        background: hovered ? '#252434' : '#1C1B25',
+        background: hovered && !disabled ? '#252434' : '#1C1B25',
+        opacity: disabled ? 0.4 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
       }}
     >
       {children}
@@ -67,6 +73,7 @@ export function Header({
   onSaveAs,
   onSettings,
   onClose,
+  saveDisabled,
 }: HeaderProps) {
   return (
     <header
@@ -107,8 +114,8 @@ export function Header({
         {supportsOpenProject && onOpenProject && (
           <HeaderButton onClick={onOpenProject}>Open Project</HeaderButton>
         )}
-        <HeaderButton onClick={onSave}>Save</HeaderButton>
-        <HeaderButton onClick={onSaveAs}>Save As</HeaderButton>
+        <HeaderButton onClick={onSave} disabled={saveDisabled}>Save</HeaderButton>
+        <HeaderButton onClick={onSaveAs} disabled={saveDisabled}>Save As</HeaderButton>
         <HeaderButton onClick={onSettings}>Settings</HeaderButton>
         <HeaderButton onClick={onCycleTheme}>
           Theme: {THEME_LABELS[themeMode]}
