@@ -1,4 +1,5 @@
 import type { ExecutionContext, NodeExecutionRecord } from '../walker/types.js'
+import type { ExecutionAdapter } from '../adapters/types.js'
 
 /** How a node's handler was resolved at load() time. */
 export type ResolvedHandler =
@@ -25,6 +26,8 @@ export interface EngineOptions {
   expressionTimeout?: number
   /** Observability hooks. */
   hooks?: EngineHooks
+  /** Execution adapter for action handlers. Defaults to PlainAdapter. */
+  adapter?: ExecutionAdapter
 }
 
 /** Result of a successful execution. */

@@ -61,6 +61,10 @@ export { assertWithinProject } from './security/index.js'
 export { FlowprintEngine, CompiledFlow } from './engine/index.js'
 export type { EngineOptions, EngineHooks, ExecutionResult } from './engine/index.js'
 
+// Adapters
+export { PlainAdapter, ActionTimeoutError } from './adapters/index.js'
+export type { ExecutionAdapter, ActionConfig } from './adapters/index.js'
+
 // Codegen
 export { generateCode } from './codegen/index.js'
 export type { GenerateResult, GenerateOptions, GeneratedFile } from './codegen/index.js'
