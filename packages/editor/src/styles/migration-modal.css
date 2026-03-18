@@ -1,0 +1,78 @@
+/* ── Migration Modal ──────────────────────── */
+
+.fp-migration-modal {
+  max-width: 480px;
+  width: 100%;
+  border: 1px solid var(--fp-border-default, #e2e8f0);
+  border-radius: var(--fp-radius-lg, 8px);
+  padding: var(--fp-space-6, 24px);
+  font-family: var(--fp-font-sans);
+}
+
+.fp-migration-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.fp-migration-modal__title {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.fp-migration-modal__subtitle {
+  margin: 0 0 16px;
+  font-size: var(--fp-text-sm);
+  color: var(--fp-text-secondary, #64748b);
+}
+
+.fp-migration-modal__entries {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.fp-migration-modal__entry {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--fp-border-default, #e2e8f0);
+}
+
+.fp-migration-modal__entry:last-child {
+  border-bottom: none;
+}
+
+.fp-migration-modal__entry strong {
+  display: block;
+  font-size: var(--fp-text-sm);
+  margin-bottom: 2px;
+}
+
+.fp-migration-modal__entry span {
+  font-size: var(--fp-text-sm);
+  color: var(--fp-text-secondary, #64748b);
+}
+
+.fp-migration-modal__transforms {
+  font-size: var(--fp-text-xs);
+  color: var(--fp-text-secondary, #64748b);
+  padding-left: 16px;
+  margin-top: 4px;
+}
+
+.fp-migration-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.fp-migration-modal__accept {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--fp-radius-md, 4px);
+  background: var(--fp-color-primary, #3b82f6);
+  color: var(--fp-text-on-accent, white);
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-sans);
+  cursor: pointer;
+}
+
+.fp-migration-modal__accept:hover {
+  opacity: 0.9;
+}

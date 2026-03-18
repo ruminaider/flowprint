@@ -11,3 +11,5 @@
 @import './zoom.css';
 @import './bottom-panel.css';
 @import './rules-editor.css';
+@import './migration-banner.css';
+@import './migration-modal.css';
