@@ -114,6 +114,14 @@
           "minimum": 0,
           "description": "Display order (0 = topmost lane)"
         },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
+        },
         "height": {
           "type": "number",
           "minimum": 140,
@@ -201,6 +209,14 @@
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
         },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -215,6 +231,13 @@
         },
         "rules": {
           "$ref": "#/definitions/RulesRef"
+        },
+        "expressions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Key-value pairs of output field name to expression string. Makes this an engine-native transform node."
         },
         "position": {
           "$ref": "#/definitions/Position"
@@ -266,6 +289,14 @@
         "notes": {
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
+        },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
         },
         "metadata": {
           "type": "object",
@@ -333,6 +364,14 @@
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
         },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -387,6 +426,14 @@
         "notes": {
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
+        },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
         },
         "metadata": {
           "type": "object",
@@ -458,6 +505,14 @@
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
         },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -500,6 +555,14 @@
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
         },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
+        },
         "metadata": {
           "type": "object",
           "additionalProperties": {
@@ -539,6 +602,14 @@
         "notes": {
           "type": "string",
           "description": "Markdown notes for documentation and design rationale"
+        },
+        "data_class": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["pii", "financial", "credentials", "internal"]
+          },
+          "description": "Data classification labels for trace redaction policy"
         },
         "metadata": {
           "type": "object",
