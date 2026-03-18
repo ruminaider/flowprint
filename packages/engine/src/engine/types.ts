@@ -25,6 +25,8 @@ export interface EngineOptions {
   expressionTimeout?: number
   /** Observability hooks. */
   hooks?: EngineHooks
+  /** Maximum concurrent execute() calls on a CompiledFlow. Unlimited if omitted. */
+  maxConcurrency?: number
 }
 
 /** Result of a successful execution. */
