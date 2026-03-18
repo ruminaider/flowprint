@@ -34,7 +34,7 @@ function makeDoc(
         next: 'done',
         ...nodeOverrides?.wait1,
       },
-      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'completed' },
+      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
     },
   } as FlowprintDocument
 }
@@ -97,7 +97,7 @@ describe('applyTransform', () => {
 
     it('creates metadata object if absent', () => {
       const doc = makeDoc()
-      delete (doc as Record<string, unknown>).metadata
+      delete (doc as unknown as Record<string, unknown>).metadata
       const transform: Transform = {
         type: 'addField',
         scope: 'metadata',
@@ -127,7 +127,7 @@ describe('applyTransform', () => {
 
     it('removes field from metadata', () => {
       const doc = makeDoc()
-      ;(doc as Record<string, unknown>).metadata = { legacy: 'yes', owner: 'team-a' }
+      ;(doc as unknown as Record<string, unknown>).metadata = { legacy: 'yes', owner: 'team-a' }
       const transform: Transform = {
         type: 'removeField',
         scope: 'metadata',
@@ -184,7 +184,7 @@ describe('applyTransform', () => {
 
     it('renames field in metadata', () => {
       const doc = makeDoc()
-      ;(doc as Record<string, unknown>).metadata = { old_key: 'value' }
+      ;(doc as unknown as Record<string, unknown>).metadata = { old_key: 'value' }
       const transform: Transform = {
         type: 'renameField',
         scope: 'metadata',
@@ -266,7 +266,7 @@ describe('applyTransform', () => {
 
     it('sets default in metadata scope', () => {
       const doc = makeDoc()
-      ;(doc as Record<string, unknown>).metadata = {}
+      ;(doc as unknown as Record<string, unknown>).metadata = {}
       const transform: Transform = {
         type: 'setDefault',
         scope: 'metadata',

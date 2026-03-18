@@ -112,7 +112,7 @@ describe('useProjectDirectory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(migrate).mockReturnValue({ status: 'current' })
+    vi.mocked(migrate).mockReturnValue({ status: 'current', doc: MOCK_DOC })
     vi.mocked(validate).mockReturnValue({ valid: true, errors: [] })
     vi.mocked(validateRulesYaml).mockReturnValue({ valid: true, errors: [] })
     vi.mocked(parse).mockReturnValue(MOCK_DOC)

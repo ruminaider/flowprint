@@ -18,7 +18,7 @@ function makeDoc(schemaVersion = 'flowprint/1.0'): FlowprintDocument {
         next: 'done',
       },
       step1: { type: 'action', lane: 'main', label: 'Step', next: 'done' },
-      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'completed' },
+      done: { type: 'terminal', lane: 'main', label: 'Done', outcome: 'success' },
     },
   } as FlowprintDocument
 }
@@ -89,8 +89,8 @@ describe('migrate', () => {
         expect(result.changelog.from).toBe('flowprint/1.0')
         expect(result.changelog.to).toBe('flowprint/1.1')
         expect(result.changelog.entries).toHaveLength(1)
-        expect(result.changelog.entries[0].version).toBe('flowprint/1.1')
-        expect(result.changelog.entries[0].description).toBe('Add priority field to all nodes')
+        expect(result.changelog.entries[0]!.version).toBe('flowprint/1.1')
+        expect(result.changelog.entries[0]!.description).toBe('Add priority field to all nodes')
         // Verify the transform was applied
         const nodes = result.doc.nodes as Record<string, Record<string, unknown>>
         for (const node of Object.values(nodes)) {
@@ -167,8 +167,8 @@ describe('migrate', () => {
         expect(result.fromVersion).toBe('flowprint/1.0')
         expect(result.toVersion).toBe('flowprint/1.2')
         expect(result.changelog.entries).toHaveLength(2)
-        expect(result.changelog.entries[0].version).toBe('flowprint/1.1')
-        expect(result.changelog.entries[1].version).toBe('flowprint/1.2')
+        expect(result.changelog.entries[0]!.version).toBe('flowprint/1.1')
+        expect(result.changelog.entries[1]!.version).toBe('flowprint/1.2')
         // Both transforms applied
         const nodes = result.doc.nodes as Record<string, Record<string, unknown>>
         for (const node of Object.values(nodes)) {
@@ -195,11 +195,11 @@ describe('migrate', () => {
             // At this point, declarative transforms should have already been applied
             const nodes = d.nodes as Record<string, Record<string, unknown>>
             const firstNode = Object.values(nodes)[0]
-            if (firstNode.priority === 'normal') {
+            if (firstNode?.priority === 'normal') {
               executionOrder.push('custom_after_declarative')
             }
             // Custom transform modifies the doc further
-            ;(d as Record<string, unknown>).description = 'Modified by custom'
+            ;(d as unknown as Record<string, unknown>).description = 'Modified by custom'
             return d
           },
         },
@@ -391,19 +391,19 @@ describe('buildMigrationPath', () => {
   it('finds single-step path', () => {
     const path = buildMigrationPath('flowprint/1.0', 'flowprint/1.1', rules)
     expect(path).toHaveLength(1)
-    expect(path[0].from).toBe('flowprint/1.0')
-    expect(path[0].to).toBe('flowprint/1.1')
+    expect(path[0]!.from).toBe('flowprint/1.0')
+    expect(path[0]!.to).toBe('flowprint/1.1')
   })
 
   it('finds multi-step path', () => {
     const path = buildMigrationPath('flowprint/1.0', 'flowprint/1.3', rules)
     expect(path).toHaveLength(3)
-    expect(path[0].from).toBe('flowprint/1.0')
-    expect(path[0].to).toBe('flowprint/1.1')
-    expect(path[1].from).toBe('flowprint/1.1')
-    expect(path[1].to).toBe('flowprint/1.2')
-    expect(path[2].from).toBe('flowprint/1.2')
-    expect(path[2].to).toBe('flowprint/1.3')
+    expect(path[0]!.from).toBe('flowprint/1.0')
+    expect(path[0]!.to).toBe('flowprint/1.1')
+    expect(path[1]!.from).toBe('flowprint/1.1')
+    expect(path[1]!.to).toBe('flowprint/1.2')
+    expect(path[2]!.from).toBe('flowprint/1.2')
+    expect(path[2]!.to).toBe('flowprint/1.3')
   })
 
   it('returns empty array when no path exists', () => {

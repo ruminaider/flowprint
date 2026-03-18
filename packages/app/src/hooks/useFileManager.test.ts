@@ -113,7 +113,7 @@ describe('useFileManager', () => {
     vi.clearAllMocks()
 
     // Default: migration returns current, validation passes
-    vi.mocked(migrate).mockReturnValue({ status: 'current' })
+    vi.mocked(migrate).mockReturnValue({ status: 'current', doc: MOCK_DOC })
     vi.mocked(validate).mockReturnValue({
       valid: true,
       errors: [],
