@@ -2,12 +2,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
-import { validateYaml, serialize } from '@ruminaider/flowprint-schema'
+import { validate, migrate, serialize } from '@ruminaider/flowprint-schema'
 import { parse } from 'yaml'
 import { useFileManager } from './useFileManager'
 
 vi.mock('@ruminaider/flowprint-schema', () => ({
-  validateYaml: vi.fn(),
+  validate: vi.fn(),
+  migrate: vi.fn(),
   serialize: vi.fn(),
 }))
 
@@ -111,8 +112,9 @@ describe('useFileManager', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Default: validation passes
-    vi.mocked(validateYaml).mockReturnValue({
+    // Default: migration returns current, validation passes
+    vi.mocked(migrate).mockReturnValue({ status: 'current' })
+    vi.mocked(validate).mockReturnValue({
       valid: true,
       errors: [],
     })
@@ -169,7 +171,8 @@ describe('useFileManager', () => {
         types: [{ description: 'Flowprint YAML', accept: { 'text/yaml': ['.yaml', '.yml'] } }],
         multiple: false,
       })
-      expect(validateYaml).toHaveBeenCalledWith(VALID_YAML)
+      expect(migrate).toHaveBeenCalledWith(MOCK_DOC)
+      expect(validate).toHaveBeenCalledWith(MOCK_DOC)
       expect(onDocLoaded).toHaveBeenCalledWith(MOCK_DOC, 'flow.flowprint.yaml')
       expect(result.current.fileName).toBe('flow.flowprint.yaml')
       expect(result.current.dirty).toBe(false)
@@ -188,7 +191,8 @@ describe('useFileManager', () => {
         await result.current.openFile()
       })
 
-      expect(validateYaml).toHaveBeenCalled()
+      expect(migrate).toHaveBeenCalledWith(MOCK_DOC)
+      expect(validate).toHaveBeenCalledWith(MOCK_DOC)
       expect(onDocLoaded).toHaveBeenCalledWith(MOCK_DOC, 'fallback.flowprint.yaml')
       expect(result.current.fileName).toBe('fallback.flowprint.yaml')
       expect(result.current.dirty).toBe(false)
@@ -202,7 +206,7 @@ describe('useFileManager', () => {
       const onDocLoaded = vi.fn()
       const onError = vi.fn()
 
-      vi.mocked(validateYaml).mockReturnValue({
+      vi.mocked(validate).mockReturnValue({
         valid: false,
         errors: [
           { path: '/schema', message: 'Missing required property: schema', severity: 'error' },

@@ -1,5 +1,10 @@
 import { useState, useCallback } from 'react'
-import { FlowprintEditor, useTheme, useSymbolSearch } from '@ruminaider/flowprint-editor'
+import {
+  FlowprintEditor,
+  MigrationBanner,
+  useTheme,
+  useSymbolSearch,
+} from '@ruminaider/flowprint-editor'
 import type { RulesDataMap } from '@ruminaider/flowprint-editor'
 import '@ruminaider/flowprint-editor/styles.css'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
@@ -106,6 +111,14 @@ export function App() {
     void settingsHook.updateSettings({ theme: next })
   }, [settings.theme, settingsHook])
 
+  // Use the migration result from whichever hook opened the file
+  const activeMigrationResult =
+    fileManager.migrationResult ?? projectDirectory.migrationResult ?? null
+  const dismissMigration = useCallback(() => {
+    fileManager.clearMigrationResult()
+    projectDirectory.clearMigrationResult()
+  }, [fileManager, projectDirectory])
+
   const handleClose = useCallback(() => {
     if (fileManager.dirty) {
       if (!window.confirm('You have unsaved changes. Discard and return to the welcome screen?')) {
@@ -116,7 +129,8 @@ export function App() {
     fileManager.setDirty(false)
     setRulesDataMap({})
     setError(null)
-  }, [fileManager])
+    dismissMigration()
+  }, [fileManager, dismissMigration])
 
   return (
     <div
@@ -200,6 +214,9 @@ export function App() {
             }}
             onClose={handleClose}
           />
+          {activeMigrationResult && activeMigrationResult.status !== 'current' && (
+            <MigrationBanner result={activeMigrationResult} onDismiss={dismissMigration} />
+          )}
           <div style={{ flex: 1, minHeight: 0 }}>
             <FlowprintEditor
               value={doc}

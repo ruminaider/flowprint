@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import { parse } from 'yaml'
-import { validateYaml, validateRulesYaml } from '@ruminaider/flowprint-schema'
-import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
+import { validate, migrate, validateRulesYaml } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, MigrationResult } from '@ruminaider/flowprint-schema'
 import type { RulesDataMap, RulesDataEntry } from '@ruminaider/flowprint-editor'
 
 // File System Access API type augmentation (Chrome/Edge only)
@@ -25,6 +25,8 @@ export interface UseProjectDirectoryReturn {
   refreshRules(): Promise<void>
   projectName: string | null
   supportsDirectoryPicker: boolean
+  migrationResult: MigrationResult | null
+  clearMigrationResult(): void
 }
 
 function hasDirectoryPicker(): boolean {
@@ -125,6 +127,7 @@ export function useProjectDirectory(
   const { onDocLoaded, onRulesResolved, onError } = options
 
   const [projectName, setProjectName] = useState<string | null>(null)
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null)
   const dirHandleRef = useRef<FileSystemDirectoryHandle | null>(null)
   const lastDocRef = useRef<FlowprintDocument | null>(null)
 
@@ -166,22 +169,45 @@ export function useProjectDirectory(
       const file = await blueprintHandle.getFile()
       const text = await file.text()
 
-      const result = validateYaml(text)
-      if (!result.valid) {
-        const firstError = result.errors[0]
-        const msg = firstError
-          ? `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`
-          : 'Invalid flowprint file'
-        throw new Error(msg)
+      let parsed: FlowprintDocument
+      try {
+        parsed = parse(text) as FlowprintDocument
+      } catch (err) {
+        throw new Error(
+          `Failed to parse YAML: ${err instanceof Error ? err.message : String(err)}`,
+        )
       }
 
-      const doc = parse(text) as FlowprintDocument
-      dirHandleRef.current = dirHandle
-      lastDocRef.current = doc
-      setProjectName(dirHandle.name)
-      onDocLoaded(doc, file.name)
+      const migration = migrate(parsed)
+      setMigrationResult(migration)
 
-      await resolveRulesForDoc(dirHandle, doc)
+      // Determine which doc to load
+      const docToLoad =
+        migration.status === 'migrated'
+          ? migration.doc
+          : migration.status === 'error'
+            ? migration.originalDoc
+            : parsed
+
+      // Run structural validation (skip for future_version — tool can't validate future schemas)
+      if (migration.status !== 'future_version') {
+        const validation = validate(docToLoad)
+        if (!validation.valid) {
+          const firstError = validation.errors.find((e) => e.severity === 'error')
+          if (firstError) {
+            throw new Error(
+              `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`,
+            )
+          }
+        }
+      }
+
+      dirHandleRef.current = dirHandle
+      lastDocRef.current = docToLoad
+      setProjectName(dirHandle.name)
+      onDocLoaded(docToLoad, file.name)
+
+      await resolveRulesForDoc(dirHandle, docToLoad)
     } catch (err) {
       if (isAbortError(err)) return
       if (onError && err instanceof Error) {
@@ -204,10 +230,16 @@ export function useProjectDirectory(
     }
   }, [resolveRulesForDoc, onError])
 
+  const clearMigrationResult = useCallback(() => {
+    setMigrationResult(null)
+  }, [])
+
   return {
     openProject,
     refreshRules,
     projectName,
     supportsDirectoryPicker,
+    migrationResult,
+    clearMigrationResult,
   }
 }
