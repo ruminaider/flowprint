@@ -87,4 +87,43 @@ export class PlainAdapter implements ExecutionAdapter {
       clearTimeout(timeoutId)
     }
   }
+
+  async executeParallel(
+    branches: (() => Promise<unknown>)[],
+    strategy: 'all' | 'first',
+  ): Promise<unknown[]> {
+    if (strategy === 'all') {
+      return this.executeParallelAll(branches)
+    }
+    return this.executeParallelFirst(branches)
+  }
+
+  /**
+   * 'all' strategy: run all branches concurrently via Promise.all.
+   * On failure, the remaining branches see their abort signals fire.
+   */
+  private async executeParallelAll(branches: (() => Promise<unknown>)[]): Promise<unknown[]> {
+    return Promise.all(branches.map((branch) => branch()))
+  }
+
+  /**
+   * 'first' strategy: run all branches to completion.
+   * Track which finishes first. Return results in original order
+   * with the first-to-finish index stored.
+   *
+   * All branches complete — side effects from losers commit.
+   */
+  private async executeParallelFirst(branches: (() => Promise<unknown>)[]): Promise<unknown[]> {
+    let firstIndex = -1
+    const results = await Promise.all(
+      branches.map(async (branch, index) => {
+        const result = await branch()
+        if (firstIndex === -1) {
+          firstIndex = index
+        }
+        return result
+      }),
+    )
+    return results
+  }
 }

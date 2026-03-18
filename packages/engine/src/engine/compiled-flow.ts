@@ -8,8 +8,7 @@ import type {
   TriggerNode,
   TerminalNode,
 } from '@ruminaider/flowprint-schema'
-import { isActionNode } from '@ruminaider/flowprint-schema'
-import { walkGraph } from '../walker/walk.js'
+import { walkGraph, walkBranch } from '../walker/walk.js'
 import type { WalkGraphCallbacks } from '../walker/walk.js'
 import type { ExecutionContext, NodeExecutionRecord } from '../walker/types.js'
 import { evaluateExpression } from '../runner/evaluator.js'
@@ -254,64 +253,50 @@ export class CompiledFlow {
       ): Promise<unknown> => {
         safeCallHook(() => hooks?.onNodeStart?.(nodeId, node.type, node.lane))
         const startedAt = performance.now()
+        const strategy = node.join_strategy ?? 'all'
+        const joinNodeId = node.join
 
-        const branchPromises = node.branches.map(async (branchId) => {
-          const branchNode = doc.nodes[branchId]
-          if (!branchNode) {
-            throw new Error(`Parallel branch node "${branchId}" not found`)
-          }
-
-          const handler = resolvedHandlers.get(branchId)
-          if (!handler) {
-            throw new Error(`No resolved handler for parallel branch "${branchId}"`)
-          }
-
-          if (isActionNode(branchNode)) {
-            let result: unknown
-            switch (handler.type) {
-              case 'registered':
-              case 'entry_point':
-                result = await adapter.executeAction(branchId, handler.fn, ctx, {
-                  metadata: branchNode.metadata as Record<string, unknown> | undefined,
-                })
-                break
-              case 'expressions': {
-                const legacyCtx = buildLegacyContext(ctx)
-                const output: Record<string, unknown> = {}
-                for (const [key, expr] of Object.entries(handler.exprs)) {
-                  output[key] = evaluateExpression(expr, legacyCtx, expressionTimeout)
-                }
-                result = output
-                break
-              }
-              case 'rules': {
-                const rulesDoc = loadRulesFile(handler.rulesFile, projectRoot)
-                const legacyCtx = buildLegacyContext(ctx)
-                const rulesResult = evaluateRules(rulesDoc, legacyCtx, expressionTimeout)
-                result = rulesResult.output
-                break
-              }
-              case 'native':
-                result = {}
-                break
+        // Build a branch function for each branch ID.
+        // Each branch gets an isolated copy of the parent state.
+        const branchFns = node.branches.map((branchId) => {
+          return async (): Promise<{ branchId: string; state: Record<string, unknown> }> => {
+            const branchNode = doc.nodes[branchId]
+            if (!branchNode) {
+              throw new Error(`Parallel branch node "${branchId}" not found`)
             }
 
-            ctx.state[branchId] = result
-            return { branchId, result }
-          }
+            // Isolated state: structuredClone ensures branches cannot see each other's writes
+            const branchState = structuredClone(ctx.state)
+            const branchCtx: ExecutionContext = {
+              input: ctx.input,
+              state: branchState,
+              node: { id: branchId, type: branchNode.type, lane: branchNode.lane },
+              signal: ctx.signal,
+            }
 
-          throw new Error(
-            `Parallel branch "${branchId}" is not an action node (type: ${branchNode.type})`,
-          )
+            // Walk the branch subgraph from branchId until joinNodeId
+            const finalState = await walkBranch(doc, branchId, joinNodeId, branchCtx, callbacks)
+            return { branchId, state: finalState }
+          }
         })
 
-        const results = await Promise.all(branchPromises)
+        // Execute branches through the adapter's parallel strategy
+        const rawResults = await adapter.executeParallel(
+          branchFns.map((fn) => fn as () => Promise<unknown>),
+          strategy,
+        )
+
+        // Merge results: namespace by branch ID
         const resultMap: Record<string, unknown> = {}
-        for (const r of results) {
-          resultMap[r.branchId] = r.result
+        for (const raw of rawResults) {
+          const result = raw as { branchId: string; state: Record<string, unknown> }
+          resultMap[result.branchId] = result.state
         }
-        ctx.state[nodeId] = resultMap
-        const parallelResult = { [nodeId]: resultMap }
+
+        // Write merged results into parent context
+        Object.assign(ctx.state, resultMap)
+
+        const parallelResult = resultMap
 
         const record: NodeExecutionRecord = {
           nodeId,

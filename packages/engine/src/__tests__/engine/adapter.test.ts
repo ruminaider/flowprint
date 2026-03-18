@@ -94,7 +94,7 @@ describe('PlainAdapter', () => {
 
       await expect(
         adapter.executeAction('slow_node', handler, ctx, { timeout: 50 }),
-      ).rejects.toThrow("timed out after 50ms")
+      ).rejects.toThrow('timed out after 50ms')
     })
 
     it('handler that completes quickly with generous timeout succeeds', async () => {
@@ -139,9 +139,9 @@ describe('PlainAdapter', () => {
       }
       const ctx = makeCtx()
 
-      await expect(
-        shortAdapter.executeAction('default_timeout', handler, ctx, {}),
-      ).rejects.toThrow(ActionTimeoutError)
+      await expect(shortAdapter.executeAction('default_timeout', handler, ctx, {})).rejects.toThrow(
+        ActionTimeoutError,
+      )
     })
 
     it('config.timeout overrides defaultTimeout', async () => {
@@ -198,6 +198,7 @@ describe('Adapter integration with engine', () => {
           return handler(context)
         },
       ),
+      executeParallel: async (branches, _strategy) => Promise.all(branches.map((b) => b())),
     }
 
     const engine = new FlowprintEngine({ adapter: mockAdapter })
@@ -255,6 +256,7 @@ describe('Adapter lifecycle', () => {
       init: initFn,
       shutdown: shutdownFn,
       executeAction: async (_nodeId, handler, ctx) => handler(ctx),
+      executeParallel: async (branches, _strategy) => Promise.all(branches.map((b) => b())),
     }
 
     await lifecycleAdapter.init?.()

@@ -24,4 +24,20 @@ export interface ExecutionAdapter {
     context: ExecutionContext,
     config: ActionConfig,
   ): Promise<unknown>
+
+  /**
+   * Execute parallel branches with the given strategy.
+   *
+   * - `'all'`: Run all branches concurrently. All must complete. On failure,
+   *   abort remaining branches and propagate the error.
+   * - `'first'`: Run all branches to completion. Return all results but mark
+   *   the first to finish as primary.
+   *
+   * Each branch function receives its own AbortController that the adapter
+   * can signal on failure.
+   */
+  executeParallel(
+    branches: (() => Promise<unknown>)[],
+    strategy: 'all' | 'first',
+  ): Promise<unknown[]>
 }

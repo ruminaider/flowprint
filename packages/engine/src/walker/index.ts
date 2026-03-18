@@ -6,5 +6,5 @@ export type {
   WalkResult,
 } from './types.js'
 
-export { walkGraph } from './walk.js'
+export { walkGraph, walkBranch } from './walk.js'
 export type { WalkGraphCallbacks, CompensationEntry } from './walk.js'

@@ -1,4 +1,4 @@
-import type { FlowprintDocument, WaitNode } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, WaitNode, Node } from '@ruminaider/flowprint-schema'
 import {
   findRoots,
   isActionNode,
@@ -193,6 +193,98 @@ export async function walkGraph<TStep = NodeExecutionRecord>(
     trace,
     outcome,
   }
+}
+
+/**
+ * Walk a subgraph starting at `startNodeId`, stopping when `stopNodeId` is reached.
+ *
+ * Used for parallel branch execution: each branch gets an isolated state copy
+ * and walks its own subgraph until it reaches the join node (or a terminal).
+ *
+ * Rejects nested parallel nodes at runtime — parallel branches must not
+ * contain other parallel nodes.
+ */
+export async function walkBranch<TStep = NodeExecutionRecord>(
+  doc: FlowprintDocument,
+  startNodeId: string,
+  stopNodeId: string,
+  ctx: ExecutionContext,
+  callbacks: WalkGraphCallbacks<TStep>,
+): Promise<Record<string, unknown>> {
+  let currentNodeId: string | undefined = startNodeId
+
+  while (currentNodeId) {
+    // Stop when we reach the join node
+    if (currentNodeId === stopNodeId) {
+      break
+    }
+
+    if (ctx.signal.aborted) {
+      break
+    }
+
+    const node: Node | undefined = doc.nodes[currentNodeId]
+    if (!node) {
+      throw new Error(`Node "${currentNodeId}" not found in document`)
+    }
+
+    const nodeCtx: ExecutionContext = {
+      input: ctx.input,
+      state: ctx.state,
+      node: { id: currentNodeId, type: node.type, lane: node.lane },
+      signal: ctx.signal,
+    }
+
+    if (isParallelNode(node)) {
+      throw new Error(
+        `Nested parallel node "${currentNodeId}" found inside a parallel branch. ` +
+          'Nested parallels are not supported.',
+      )
+    }
+
+    if (isTriggerNode(node)) {
+      const nextFromCallback = await callbacks.onTrigger(currentNodeId, node, nodeCtx)
+      currentNodeId = nextFromCallback ?? (node.next as string | undefined)
+    } else if (isActionNode(node)) {
+      try {
+        const result = await callbacks.onAction(currentNodeId, node, nodeCtx)
+        mergeOutput(ctx.state, result)
+        currentNodeId = node.next
+      } catch (err: unknown) {
+        if (node.error?.catch) {
+          const catchNodeId: string = node.error.catch
+          const errorNode = doc.nodes[catchNodeId]
+          if (errorNode && isErrorNode(errorNode)) {
+            currentNodeId = catchNodeId
+            continue
+          }
+        }
+        throw err
+      }
+    } else if (isSwitchNode(node)) {
+      currentNodeId = await callbacks.onSwitch(currentNodeId, node, nodeCtx)
+    } else if (isWaitNode(node)) {
+      const result = await callbacks.onWait(currentNodeId, node, nodeCtx)
+      mergeOutput(ctx.state, result)
+      if (callbacks.resolveWaitNext) {
+        currentNodeId = callbacks.resolveWaitNext(currentNodeId, node, result)
+      } else {
+        currentNodeId = node.next
+      }
+    } else if (isErrorNode(node)) {
+      const nextFromCallback = await callbacks.onError(currentNodeId, node, nodeCtx)
+      currentNodeId = nextFromCallback ?? node.next
+    } else if (isTerminalNode(node)) {
+      if (callbacks.onTerminal) {
+        await callbacks.onTerminal(currentNodeId, node, nodeCtx)
+      }
+      currentNodeId = undefined
+    } else {
+      throw new Error(`Unknown node type for node "${currentNodeId}"`)
+    }
+  }
+
+  return ctx.state
 }
 
 /**

@@ -266,6 +266,61 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
     }
   }
 
+  // Nested parallel detection — parallel branches must not transitively contain parallel nodes
+  for (const [nodeId, nodeDef] of Object.entries(nodes)) {
+    const node = nodeDef as Record<string, unknown>
+    if (node.type !== 'parallel') continue
+
+    const branches = node.branches as string[] | undefined
+    const joinId = node.join as string | undefined
+    if (!branches || !joinId) continue
+
+    for (const branchId of branches) {
+      const visited = new Set<string>()
+      const stack = [branchId]
+
+      while (stack.length > 0) {
+        const currentId = stack.pop()!
+        if (currentId === joinId || visited.has(currentId)) continue
+        visited.add(currentId)
+
+        const current = nodes[currentId] as Record<string, unknown> | undefined
+        if (!current) continue
+
+        if (current.type === 'parallel') {
+          errors.push({
+            path: `/nodes/${currentId}`,
+            message: `Nested parallel node "${currentId}" found inside branch of parallel node "${nodeId}". Nested parallels are not supported`,
+            severity: 'error',
+          })
+          break
+        }
+
+        // Follow outgoing edges to find transitively reachable nodes
+        const next = current.next as string | undefined
+        if (next) stack.push(next)
+
+        const defaultNext = current.default as string | undefined
+        if (defaultNext) stack.push(defaultNext)
+
+        const cases = current.cases as Array<{ next?: string }> | undefined
+        if (cases) {
+          for (const c of cases) {
+            if (c.next) stack.push(c.next)
+          }
+        }
+
+        const errorCatch = (current.error as Record<string, unknown> | undefined)?.catch as
+          | string
+          | undefined
+        if (errorCatch) stack.push(errorCatch)
+
+        const timeoutNext = current.timeout_next as string | undefined
+        if (timeoutNext) stack.push(timeoutNext)
+      }
+    }
+  }
+
   // Check for orphan nodes
   // - Non-terminal: orphan if no incoming AND no outgoing edges
   // - Terminal: orphan if no incoming edges (terminals never have outgoing edges by design)
