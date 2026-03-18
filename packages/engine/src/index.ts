@@ -57,6 +57,10 @@ export type {
 // Security
 export { assertWithinProject } from './security/index.js'
 
+// Engine
+export { FlowprintEngine, CompiledFlow } from './engine/index.js'
+export type { EngineOptions, EngineHooks, ExecutionResult } from './engine/index.js'
+
 // Codegen
 export { generateCode } from './codegen/index.js'
 export type { GenerateResult, GenerateOptions, GeneratedFile } from './codegen/index.js'
