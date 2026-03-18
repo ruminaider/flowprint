@@ -69,6 +69,8 @@ export {
   TestClock,
   parseDuration,
   Semaphore,
+  resolveClassifications,
+  redactRecord,
 } from './engine/index.js'
 export type {
   Clock,
@@ -77,6 +79,10 @@ export type {
   EngineHooks,
   ExecutionResult,
   ValidateSignalFn,
+  DataClassification,
+  RedactionAction,
+  TraceLevel,
+  RedactionPolicy,
 } from './engine/index.js'
 
 // Adapters

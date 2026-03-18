@@ -26,8 +26,17 @@ import type { Clock } from './clock.js'
 import { parseDuration } from './duration.js'
 import { buildLegacyContext } from './engine.js'
 import { ExecutionError } from './errors.js'
-import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
+import type {
+  EngineOptions,
+  ExecutionResult,
+  ResolvedHandler,
+  EngineHooks,
+  TraceLevel,
+  RedactionPolicy,
+} from './types.js'
 import { Semaphore } from './semaphore.js'
+import { resolveClassifications } from './classification.js'
+import { redactRecord } from './redaction.js'
 
 /** Default TTL for paused executions: 1 hour. */
 const DEFAULT_PAUSED_TTL = 3_600_000
@@ -150,7 +159,15 @@ export class CompiledFlow {
     const projectRoot = this.options.projectRoot ?? process.cwd()
     const expressionTimeout = this.options.expressionTimeout
 
-    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, execution, adapter)
+    const externalTrace: NodeExecutionRecord[] = []
+    const callbacks = this.buildCallbacks(
+      hooks,
+      projectRoot,
+      expressionTimeout,
+      externalTrace,
+      execution,
+      adapter,
+    )
 
     try {
       const result = await walkGraph(this.doc, input, callbacks)
@@ -185,17 +202,33 @@ export class CompiledFlow {
     const resolvedHandlers = this.resolvedHandlers
     const doc = this.doc
     const adapter = this.adapter
+    const traceLevel: TraceLevel = this.options.traceLevel ?? 'full'
+    const redactionPolicy: RedactionPolicy = this.options.redactionPolicy ?? {}
+    const customRedact = this.options.redactTrace
 
     // eslint-disable-next-line prefer-const
     let callbacks: WalkGraphCallbacks<NodeExecutionRecord>
 
     /**
-     * Record a step. Delegates to callbacks.onStep which walkGraph has
-     * replaced with its trace-collecting interceptor.
+     * Record a step. Applies trace-level filtering and redaction before
+     * delegating to callbacks.onStep (which walkGraph has replaced with
+     * its trace-collecting interceptor).
      */
     const recordStep = (record: NodeExecutionRecord): void => {
-      externalTrace.push(record)
-      callbacks.onStep(record)
+      if (traceLevel === 'none') return
+
+      let finalRecord = record
+      if (traceLevel === 'policy') {
+        if (customRedact) {
+          finalRecord = customRedact(record)
+        } else {
+          const classifications = resolveClassifications(record.nodeId, doc)
+          finalRecord = redactRecord(record, classifications, redactionPolicy)
+        }
+      }
+
+      externalTrace.push(finalRecord)
+      callbacks.onStep(finalRecord)
     }
 
     callbacks = {
@@ -480,11 +513,7 @@ export class CompiledFlow {
         }
       },
 
-      onWait: async (
-        nodeId: string,
-        node: WaitNode,
-        _ctx: ExecutionContext,
-      ): Promise<unknown> => {
+      onWait: async (nodeId: string, node: WaitNode, _ctx: ExecutionContext): Promise<unknown> => {
         if (!execution || !plainAdapter) {
           throw new Error('Wait nodes require start(), not execute()')
         }
@@ -521,9 +550,10 @@ export class CompiledFlow {
           lane: node.lane,
           startedAt,
           completedAt: performance.now(),
-          output: signalData && typeof signalData === 'object' && !Array.isArray(signalData)
-            ? (signalData as Record<string, unknown>)
-            : {},
+          output:
+            signalData && typeof signalData === 'object' && !Array.isArray(signalData)
+              ? (signalData as Record<string, unknown>)
+              : {},
           handler: 'native',
         }
         safeCallHook(() => hooks?.onNodeComplete?.(record))
@@ -532,11 +562,7 @@ export class CompiledFlow {
         return signalData
       },
 
-      resolveWaitNext: (
-        _nodeId: string,
-        node: WaitNode,
-        result: unknown,
-      ): string | undefined => {
+      resolveWaitNext: (_nodeId: string, node: WaitNode, result: unknown): string | undefined => {
         // If result is undefined (timeout case) and timeout_next exists, route there
         if (result === undefined && node.timeout_next) {
           return node.timeout_next
