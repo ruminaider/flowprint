@@ -58,9 +58,17 @@ export type {
 export { assertWithinProject } from './security/index.js'
 
 // Engine
-export { FlowprintEngine, CompiledFlow, RealClock, TestClock, parseDuration } from './engine/index.js'
+export {
+  FlowprintEngine,
+  CompiledFlow,
+  Execution,
+  RealClock,
+  TestClock,
+  parseDuration,
+} from './engine/index.js'
 export type {
   Clock,
+  ExecutionStatus,
   EngineOptions,
   EngineHooks,
   ExecutionResult,
@@ -68,7 +76,7 @@ export type {
 } from './engine/index.js'
 
 // Adapters
-export { PlainAdapter, ActionTimeoutError } from './adapters/index.js'
+export { PlainAdapter, ActionTimeoutError, WaitTimeoutError } from './adapters/index.js'
 export type { ExecutionAdapter, ActionConfig } from './adapters/index.js'
 
 // Codegen
