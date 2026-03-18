@@ -34,6 +34,15 @@ export type {
   RulesTestResult,
 } from './rules/index.js'
 
+// Walker (new execution types — will replace runner types in PR 1b)
+export type {
+  ExecutionContext as WalkerExecutionContext,
+  NodeExecutionRecord,
+  WalkerCallbacks,
+  WalkOptions,
+  WalkResult,
+} from './walker/index.js'
+
 // Codegen
 export { generateCode } from './codegen/index.js'
 export type { GenerateResult, GenerateOptions, GeneratedFile } from './codegen/index.js'
