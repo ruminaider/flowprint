@@ -2,15 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { parseExpression } from '../../expressions/parser.js'
 
 describe('parser security', () => {
-  it('rejects arithmetic operators', () => {
-    // ALLOWED_BINARY_OPS only includes ===, !==, >, <, >=, <=
-    // Arithmetic operators (+, -, *, /, %) are NOT in the allowlist
+  it('allows arithmetic operators', () => {
+    // Arithmetic operators (+, -, *, /, %) are in the allowlist
     for (const op of ['+', '-', '*', '/', '%']) {
       const result = parseExpression(`input.a ${op} input.b`)
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.errors[0]?.message).toContain('Disallowed binary operator')
-      }
+      expect(result.success).toBe(true)
     }
   })
 

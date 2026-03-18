@@ -8,14 +8,30 @@ import {
   ALLOWED_METHODS,
   ALLOWED_MATH_MEMBERS,
 } from './allowlist.js'
+import { LRUCache } from './cache.js'
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 const FORBIDDEN_IDENTIFIERS = new Set(['Date', 'this', 'globalThis', 'window', 'self', 'process'])
 
+const PARSE_CACHE = new LRUCache<string, ParseResult>(1000)
+
+/**
+ * Clear the expression parse cache.
+ * Useful for testing or when allowlist changes at runtime.
+ */
+export function clearParseCache(): void {
+  PARSE_CACHE.clear()
+}
+
 export function parseExpression(source: string): ParseResult {
+  const cached = PARSE_CACHE.get(source)
+  if (cached) return cached
+
   if (source.trim().length === 0) {
-    return { success: false, errors: [{ message: 'Expression is empty' }] }
+    const result: ParseResult = { success: false, errors: [{ message: 'Expression is empty' }] }
+    PARSE_CACHE.set(source, result)
+    return result
   }
 
   let ast: acorn.Node
@@ -24,15 +40,19 @@ export function parseExpression(source: string): ParseResult {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Parse error'
     const pos = e instanceof SyntaxError ? ((e as any).pos as number | undefined) : undefined
-    return { success: false, errors: [{ message: msg, position: pos }] }
+    const result: ParseResult = { success: false, errors: [{ message: msg, position: pos }] }
+    PARSE_CACHE.set(source, result)
+    return result
   }
 
   // Ensure the entire source was consumed (no trailing content except whitespace)
   if (ast.end < source.trimEnd().length) {
-    return {
+    const result: ParseResult = {
       success: false,
       errors: [{ message: 'Unexpected content after expression', position: ast.end }],
     }
+    PARSE_CACHE.set(source, result)
+    return result
   }
 
   const errors: ExpressionError[] = []
@@ -230,10 +250,12 @@ export function parseExpression(source: string): ParseResult {
   walk(ast, false)
 
   if (errors.length > 0) {
-    return { success: false, errors }
+    const result: ParseResult = { success: false, errors }
+    PARSE_CACHE.set(source, result)
+    return result
   }
 
-  return {
+  const result: ParseResult = {
     success: true,
     expression: {
       source,
@@ -241,6 +263,8 @@ export function parseExpression(source: string): ParseResult {
       memberPaths: [...memberPaths],
     },
   }
+  PARSE_CACHE.set(source, result)
+  return result
 }
 
 /**
