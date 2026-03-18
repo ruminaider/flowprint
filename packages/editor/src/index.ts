@@ -65,3 +65,9 @@ export type { RulesDataMap, RulesDataEntry } from './contexts/RulesDataContext'
 // Theme
 export { useTheme } from './hooks/useTheme'
 export type { ThemeMode, ResolvedTheme } from './hooks/useTheme'
+
+// Migration UI
+export { MigrationBanner } from './components/MigrationBanner'
+export type { MigrationBannerProps } from './components/MigrationBanner'
+export { MigrationModal } from './components/MigrationModal'
+export type { MigrationModalProps } from './components/MigrationModal'

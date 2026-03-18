@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import { parse } from 'yaml'
-import { validateYaml, serialize } from '@ruminaider/flowprint-schema'
-import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
+import { validate, migrate, serialize } from '@ruminaider/flowprint-schema'
+import type { FlowprintDocument, MigrationResult } from '@ruminaider/flowprint-schema'
 
 export interface UseFileManagerOptions {
   doc: FlowprintDocument
@@ -19,6 +19,8 @@ export interface UseFileManagerReturn {
   dirty: boolean
   setDirty(dirty: boolean): void
   supportsNativeFS: boolean
+  migrationResult: MigrationResult | null
+  clearMigrationResult(): void
 }
 
 const YAML_PICKER_TYPES: FilePickerAcceptType[] = [
@@ -40,6 +42,7 @@ export function useFileManager(options: UseFileManagerOptions): UseFileManagerRe
   const [filePath, setFilePath] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [hasFileHandle, setHasFileHandle] = useState(false)
+  const [migrationResult, setMigrationResult] = useState<MigrationResult | null>(null)
   const handleRef = useRef<FileSystemFileHandle | null>(null)
 
   const supportsNativeFS = useMemo(() => hasNativeFS(), [])
@@ -62,21 +65,44 @@ export function useFileManager(options: UseFileManagerOptions): UseFileManagerRe
     const file = await handle.getFile()
     const text = await file.text()
 
-    const result = validateYaml(text)
-    if (!result.valid) {
-      const firstError = result.errors[0]
-      const msg = firstError
-        ? `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`
-        : 'Invalid flowprint file'
-      throw new Error(msg)
+    let parsed: FlowprintDocument
+    try {
+      parsed = parse(text) as FlowprintDocument
+    } catch (err) {
+      throw new Error(
+        `Failed to parse YAML: ${err instanceof Error ? err.message : String(err)}`,
+      )
     }
 
-    const parsed = parse(text) as FlowprintDocument
+    const migration = migrate(parsed)
+    setMigrationResult(migration)
+
+    // Determine which doc to load
+    const docToLoad =
+      migration.status === 'migrated'
+        ? migration.doc
+        : migration.status === 'error'
+          ? migration.originalDoc
+          : parsed
+
+    // Run structural validation (skip for future_version — tool can't validate future schemas)
+    if (migration.status !== 'future_version') {
+      const validation = validate(docToLoad)
+      if (!validation.valid) {
+        const firstError = validation.errors.find((e) => e.severity === 'error')
+        if (firstError) {
+          throw new Error(
+            `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`,
+          )
+        }
+      }
+    }
+
     setHandle(handle)
     setFileName(file.name)
     setFilePath(file.name)
     setDirty(false)
-    onDocLoaded(parsed, file.name)
+    onDocLoaded(docToLoad, file.name)
   }, [onDocLoaded, setHandle])
 
   const openFileFallback = useCallback((): Promise<void> => {
@@ -96,21 +122,44 @@ export function useFileManager(options: UseFileManagerOptions): UseFileManagerRe
         void file
           .text()
           .then((text) => {
-            const result = validateYaml(text)
-            if (!result.valid) {
-              const firstError = result.errors[0]
-              const msg = firstError
-                ? `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`
-                : 'Invalid flowprint file'
-              throw new Error(msg)
+            let parsed: FlowprintDocument
+            try {
+              parsed = parse(text) as FlowprintDocument
+            } catch (err) {
+              throw new Error(
+                `Failed to parse YAML: ${err instanceof Error ? err.message : String(err)}`,
+              )
             }
 
-            const parsed = parse(text) as FlowprintDocument
+            const migration = migrate(parsed)
+            setMigrationResult(migration)
+
+            // Determine which doc to load
+            const docToLoad =
+              migration.status === 'migrated'
+                ? migration.doc
+                : migration.status === 'error'
+                  ? migration.originalDoc
+                  : parsed
+
+            // Run structural validation (skip for future_version — tool can't validate future schemas)
+            if (migration.status !== 'future_version') {
+              const validation = validate(docToLoad)
+              if (!validation.valid) {
+                const firstError = validation.errors.find((e) => e.severity === 'error')
+                if (firstError) {
+                  throw new Error(
+                    `Invalid flowprint file: ${firstError.message} (at ${firstError.path})`,
+                  )
+                }
+              }
+            }
+
             setHandle(null)
             setFileName(file.name)
             setFilePath(null)
             setDirty(false)
-            onDocLoaded(parsed, file.name)
+            onDocLoaded(docToLoad, file.name)
             resolve()
           })
           .catch((err: unknown) => {
@@ -206,6 +255,10 @@ export function useFileManager(options: UseFileManagerOptions): UseFileManagerRe
     }
   }, [writeToHandle, saveFileAs, onError])
 
+  const clearMigrationResult = useCallback(() => {
+    setMigrationResult(null)
+  }, [])
+
   return {
     openFile,
     saveFile,
@@ -216,5 +269,7 @@ export function useFileManager(options: UseFileManagerOptions): UseFileManagerRe
     dirty,
     setDirty,
     supportsNativeFS,
+    migrationResult,
+    clearMigrationResult,
   }
 }

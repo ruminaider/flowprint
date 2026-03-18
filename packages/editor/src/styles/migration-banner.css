@@ -1,0 +1,61 @@
+/* ── Migration Banner ─────────────────────── */
+
+.fp-migration-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: var(--fp-text-sm);
+  font-family: var(--fp-font-sans);
+  border-bottom: 1px solid;
+}
+
+.fp-migration-banner--info {
+  background: var(--fp-info-bg, #dbeafe);
+  border-color: var(--fp-info-border, #93c5fd);
+  color: var(--fp-info-text, #1e40af);
+}
+
+.fp-migration-banner--warning {
+  background: var(--fp-warning-bg, #fef3c7);
+  border-color: var(--fp-warning-border, #fcd34d);
+  color: var(--fp-warning-text, #92400e);
+}
+
+.fp-migration-banner--error {
+  background: var(--fp-error-bg, #fee2e2);
+  border-color: var(--fp-error-border, #fca5a5);
+  color: var(--fp-error-text, #991b1b);
+}
+
+.fp-migration-banner__message {
+  flex: 1;
+}
+
+.fp-migration-banner__toggle,
+.fp-migration-banner__dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--fp-text-sm);
+  color: inherit;
+  padding: 0;
+}
+
+.fp-migration-banner__toggle {
+  text-decoration: underline;
+}
+
+.fp-migration-banner__dismiss {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.fp-migration-banner__changelog {
+  width: 100%;
+  margin: 4px 0 0;
+  padding: 0 0 0 20px;
+  font-size: var(--fp-text-xs);
+  list-style: disc;
+}

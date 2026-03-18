@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { validateYaml, validateRulesYaml } from '@ruminaider/flowprint-schema'
+import { validate, migrate, validateRulesYaml } from '@ruminaider/flowprint-schema'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { parse } from 'yaml'
 import { useProjectDirectory } from './useProjectDirectory'
 
 vi.mock('@ruminaider/flowprint-schema', () => ({
-  validateYaml: vi.fn(),
+  validate: vi.fn(),
+  migrate: vi.fn(),
   validateRulesYaml: vi.fn(),
 }))
 
@@ -111,7 +112,8 @@ describe('useProjectDirectory', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    vi.mocked(validateYaml).mockReturnValue({ valid: true, errors: [] })
+    vi.mocked(migrate).mockReturnValue({ status: 'current', doc: MOCK_DOC })
+    vi.mocked(validate).mockReturnValue({ valid: true, errors: [] })
     vi.mocked(validateRulesYaml).mockReturnValue({ valid: true, errors: [] })
     vi.mocked(parse).mockReturnValue(MOCK_DOC)
 
@@ -176,7 +178,8 @@ describe('useProjectDirectory', () => {
         await result.current.openProject()
       })
 
-      expect(validateYaml).toHaveBeenCalledWith(VALID_YAML)
+      expect(migrate).toHaveBeenCalledWith(MOCK_DOC_NO_RULES)
+      expect(validate).toHaveBeenCalledWith(MOCK_DOC_NO_RULES)
       expect(onDocLoaded).toHaveBeenCalledWith(MOCK_DOC_NO_RULES, 'flow.flowprint.yaml')
       expect(result.current.projectName).toBe('my-project')
       expect(onRulesResolved).toHaveBeenCalledWith({})

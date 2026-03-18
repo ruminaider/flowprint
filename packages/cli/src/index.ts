@@ -7,6 +7,7 @@ import { initCommand } from './commands/init.js'
 import { generateCommand } from './commands/generate.js'
 import { runCommand } from './commands/run.js'
 import { testCommand } from './commands/test.js'
+import { migrateCommand } from './commands/migrate.js'
 
 const program = new Command()
 
@@ -27,5 +28,6 @@ program.addCommand(initCommand)
 program.addCommand(generateCommand)
 program.addCommand(runCommand)
 program.addCommand(testCommand)
+program.addCommand(migrateCommand)
 
 program.parse()
