@@ -17,15 +17,19 @@ function makeDoc(overrides: Partial<RulesDocument> = {}): RulesDocument {
 describe('browser-safe evaluateRules', () => {
   describe('no Node.js imports', () => {
     it('does not import node:fs, node:path, node:vm, acorn, or yaml', () => {
-      const filePath = resolve(import.meta.dirname, '../../rules/evaluator-browser.ts')
-      const source = readFileSync(filePath, 'utf-8')
-
       const forbidden = ['node:fs', 'node:path', 'node:vm', 'acorn', 'yaml']
-      for (const mod of forbidden) {
-        expect(source).not.toContain(`from '${mod}'`)
-        expect(source).not.toContain(`from "${mod}"`)
-        expect(source).not.toContain(`require('${mod}')`)
-        expect(source).not.toContain(`require("${mod}")`)
+      const files = [
+        resolve(import.meta.dirname, '../../rules/evaluator-browser.ts'),
+        resolve(import.meta.dirname, '../../rules/core.ts'),
+      ]
+      for (const filePath of files) {
+        const source = readFileSync(filePath, 'utf-8')
+        for (const mod of forbidden) {
+          expect(source).not.toContain(`from '${mod}'`)
+          expect(source).not.toContain(`from "${mod}"`)
+          expect(source).not.toContain(`require('${mod}')`)
+          expect(source).not.toContain(`require("${mod}")`)
+        }
       }
     })
   })
