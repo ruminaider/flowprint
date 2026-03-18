@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { parse } from 'yaml'
 import { validateRules } from '@ruminaider/flowprint-schema'
 import type { ExecutionContext } from '../runner/types.js'
-import { evaluateExpression } from '../runner/evaluator.js'
+import { interpretExpression } from '../expressions/interpreter.js'
 import {
   resolveDotPath,
   ruleMatches,
@@ -55,22 +55,20 @@ export function loadRulesFile(filePath: string, projectRoot: string): RulesDocum
 /**
  * Evaluate a rules document against a context.
  *
- * Full Node.js version: supports labeled expressions (via `node:vm`),
- * ExecutionContext with node results, and expression timeouts.
- * For browser usage, import from `./evaluator-browser.js` instead.
+ * Supports labeled expressions (via AST interpreter), ExecutionContext
+ * with node results. For browser usage, import from `./evaluator-browser.js`
+ * instead.
  *
  * @param doc - Parsed rules document
  * @param context - Execution context with input and prior node results
- * @param expressionTimeout - Timeout for labeled expression evaluation (ms)
  * @returns Evaluation result with matched output(s)
  */
 export function evaluateRules(
   doc: RulesDocument,
   context: ExecutionContext,
-  expressionTimeout?: number,
 ): RulesEvaluationResult {
   const rulesContext = buildRulesContext(context)
-  const resolvedInputs = resolveInputs(doc.inputs, rulesContext, context, expressionTimeout)
+  const resolvedInputs = resolveInputs(doc.inputs, rulesContext, context)
 
   const matchedRules: Rule[] = []
 
@@ -109,13 +107,12 @@ function buildRulesContext(context: ExecutionContext): Record<string, unknown> {
  * Resolve input values from the context using declared inputs or auto-discovery.
  *
  * Extends the browser-safe dot-path resolution with labeled expression support
- * via Node.js `node:vm`.
+ * via the AST interpreter.
  */
 function resolveInputs(
   inputs: InputDef[] | undefined,
   rulesContext: Record<string, unknown>,
   executionContext: ExecutionContext,
-  expressionTimeout?: number,
 ): Map<string, unknown> {
   const resolved = new Map<string, unknown>()
 
@@ -127,8 +124,8 @@ function resolveInputs(
     if (typeof input === 'string') {
       resolved.set(input, resolveDotPath(input, rulesContext))
     } else {
-      // Labeled expression — requires Node.js `node:vm`
-      const value = evaluateExpression(input.expr, executionContext, expressionTimeout)
+      // Labeled expression — evaluated via AST interpreter
+      const value = interpretExpression(input.expr, executionContext)
       resolved.set(input.label, value)
     }
   }

@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { runGraph } from '../../runner/walker.js'
-import type { RunOptions, ExecutionContext } from '../../runner/types.js'
+import type { RunOptions } from '../../runner/types.js'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
-import { evaluateExpression } from '../../runner/evaluator.js'
+import { interpretExpression } from '../../expressions/interpreter.js'
+import type { InterpreterContext } from '../../expressions/interpreter.js'
 
 vi.mock('../../runner/loader.js', () => ({
   loadEntryPoint: vi.fn(),
@@ -28,7 +29,7 @@ function makeOptions(overrides: Partial<RunOptions> = {}): RunOptions {
   }
 }
 
-function makeContext(input: unknown, results: Record<string, unknown> = {}): ExecutionContext {
+function makeContext(input: unknown, results: Record<string, unknown> = {}): InterpreterContext {
   const map = new Map<string, unknown>()
   for (const [k, v] of Object.entries(results)) {
     map.set(k, v)
@@ -114,7 +115,7 @@ describe('Fixtures Edge Cases', () => {
     expect(doneStep?.outcome).toBe('success')
   })
 
-  it('expression timeout is configurable', async () => {
+  it('AST interpreter rejects unsupported expressions in switch cases', async () => {
     const doc = makeDoc({
       decide: {
         type: 'switch',
@@ -131,16 +132,17 @@ describe('Fixtures Edge Cases', () => {
       },
     })
 
-    const trace = await runGraph(doc, makeOptions({ expressionTimeout: 50 }))
+    const trace = await runGraph(doc, makeOptions())
 
     expect(trace.status).toBe('error')
-    expect(trace.error).toContain('timed out')
+    // The AST interpreter rejects unsupported node types like WhileStatement
+    expect(trace.error).toBeDefined()
   })
 
-  it('evaluator returns undefined for nonexistent property on context input', () => {
+  it('interpreter returns undefined for nonexistent property on context input', () => {
     const context = makeContext({}, {})
     // Accessing a property on input that doesn't exist returns undefined (no throw)
-    const result = evaluateExpression('input.nonexistent', context)
+    const result = interpretExpression('input.nonexistent', context)
 
     expect(result).toBeUndefined()
   })
