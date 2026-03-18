@@ -19,6 +19,22 @@ export type {
   ValidationError,
   OrderedNode,
   Edge,
+  MigrationRule,
+  MigrationResult,
+  MigrationResultMigrated,
+  MigrationResultError,
+  MigrationResultFutureVersion,
+  MigrationResultCurrent,
+  MigrationChangelog,
+  MigrationChangelogEntry,
+  MigrationError,
+  Transform,
+  AddFieldTransform,
+  RemoveFieldTransform,
+  RenameFieldTransform,
+  RenameNodeTypeTransform,
+  SetDefaultTransform,
+  ChangeFieldTypeTransform,
 } from './types.js'
 
 // Validation
@@ -52,3 +68,14 @@ export {
 
 // Serialization
 export { serialize } from './serialize.js'
+
+// Migration engine
+export { migrate, buildMigrationPath } from './migrate.js'
+export type { MigrateOptions } from './migrate.js'
+export { CURRENT_VERSION, migrationRules, schemaSnapshots } from './migrations/index.js'
+
+// Transforms
+export { applyTransform, describeTransform } from './transforms.js'
+
+// Version utilities
+export { parseVersion, compareVersions, isMajorBump } from './version.js'

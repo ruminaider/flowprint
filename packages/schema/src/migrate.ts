@@ -63,7 +63,7 @@ export function migrate(doc: FlowprintDocument, options?: MigrateOptions): Migra
   const entries: MigrationChangelogEntry[] = []
 
   for (let i = 0; i < path.length; i++) {
-    const rule = path[i]
+    const rule = path[i]!
     try {
       // Apply declarative transforms
       for (const transform of rule.transforms) {
@@ -76,7 +76,7 @@ export function migrate(doc: FlowprintDocument, options?: MigrateOptions): Migra
       }
 
       // Update schema version
-      ;(current as Record<string, unknown>).schema = rule.to
+      ;(current as unknown as Record<string, unknown>).schema = rule.to
 
       // Per-step validation against target version's schema snapshot
       const targetSchema = schemas[rule.to]
