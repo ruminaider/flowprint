@@ -38,6 +38,8 @@ export interface EngineOptions {
   validateSignal?: ValidateSignalFn
   /** TTL for paused executions in ms. Default: 3600000 (1 hour). */
   pausedExecutionTTL?: number
+  /** Maximum concurrent execute() calls on a CompiledFlow. Unlimited if omitted. */
+  maxConcurrency?: number
 }
 
 /** Result of a successful execution. */

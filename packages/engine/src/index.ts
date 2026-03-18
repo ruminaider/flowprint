@@ -68,6 +68,7 @@ export {
   RealClock,
   TestClock,
   parseDuration,
+  Semaphore,
 } from './engine/index.js'
 export type {
   Clock,

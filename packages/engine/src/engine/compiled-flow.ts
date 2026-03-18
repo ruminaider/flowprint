@@ -27,6 +27,7 @@ import { parseDuration } from './duration.js'
 import { buildLegacyContext } from './engine.js'
 import { ExecutionError } from './errors.js'
 import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
+import { Semaphore } from './semaphore.js'
 
 /** Default TTL for paused executions: 1 hour. */
 const DEFAULT_PAUSED_TTL = 3_600_000
@@ -40,6 +41,7 @@ const DEFAULT_PAUSED_TTL = 3_600_000
 export class CompiledFlow {
   private readonly adapter: ExecutionAdapter
   private readonly clock: Clock
+  private readonly semaphore: Semaphore | undefined
 
   constructor(
     private readonly doc: FlowprintDocument,
@@ -50,6 +52,9 @@ export class CompiledFlow {
     this.adapter =
       options.adapter ??
       new PlainAdapter({ defaultTimeout: options.defaultTimeout, clock: this.clock })
+    if (options.maxConcurrency != null) {
+      this.semaphore = new Semaphore(options.maxConcurrency)
+    }
   }
 
   /**
@@ -62,40 +67,45 @@ export class CompiledFlow {
    * and compensationErrors fields.
    */
   async execute(input: Record<string, unknown>): Promise<ExecutionResult> {
-    const hooks = this.options.hooks
-    const projectRoot = this.options.projectRoot ?? process.cwd()
-    const expressionTimeout = this.options.expressionTimeout
-
-    // Externally tracked trace — survives even if walkGraph throws
-    const externalTrace: NodeExecutionRecord[] = []
-    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, externalTrace)
-
+    if (this.semaphore) await this.semaphore.acquire()
     try {
-      const result = await walkGraph(this.doc, input, callbacks)
-      return {
-        output: result.output,
-        trace: result.trace,
-        outcome: result.outcome,
+      const hooks = this.options.hooks
+      const projectRoot = this.options.projectRoot ?? process.cwd()
+      const expressionTimeout = this.options.expressionTimeout
+
+      // Externally tracked trace — survives even if walkGraph throws
+      const externalTrace: NodeExecutionRecord[] = []
+      const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, externalTrace)
+
+      try {
+        const result = await walkGraph(this.doc, input, callbacks)
+        return {
+          output: result.output,
+          trace: result.trace,
+          outcome: result.outcome,
+        }
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        safeCallHook(() => hooks?.onFlowError?.(error))
+
+        // Extract compensation result attached by walkGraph
+        const compResult = (err as { __compensationResult?: CompensationResult })
+          ?.__compensationResult
+
+        // Find the failed node from the trace
+        const failedRecord = [...externalTrace].reverse().find((r) => r.error)
+        const failedNode = failedRecord?.nodeId ?? 'unknown'
+
+        throw new ExecutionError(
+          error.message,
+          externalTrace,
+          failedNode,
+          compResult?.compensated ?? [],
+          compResult?.compensationErrors ?? [],
+        )
       }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err))
-      safeCallHook(() => hooks?.onFlowError?.(error))
-
-      // Extract compensation result attached by walkGraph
-      const compResult = (err as { __compensationResult?: CompensationResult })
-        ?.__compensationResult
-
-      // Find the failed node from the trace
-      const failedRecord = [...externalTrace].reverse().find((r) => r.error)
-      const failedNode = failedRecord?.nodeId ?? 'unknown'
-
-      throw new ExecutionError(
-        error.message,
-        externalTrace,
-        failedNode,
-        compResult?.compensated ?? [],
-        compResult?.compensationErrors ?? [],
-      )
+    } finally {
+      if (this.semaphore) this.semaphore.release()
     }
   }
 
