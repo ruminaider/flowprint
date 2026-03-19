@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@gorules/zen-engine": "^0.54.0",
-    "@ruminaider/flowprint-engine": "workspace:*"
+    "@ruminaider/flowprint-engine-core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

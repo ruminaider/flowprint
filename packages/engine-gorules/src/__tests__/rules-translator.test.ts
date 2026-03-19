@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { translateToJDM, conditionToUnary } from '../rules-translator.js'
-import type { RulesDocument } from '@ruminaider/flowprint-engine'
+import type { RulesDocument } from '@ruminaider/flowprint-engine-core'
 
 function makeDoc(overrides: Partial<RulesDocument> = {}): RulesDocument {
   return {

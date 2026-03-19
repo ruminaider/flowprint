@@ -6,5 +6,8 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "references": [{ "path": "../schema" }]
+  "references": [
+    { "path": "../engine-core" },
+    { "path": "../engine-gorules" }
+  ]
 }

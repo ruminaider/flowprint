@@ -2,6 +2,8 @@
   "files": [],
   "references": [
     { "path": "packages/schema" },
+    { "path": "packages/engine-core" },
+    { "path": "packages/engine-gorules" },
     { "path": "packages/engine" },
     { "path": "packages/editor" },
     { "path": "packages/cli" }

@@ -1,7 +1,7 @@
 {
   "name": "@ruminaider/flowprint-engine",
-  "version": "0.0.0",
-  "description": "Expression parser, dev runner, and code generator for Flowprint execution engine",
+  "version": "0.0.1",
+  "description": "Umbrella package re-exporting engine-core and engine-gorules",
   "type": "module",
   "exports": {
     ".": {
@@ -16,12 +16,12 @@
     },
     "./browser": {
       "import": {
-        "types": "./dist/rules/evaluator-browser.d.ts",
-        "default": "./dist/rules/evaluator-browser.js"
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.js"
       },
       "require": {
-        "types": "./dist/rules/evaluator-browser.d.cts",
-        "default": "./dist/rules/evaluator-browser.cjs"
+        "types": "./dist/browser.d.cts",
+        "default": "./dist/browser.cjs"
       }
     }
   },
@@ -31,26 +31,17 @@
   "files": [
     "dist"
   ],
-  "engines": {
-    "node": ">=22.0.0"
-  },
   "scripts": {
     "build": "tsup",
-    "test": "vitest run",
-    "lint": "eslint src/",
-    "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ruminaider/flowprint-schema": "workspace:*",
-    "acorn": "^8.14.0",
-    "yaml": "^2.8.2"
+    "@ruminaider/flowprint-engine-core": "workspace:*",
+    "@ruminaider/flowprint-engine-gorules": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.2.2",
     "tsup": "^8.3.6",
-    "typescript": "^5.7.3",
-    "vitest": "^4.0.18"
+    "typescript": "^5.7.3"
   },
   "license": "MIT"
 }

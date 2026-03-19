@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from 'vitest'
 import { evaluateRulesViaZen, disposeZenEngine } from '../rules-evaluator.js'
-import type { RulesDocument } from '@ruminaider/flowprint-engine'
+import type { RulesDocument } from '@ruminaider/flowprint-engine-core'
 
 afterAll(() => {
   disposeZenEngine()
