@@ -19,7 +19,7 @@ import {
   isTriggerNode,
 } from '@ruminaider/flowprint-schema'
 import type { RunOptions, ExecutionContext, StepResult, ExecutionTrace } from './types.js'
-import { evaluateExpression } from './evaluator.js'
+import { interpretExpression } from '../expressions/interpreter.js'
 import { loadEntryPoint } from './loader.js'
 import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
 
@@ -157,7 +157,7 @@ async function executeAction(
       }
 
       const rulesDoc = loadRulesFile(node.rules.file, options.projectRoot)
-      const rulesResult = evaluateRules(rulesDoc, context, options.expressionTimeout)
+      const rulesResult = evaluateRules(rulesDoc, context)
       context.results.set(nodeId, rulesResult.output)
 
       steps.push({
@@ -183,7 +183,7 @@ async function executeAction(
     if (node.inputs) {
       const evaluated: Record<string, unknown> = {}
       for (const [key, expr] of Object.entries(node.inputs)) {
-        evaluated[key] = evaluateExpression(expr, context, options.expressionTimeout)
+        evaluated[key] = interpretExpression(expr, context)
       }
       args = evaluated
     } else {
@@ -255,7 +255,7 @@ function executeSwitch(
     }
 
     const rulesDoc = loadRulesFile(node.rules.file, options.projectRoot)
-    const rulesResult = evaluateRules(rulesDoc, context, options.expressionTimeout)
+    const rulesResult = evaluateRules(rulesDoc, context)
     context.results.set(nodeId, rulesResult.output)
 
     // Route via `then.next` from matching rule
@@ -299,7 +299,7 @@ function executeSwitch(
     const c = node.cases?.[i]
     if (!c) continue
 
-    const result = evaluateExpression(c.when, context, options.expressionTimeout)
+    const result = interpretExpression(c.when, context)
 
     if (result) {
       steps.push({
@@ -365,7 +365,7 @@ async function executeParallel(
       if (branchNode.inputs) {
         const evaluated: Record<string, unknown> = {}
         for (const [key, expr] of Object.entries(branchNode.inputs)) {
-          evaluated[key] = evaluateExpression(expr, context, options.expressionTimeout)
+          evaluated[key] = interpretExpression(expr, context)
         }
         args = evaluated
       } else {

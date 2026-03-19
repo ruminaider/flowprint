@@ -20,8 +20,6 @@ export type {
 export {
   runGraph,
   formatTrace,
-  evaluateExpression,
-  ExpressionTimeoutError,
   loadEntryPoint,
   loadFixtures,
 } from './runner/index.js'

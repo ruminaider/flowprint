@@ -1,6 +1,5 @@
 export { runGraph } from './walker.js'
 export { formatTrace } from './trace.js'
-export { evaluateExpression, ExpressionTimeoutError } from './evaluator.js'
 export { loadEntryPoint } from './loader.js'
 export { loadFixtures } from './fixtures.js'
 export type { RunOptions, ExecutionTrace, StepResult, ExecutionContext } from './types.js'
