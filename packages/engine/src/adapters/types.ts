@@ -24,4 +24,14 @@ export interface ExecutionAdapter {
     context: ExecutionContext,
     config: ActionConfig,
   ): Promise<unknown>
+
+  /**
+   * Suspend execution at a wait node until an external signal arrives or timeout fires.
+   * Returns the signal payload when delivered.
+   */
+  waitForEvent?(
+    nodeId: string,
+    eventName: string,
+    timeout?: number,
+  ): Promise<unknown>
 }
