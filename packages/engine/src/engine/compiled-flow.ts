@@ -20,9 +20,26 @@ import { evaluateExpression } from '../runner/evaluator.js'
 import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
 import { PlainAdapter } from '../adapters/plain.js'
 import type { ExecutionAdapter } from '../adapters/types.js'
+import { Execution } from './execution.js'
+import { RealClock } from './clock.js'
+import type { Clock } from './clock.js'
+import { parseDuration } from './duration.js'
 import { buildLegacyContext } from './engine.js'
 import { ExecutionError } from './errors.js'
-import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
+import type {
+  EngineOptions,
+  ExecutionResult,
+  ResolvedHandler,
+  EngineHooks,
+  TraceLevel,
+  RedactionPolicy,
+} from './types.js'
+import { Semaphore } from './semaphore.js'
+import { resolveClassifications } from './classification.js'
+import { redactRecord } from './redaction.js'
+
+/** Default TTL for paused executions: 1 hour. */
+const DEFAULT_PAUSED_TTL = 3_600_000
 
 /**
  * An immutable, pre-compiled flow ready for execution.
@@ -32,13 +49,21 @@ import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } fro
  */
 export class CompiledFlow {
   private readonly adapter: ExecutionAdapter
+  private readonly clock: Clock
+  private readonly semaphore: Semaphore | undefined
 
   constructor(
     private readonly doc: FlowprintDocument,
     private readonly resolvedHandlers: ReadonlyMap<string, ResolvedHandler>,
     private readonly options: EngineOptions,
   ) {
-    this.adapter = options.adapter ?? new PlainAdapter({ defaultTimeout: options.defaultTimeout })
+    this.clock = options.clock ?? new RealClock()
+    this.adapter =
+      options.adapter ??
+      new PlainAdapter({ defaultTimeout: options.defaultTimeout, clock: this.clock })
+    if (options.maxConcurrency != null) {
+      this.semaphore = new Semaphore(options.maxConcurrency)
+    }
   }
 
   /**
@@ -51,13 +76,98 @@ export class CompiledFlow {
    * and compensationErrors fields.
    */
   async execute(input: Record<string, unknown>): Promise<ExecutionResult> {
+    if (this.semaphore) await this.semaphore.acquire()
+    try {
+      const hooks = this.options.hooks
+      const projectRoot = this.options.projectRoot ?? process.cwd()
+      const expressionTimeout = this.options.expressionTimeout
+
+      // Externally tracked trace — survives even if walkGraph throws
+      const externalTrace: NodeExecutionRecord[] = []
+      const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, externalTrace)
+
+      try {
+        const result = await walkGraph(this.doc, input, callbacks)
+        return {
+          output: result.output,
+          trace: result.trace,
+          outcome: result.outcome,
+        }
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        safeCallHook(() => hooks?.onFlowError?.(error))
+
+        // Extract compensation result attached by walkGraph
+        const compResult = (err as { __compensationResult?: CompensationResult })
+          ?.__compensationResult
+
+        // Find the failed node from the trace
+        const failedRecord = [...externalTrace].reverse().find((r) => r.error)
+        const failedNode = failedRecord?.nodeId ?? 'unknown'
+
+        throw new ExecutionError(
+          error.message,
+          externalTrace,
+          failedNode,
+          compResult?.compensated ?? [],
+          compResult?.compensationErrors ?? [],
+        )
+      }
+    } finally {
+      if (this.semaphore) this.semaphore.release()
+    }
+  }
+
+  /**
+   * Start a flow that may contain wait nodes. Returns an Execution handle
+   * for signal delivery and status tracking.
+   *
+   * The flow runs asynchronously. Use `execution.result` to await completion.
+   */
+  start(input: Record<string, unknown>): Execution {
+    const adapter = this.adapter
+    if (!(adapter instanceof PlainAdapter)) {
+      throw new Error('start() requires PlainAdapter (or a subclass)')
+    }
+
+    const ttl = this.options.pausedExecutionTTL ?? DEFAULT_PAUSED_TTL
+    const execution = new Execution(adapter, this.clock, this.options.validateSignal, ttl)
+
+    // Run the flow asynchronously
+    this.runAsync(input, execution, adapter).then(
+      (result) => execution.complete(result),
+      (error) => {
+        const err = error instanceof Error ? error : new Error(String(error))
+        execution.fail(err)
+      },
+    )
+
+    return execution
+  }
+
+  /**
+   * Run the flow asynchronously with wait-node support.
+   * When a wait node is hit, calls adapter.waitForEvent() which suspends
+   * until a signal is delivered via Execution.signal().
+   */
+  private async runAsync(
+    input: Record<string, unknown>,
+    execution: Execution,
+    adapter: PlainAdapter,
+  ): Promise<ExecutionResult> {
     const hooks = this.options.hooks
     const projectRoot = this.options.projectRoot ?? process.cwd()
     const expressionTimeout = this.options.expressionTimeout
 
-    // Externally tracked trace — survives even if walkGraph throws
     const externalTrace: NodeExecutionRecord[] = []
-    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout, externalTrace)
+    const callbacks = this.buildCallbacks(
+      hooks,
+      projectRoot,
+      expressionTimeout,
+      externalTrace,
+      execution,
+      adapter,
+    )
 
     try {
       const result = await walkGraph(this.doc, input, callbacks)
@@ -69,22 +179,7 @@ export class CompiledFlow {
     } catch (err: unknown) {
       const error = err instanceof Error ? err : new Error(String(err))
       safeCallHook(() => hooks?.onFlowError?.(error))
-
-      // Extract compensation result attached by walkGraph
-      const compResult = (err as { __compensationResult?: CompensationResult })
-        ?.__compensationResult
-
-      // Find the failed node from the trace
-      const failedRecord = [...externalTrace].reverse().find((r) => r.error)
-      const failedNode = failedRecord?.nodeId ?? 'unknown'
-
-      throw new ExecutionError(
-        error.message,
-        externalTrace,
-        failedNode,
-        compResult?.compensated ?? [],
-        compResult?.compensationErrors ?? [],
-      )
+      throw err
     }
   }
 
@@ -101,21 +196,39 @@ export class CompiledFlow {
     projectRoot: string,
     expressionTimeout: number | undefined,
     externalTrace: NodeExecutionRecord[],
+    execution?: Execution,
+    plainAdapter?: PlainAdapter,
   ): WalkGraphCallbacks<NodeExecutionRecord> {
     const resolvedHandlers = this.resolvedHandlers
     const doc = this.doc
     const adapter = this.adapter
+    const traceLevel: TraceLevel = this.options.traceLevel ?? 'full'
+    const redactionPolicy: RedactionPolicy = this.options.redactionPolicy ?? {}
+    const customRedact = this.options.redactTrace
 
     // eslint-disable-next-line prefer-const
     let callbacks: WalkGraphCallbacks<NodeExecutionRecord>
 
     /**
-     * Record a step. Delegates to callbacks.onStep which walkGraph has
-     * replaced with its trace-collecting interceptor.
+     * Record a step. Applies trace-level filtering and redaction before
+     * delegating to callbacks.onStep (which walkGraph has replaced with
+     * its trace-collecting interceptor).
      */
     const recordStep = (record: NodeExecutionRecord): void => {
-      externalTrace.push(record)
-      callbacks.onStep(record)
+      if (traceLevel === 'none') return
+
+      let finalRecord = record
+      if (traceLevel === 'policy') {
+        if (customRedact) {
+          finalRecord = customRedact(record)
+        } else {
+          const classifications = resolveClassifications(record.nodeId, doc)
+          finalRecord = redactRecord(record, classifications, redactionPolicy)
+        }
+      }
+
+      externalTrace.push(finalRecord)
+      callbacks.onStep(finalRecord)
     }
 
     callbacks = {
@@ -400,12 +513,61 @@ export class CompiledFlow {
         }
       },
 
-      onWait: async (
-        _nodeId: string,
-        _node: WaitNode,
-        _ctx: ExecutionContext,
-      ): Promise<unknown> => {
-        throw new Error('Wait nodes require start(), not execute()')
+      onWait: async (nodeId: string, node: WaitNode, _ctx: ExecutionContext): Promise<unknown> => {
+        if (!execution || !plainAdapter) {
+          throw new Error('Wait nodes require start(), not execute()')
+        }
+
+        safeCallHook(() => hooks?.onNodeStart?.(nodeId, node.type, node.lane))
+        const startedAt = performance.now()
+
+        // Parse timeout from the node's duration string
+        let timeoutMs: number | undefined
+        if (node.timeout) {
+          timeoutMs = parseDuration(node.timeout)
+        }
+
+        // Suspend: mark execution as waiting, then block on adapter
+        execution.setWaiting(nodeId, node.event)
+        let signalData: unknown
+
+        try {
+          signalData = await plainAdapter.waitForEvent(nodeId, node.event, timeoutMs)
+        } catch (err: unknown) {
+          // WaitTimeoutError — route to timeout_next if available
+          if (err instanceof Error && err.name === 'WaitTimeoutError' && node.timeout_next) {
+            signalData = undefined
+          } else {
+            throw err
+          }
+        }
+
+        execution.setRunning()
+
+        const record: NodeExecutionRecord = {
+          nodeId,
+          type: node.type,
+          lane: node.lane,
+          startedAt,
+          completedAt: performance.now(),
+          output:
+            signalData && typeof signalData === 'object' && !Array.isArray(signalData)
+              ? (signalData as Record<string, unknown>)
+              : {},
+          handler: 'native',
+        }
+        safeCallHook(() => hooks?.onNodeComplete?.(record))
+        recordStep(record)
+
+        return signalData
+      },
+
+      resolveWaitNext: (_nodeId: string, node: WaitNode, result: unknown): string | undefined => {
+        // If result is undefined (timeout case) and timeout_next exists, route there
+        if (result === undefined && node.timeout_next) {
+          return node.timeout_next
+        }
+        return node.next
       },
 
       onError: async (
