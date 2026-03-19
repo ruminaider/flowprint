@@ -16,6 +16,7 @@ import { evaluateExpression } from '../runner/evaluator.js'
 import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
 import { buildLegacyContext } from './engine.js'
 import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
+import { Semaphore } from './semaphore.js'
 
 /**
  * An immutable, pre-compiled flow ready for execution.
@@ -24,11 +25,17 @@ import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } fro
  * so subsequent engine mutations do not affect this instance.
  */
 export class CompiledFlow {
+  private readonly semaphore: Semaphore | undefined
+
   constructor(
     private readonly doc: FlowprintDocument,
     private readonly resolvedHandlers: ReadonlyMap<string, ResolvedHandler>,
     private readonly options: EngineOptions,
-  ) {}
+  ) {
+    if (options.maxConcurrency != null) {
+      this.semaphore = new Semaphore(options.maxConcurrency)
+    }
+  }
 
   /**
    * Execute a flow that has no wait nodes. Returns when complete.
@@ -37,23 +44,28 @@ export class CompiledFlow {
    * on the same CompiledFlow instance do not interfere.
    */
   async execute(input: Record<string, unknown>): Promise<ExecutionResult> {
-    const hooks = this.options.hooks
-    const projectRoot = this.options.projectRoot ?? process.cwd()
-    const expressionTimeout = this.options.expressionTimeout
-
-    const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout)
-
+    if (this.semaphore) await this.semaphore.acquire()
     try {
-      const result = await walkGraph(this.doc, input, callbacks)
-      return {
-        output: result.output,
-        trace: result.trace,
-        outcome: result.outcome,
+      const hooks = this.options.hooks
+      const projectRoot = this.options.projectRoot ?? process.cwd()
+      const expressionTimeout = this.options.expressionTimeout
+
+      const callbacks = this.buildCallbacks(hooks, projectRoot, expressionTimeout)
+
+      try {
+        const result = await walkGraph(this.doc, input, callbacks)
+        return {
+          output: result.output,
+          trace: result.trace,
+          outcome: result.outcome,
+        }
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        safeCallHook(() => hooks?.onFlowError?.(error))
+        throw err
       }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err))
-      safeCallHook(() => hooks?.onFlowError?.(error))
-      throw err
+    } finally {
+      if (this.semaphore) this.semaphore.release()
     }
   }
 
