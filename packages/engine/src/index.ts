@@ -43,7 +43,7 @@ export type {
 } from './rules/index.js'
 
 // Walker (generic graph walker + types)
-export { walkGraph, walkBranch } from './walker/index.js'
+export { walkGraph, walkBranch, runCompensationStack } from './walker/index.js'
 export type {
   ExecutionContext as WalkerExecutionContext,
   NodeExecutionRecord,
@@ -52,13 +52,15 @@ export type {
   WalkResult,
   WalkGraphCallbacks,
   CompensationEntry,
+  CompensationResult,
+  BranchResult,
 } from './walker/index.js'
 
 // Security
 export { assertWithinProject } from './security/index.js'
 
 // Engine
-export { FlowprintEngine, CompiledFlow } from './engine/index.js'
+export { FlowprintEngine, CompiledFlow, ExecutionError } from './engine/index.js'
 export type { EngineOptions, EngineHooks, ExecutionResult } from './engine/index.js'
 
 // Adapters

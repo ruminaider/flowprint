@@ -27,6 +27,14 @@ export interface CompensationEntry {
 }
 
 /**
+ * Result of running compensation handlers. Tracks which succeeded and which failed.
+ */
+export interface CompensationResult {
+  compensated: string[]
+  compensationErrors: { nodeId: string; error: Error }[]
+}
+
+/**
  * Extended callbacks for walkGraph beyond the base WalkerCallbacks.
  * These hooks give the consumer control over compensation and wait routing.
  */
@@ -71,7 +79,7 @@ export interface WalkGraphCallbacks<TStep = NodeExecutionRecord> extends WalkerC
  * 2. Chain-following loop (follow `next` pointers, NOT topological)
  * 3. Context management (fresh ExecutionContext, flat-merge after each node)
  * 4. AbortSignal checking before each node
- * 5. Compensation stack management (LIFO, best-effort)
+ * 5. Compensation stack management (LIFO, best-effort, scoped per parallel branch)
  * 6. Action error -> error node routing
  * 7. Terminal handling (outcome capture)
  */
@@ -101,6 +109,7 @@ export async function walkGraph<TStep = NodeExecutionRecord>(
 
   let currentNodeId: string | undefined = roots[0]
   let outcome: 'success' | 'failure' | undefined
+  let lastCompensationResult: CompensationResult | undefined
 
   const makeCtx = (nodeId: string, nodeType: string, lane: string): ExecutionContext => ({
     input,
@@ -184,7 +193,14 @@ export async function walkGraph<TStep = NodeExecutionRecord>(
     }
   } catch (err: unknown) {
     // Execute compensation stack in LIFO order (best-effort)
-    await runCompensationStack(compensationStack, callbacks)
+    lastCompensationResult = await runCompensationStack(compensationStack, callbacks)
+
+    // Attach compensation result to the error for CompiledFlow to surface
+    if (err instanceof Error) {
+      ;(err as Error & { __compensationResult?: CompensationResult }).__compensationResult =
+        lastCompensationResult
+    }
+
     throw err
   }
 
@@ -196,10 +212,22 @@ export async function walkGraph<TStep = NodeExecutionRecord>(
 }
 
 /**
+ * Result of walkBranch: the branch state plus its compensation sub-stack.
+ */
+export interface BranchResult {
+  state: Record<string, unknown>
+  compensationStack: CompensationEntry[]
+}
+
+/**
  * Walk a subgraph starting at `startNodeId`, stopping when `stopNodeId` is reached.
  *
  * Used for parallel branch execution: each branch gets an isolated state copy
  * and walks its own subgraph until it reaches the join node (or a terminal).
+ *
+ * Each branch accumulates its own compensation sub-stack. On successful completion
+ * the sub-stack is returned to the caller (onParallel) so it can be merged into
+ * the parent compensation stack or unwound on failure.
  *
  * Rejects nested parallel nodes at runtime — parallel branches must not
  * contain other parallel nodes.
@@ -210,8 +238,9 @@ export async function walkBranch<TStep = NodeExecutionRecord>(
   stopNodeId: string,
   ctx: ExecutionContext,
   callbacks: WalkGraphCallbacks<TStep>,
-): Promise<Record<string, unknown>> {
+): Promise<BranchResult> {
   let currentNodeId: string | undefined = startNodeId
+  const branchCompensationStack: CompensationEntry[] = []
 
   while (currentNodeId) {
     // Stop when we reach the join node
@@ -249,6 +278,15 @@ export async function walkBranch<TStep = NodeExecutionRecord>(
       try {
         const result = await callbacks.onAction(currentNodeId, node, nodeCtx)
         mergeOutput(ctx.state, result)
+
+        // Track compensation in this branch's sub-stack
+        if (node.compensation && callbacks.onCompensation) {
+          branchCompensationStack.push({
+            nodeId: currentNodeId,
+            handler: callbacks.onCompensation(currentNodeId, node.compensation, result),
+          })
+        }
+
         currentNodeId = node.next
       } catch (err: unknown) {
         if (node.error?.catch) {
@@ -284,7 +322,7 @@ export async function walkBranch<TStep = NodeExecutionRecord>(
     }
   }
 
-  return ctx.state
+  return { state: ctx.state, compensationStack: branchCompensationStack }
 }
 
 /**
@@ -300,22 +338,32 @@ function mergeOutput(state: Record<string, unknown>, result: unknown): void {
 /**
  * Execute compensation handlers in LIFO order.
  * Best-effort: continues even if individual handlers fail.
+ * Returns which compensations succeeded and which failed.
  */
-async function runCompensationStack<TStep>(
+export async function runCompensationStack<TStep>(
   stack: CompensationEntry[],
   callbacks: WalkGraphCallbacks<TStep>,
-): Promise<void> {
-  while (stack.length > 0) {
-    const entry = stack.pop()
-    if (!entry) break
+): Promise<CompensationResult> {
+  const compensated: string[] = []
+  const compensationErrors: { nodeId: string; error: Error }[] = []
+
+  // Process in LIFO order
+  const reversed = [...stack].reverse()
+  // Clear the original stack
+  stack.length = 0
+
+  for (const entry of reversed) {
     try {
       await entry.handler()
+      compensated.push(entry.nodeId)
       callbacks.onCompensationStep?.(entry.nodeId)
     } catch (err: unknown) {
-      callbacks.onCompensationStep?.(
-        entry.nodeId,
-        err instanceof Error ? err : new Error(String(err)),
-      )
+      const error = err instanceof Error ? err : new Error(String(err))
+      compensationErrors.push({ nodeId: entry.nodeId, error })
+      callbacks.onCompensationStep?.(entry.nodeId, error)
+      // Continue — best-effort
     }
   }
+
+  return { compensated, compensationErrors }
 }
