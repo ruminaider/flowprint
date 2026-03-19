@@ -25,6 +25,7 @@ const NODE_KEY_PREFIX = [
   'label',
   'description',
   'notes',
+  'data_class',
   'metadata',
   'position',
   'entry_points',
@@ -35,7 +36,7 @@ const NODE_KEY_PREFIX = [
  * Order matters for deterministic output.
  */
 const NODE_TYPE_FIELDS: Record<string, readonly string[]> = {
-  action: ['rules', 'inputs', 'compensation', 'temporal', 'next', 'error'],
+  action: ['rules', 'expressions', 'inputs', 'compensation', 'temporal', 'next', 'error'],
   switch: ['rules', 'cases', 'default'],
   parallel: ['branches', 'join', 'join_strategy'],
   wait: ['event', 'event_type', 'event_type_import', 'timeout', 'next', 'timeout_next'],
@@ -70,7 +71,7 @@ export function serialize(doc: FlowprintDocument): string {
     if (key === 'nodes') {
       rootMap.add(new Pair(key, serializeNodes(doc.nodes)))
     } else if (key === 'lanes') {
-      rootMap.add(new Pair(key, serializeOrderedMap(doc.lanes)))
+      rootMap.add(new Pair(key, serializeLanes(doc.lanes)))
     } else if (key === 'metadata' && typeof value === 'object') {
       rootMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else if (key === 'workflow' && typeof value === 'object') {
@@ -112,6 +113,42 @@ function serializeNodes(nodes: Record<string, Node>): YAMLMap {
 }
 
 /**
+ * Lane key order for deterministic output.
+ */
+const LANE_KEY_ORDER = ['label', 'visibility', 'order', 'data_class', 'height'] as const
+
+/**
+ * Serialize the lanes map with deterministic key ordering per lane.
+ */
+function serializeLanes(lanes: Record<string, import('./types.js').Lane>): YAMLMap {
+  const lanesMap = new YAMLMap()
+
+  for (const [laneId, lane] of Object.entries(lanes)) {
+    const laneMap = new YAMLMap()
+    const laneObj = lane as unknown as Record<string, unknown>
+
+    for (const key of LANE_KEY_ORDER) {
+      const value = laneObj[key]
+      if (value === undefined) continue
+
+      if (key === 'data_class' && Array.isArray(value)) {
+        const seq = new YAMLSeq()
+        for (const item of value as string[]) {
+          seq.add(createScalar(item))
+        }
+        laneMap.add(new Pair(key, seq))
+      } else {
+        laneMap.add(new Pair(key, createScalar(value)))
+      }
+    }
+
+    lanesMap.add(new Pair(laneId, laneMap))
+  }
+
+  return lanesMap
+}
+
+/**
  * Serialize a single node with deterministic key ordering.
  */
 function serializeNode(node: Node): YAMLMap {
@@ -124,8 +161,16 @@ function serializeNode(node: Node): YAMLMap {
     const value = nodeObj[key]
     if (value === undefined) continue
 
-    if (key === 'rules' && typeof value === 'object' && value !== null) {
+    if (key === 'data_class' && Array.isArray(value)) {
+      const seq = new YAMLSeq()
+      for (const item of value as string[]) {
+        seq.add(createScalar(item))
+      }
+      nodeMap.add(new Pair(key, seq))
+    } else if (key === 'rules' && typeof value === 'object' && value !== null) {
       nodeMap.add(new Pair(key, serializeRulesRef(value as Record<string, unknown>)))
+    } else if (key === 'expressions' && typeof value === 'object' && value !== null) {
+      nodeMap.add(new Pair(key, serializeOrderedMap(value as Record<string, unknown>)))
     } else if (key === 'entry_points' && Array.isArray(value)) {
       nodeMap.add(new Pair(key, serializeEntryPoints(value as Record<string, unknown>[])))
     } else if (key === 'cases' && Array.isArray(value)) {

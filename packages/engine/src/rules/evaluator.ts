@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parse } from 'yaml'
+import { assertWithinProject } from '../security/index.js'
 import { validateRules } from '@ruminaider/flowprint-schema'
 import type { ExecutionContext } from '../runner/types.js'
 import { evaluateExpression } from '../runner/evaluator.js'
@@ -24,6 +25,7 @@ import type {
  * @returns Parsed and validated RulesDocument
  */
 export function loadRulesFile(filePath: string, projectRoot: string): RulesDocument {
+  assertWithinProject(filePath, projectRoot)
   const absolutePath = resolve(projectRoot, filePath)
 
   let content: string
@@ -36,7 +38,7 @@ export function loadRulesFile(filePath: string, projectRoot: string): RulesDocum
 
   let doc: unknown
   try {
-    doc = parse(content)
+    doc = parse(content, { maxAliasCount: 100, schema: 'core' })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
     throw new Error(`Failed to parse rules file "${filePath}": ${message}`)

@@ -11,7 +11,19 @@ export const ALLOWED_AST_TYPES = new Set([
   'Literal',
 ])
 
-export const ALLOWED_BINARY_OPS = new Set(['===', '!==', '>', '<', '>=', '<='])
+export const ALLOWED_BINARY_OPS = new Set([
+  '===',
+  '!==',
+  '>',
+  '<',
+  '>=',
+  '<=',
+  '+',
+  '-',
+  '*',
+  '/',
+  '%',
+])
 export const ALLOWED_LOGICAL_OPS = new Set(['&&', '||'])
 export const ALLOWED_UNARY_OPS = new Set(['!', 'typeof'])
 

@@ -17,6 +17,10 @@ export type TriggerNode = {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
@@ -136,6 +140,10 @@ export interface Lane {
    */
   order: number;
   /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
+  /**
    * Optional custom lane height in pixels (minimum 140)
    */
   height?: number;
@@ -149,11 +157,21 @@ export interface ActionNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
   entry_points?: EntryPoint[];
   rules?: RulesRef;
+  /**
+   * Key-value pairs of output field name to expression string. Makes this an engine-native transform node.
+   */
+  expressions?: {
+    [k: string]: string;
+  };
   position?: Position;
   /**
    * Named input mapping: parameter name to expression
@@ -270,6 +288,10 @@ export interface SwitchNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
@@ -291,6 +313,10 @@ export interface ParallelNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
@@ -309,6 +335,10 @@ export interface WaitNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
@@ -345,6 +375,10 @@ export interface ErrorNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };
@@ -360,6 +394,10 @@ export interface TerminalNode {
    * Markdown notes for documentation and design rationale
    */
   notes?: string;
+  /**
+   * Data classification labels for trace redaction policy
+   */
+  data_class?: ("pii" | "financial" | "credentials" | "internal")[];
   metadata?: {
     [k: string]: string;
   };

@@ -1,11 +1,19 @@
 // Expressions
-export { parseExpression, validateExpressions } from './expressions/index.js'
+export {
+  parseExpression,
+  clearParseCache,
+  validateExpressions,
+  interpretExpression,
+  InterpreterError,
+  LRUCache,
+} from './expressions/index.js'
 export type {
   ParseResult,
   ExpressionError,
   ParsedExpression,
   ExpressionValidationResult,
   ExpressionValidationError,
+  InterpreterContext,
 } from './expressions/index.js'
 
 // Runner
@@ -34,14 +42,20 @@ export type {
   RulesTestResult,
 } from './rules/index.js'
 
-// Walker (new execution types — will replace runner types in PR 1b)
+// Walker (generic graph walker + types)
+export { walkGraph } from './walker/index.js'
 export type {
   ExecutionContext as WalkerExecutionContext,
   NodeExecutionRecord,
   WalkerCallbacks,
   WalkOptions,
   WalkResult,
+  WalkGraphCallbacks,
+  CompensationEntry,
 } from './walker/index.js'
+
+// Security
+export { assertWithinProject } from './security/index.js'
 
 // Codegen
 export { generateCode } from './codegen/index.js'

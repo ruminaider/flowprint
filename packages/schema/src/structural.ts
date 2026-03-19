@@ -1,11 +1,19 @@
 import type { ValidationError } from './types.js'
 
 /**
+ * Node IDs that conflict with expression sandbox globals.
+ * Using these as node IDs would shadow built-in variables in the
+ * expression evaluator, leading to subtle bugs or security issues.
+ */
+const RESERVED_NODE_IDS = new Set(['input', 'state', 'Math', 'node', 'output'])
+
+/**
  * Perform structural validation on a schema-valid Flowprint document.
  * Checks for:
- * 1. Dangling node references (next, cases[].next, branches[], join, error.catch, default, timeout_next)
- * 2. Invalid lane references (node.lane must exist in lanes)
- * 3. Orphan nodes (non-terminals: no incoming AND no outgoing; terminals: no incoming)
+ * 1. Reserved node IDs (conflict with expression sandbox globals)
+ * 2. Dangling node references (next, cases[].next, branches[], join, error.catch, default, timeout_next)
+ * 3. Invalid lane references (node.lane must exist in lanes)
+ * 4. Orphan nodes (non-terminals: no incoming AND no outgoing; terminals: no incoming)
  *
  * This function assumes the document has already passed schema validation.
  */
@@ -17,6 +25,17 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
   if (!lanes || !nodes) {
     return errors
+  }
+
+  // Check for reserved node IDs
+  for (const nodeId of Object.keys(nodes)) {
+    if (RESERVED_NODE_IDS.has(nodeId)) {
+      errors.push({
+        path: `/nodes/${nodeId}`,
+        message: `Node ID "${nodeId}" is reserved (conflicts with expression sandbox globals). Reserved IDs: ${[...RESERVED_NODE_IDS].join(', ')}`,
+        severity: 'error',
+      })
+    }
   }
 
   const laneIds = new Set(Object.keys(lanes))
@@ -41,13 +60,34 @@ export function validateStructure(doc: Record<string, unknown>): ValidationError
 
     const type = node.type as string
 
-    // Mutual exclusion: rules vs entry_points/cases
-    if (type === 'action' && node.rules !== undefined && node.entry_points !== undefined) {
-      errors.push({
-        path: `/nodes/${nodeId}`,
-        message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
-        severity: 'error',
-      })
+    // Mutual exclusion: expressions vs rules vs entry_points on action nodes
+    if (type === 'action') {
+      const hasRules = node.rules !== undefined
+      const hasEntryPoints = node.entry_points !== undefined
+      const hasExpressions = node.expressions !== undefined
+
+      if (hasExpressions && hasRules) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Action node cannot have both "expressions" and "rules". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (hasExpressions && hasEntryPoints) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message:
+            'Action node cannot have both "expressions" and "entry_points". Use one or the other',
+          severity: 'error',
+        })
+      }
+      if (hasRules && hasEntryPoints) {
+        errors.push({
+          path: `/nodes/${nodeId}`,
+          message: 'Action node cannot have both "rules" and "entry_points". Use one or the other',
+          severity: 'error',
+        })
+      }
     }
     if (type === 'switch') {
       const hasCases = node.cases !== undefined

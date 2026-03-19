@@ -91,6 +91,55 @@ describe('parseExpression', () => {
     })
   })
 
+  describe('arithmetic expressions', () => {
+    it('parses simple addition', () => {
+      const result = parseExpression('2 + 3')
+      expect(result.success).toBe(true)
+    })
+
+    it('parses member access with multiplication', () => {
+      const result = parseExpression('input.qty * input.price')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.expression.identifiers).toContain('input')
+        expect(result.expression.memberPaths).toContain('input.qty')
+        expect(result.expression.memberPaths).toContain('input.price')
+      }
+    })
+
+    it('parses modulo operator', () => {
+      const result = parseExpression('total % 100')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.expression.identifiers).toContain('total')
+      }
+    })
+
+    it('parses subtraction', () => {
+      const result = parseExpression('input.a - input.b')
+      expect(result.success).toBe(true)
+    })
+
+    it('parses division', () => {
+      const result = parseExpression('input.total / input.count')
+      expect(result.success).toBe(true)
+    })
+
+    it('preserves operator precedence (2 + 3 * 4)', () => {
+      // Acorn parses with correct JS precedence: 2 + (3 * 4) = 14
+      const result = parseExpression('2 + 3 * 4')
+      expect(result.success).toBe(true)
+    })
+
+    it('parses mixed arithmetic and comparison', () => {
+      const result = parseExpression('input.qty * input.price > 1000')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.expression.identifiers).toContain('input')
+      }
+    })
+  })
+
   describe('invalid expressions', () => {
     it('rejects assignment', () => {
       const result = parseExpression('x = 5')
