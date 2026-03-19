@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { assertWithinProject } from '../security/index.js'
 
 /**
  * Dynamically import an entry point file and extract the named symbol.
@@ -11,6 +12,7 @@ export async function loadEntryPoint(
   entry: { file: string; symbol: string },
   projectRoot: string,
 ): Promise<(...args: unknown[]) => unknown> {
+  assertWithinProject(entry.file, projectRoot)
   const filePath = resolve(projectRoot, entry.file)
 
   let mod: Record<string, unknown>
