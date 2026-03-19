@@ -9,7 +9,7 @@ import {
   resolveDotPath,
   ruleMatches,
   applyHitPolicy,
-} from './evaluator-browser.js'
+} from './core.js'
 import type {
   RulesDocument,
   Rule,

@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/rules/evaluator-browser.ts', 'src/rules/core.ts'],
+  entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   dts: {
     compilerOptions: {
