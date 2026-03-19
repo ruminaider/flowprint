@@ -8,3 +8,6 @@ export type {
   RegisterOptions,
   ResolvedHandler,
 } from './types.js'
+
+// Re-export adapter types used by EngineOptions
+export type { ExecutionAdapter } from '../adapters/types.js'

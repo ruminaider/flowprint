@@ -14,6 +14,8 @@ import type { WalkGraphCallbacks } from '../walker/walk.js'
 import type { ExecutionContext, NodeExecutionRecord } from '../walker/types.js'
 import { evaluateExpression } from '../runner/evaluator.js'
 import { loadRulesFile, evaluateRules } from '../rules/evaluator.js'
+import { PlainAdapter } from '../adapters/plain.js'
+import type { ExecutionAdapter } from '../adapters/types.js'
 import { buildLegacyContext } from './engine.js'
 import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } from './types.js'
 
@@ -24,11 +26,15 @@ import type { EngineOptions, ExecutionResult, ResolvedHandler, EngineHooks } fro
  * so subsequent engine mutations do not affect this instance.
  */
 export class CompiledFlow {
+  private readonly adapter: ExecutionAdapter
+
   constructor(
     private readonly doc: FlowprintDocument,
     private readonly resolvedHandlers: ReadonlyMap<string, ResolvedHandler>,
     private readonly options: EngineOptions,
-  ) {}
+  ) {
+    this.adapter = options.adapter ?? new PlainAdapter({ defaultTimeout: options.defaultTimeout })
+  }
 
   /**
    * Execute a flow that has no wait nodes. Returns when complete.
@@ -72,6 +78,7 @@ export class CompiledFlow {
   ): WalkGraphCallbacks<NodeExecutionRecord> {
     const resolvedHandlers = this.resolvedHandlers
     const doc = this.doc
+    const adapter = this.adapter
 
     // eslint-disable-next-line prefer-const
     let callbacks: WalkGraphCallbacks<NodeExecutionRecord>
@@ -104,7 +111,9 @@ export class CompiledFlow {
           switch (handler.type) {
             case 'registered':
             case 'entry_point':
-              result = await handler.fn(ctx)
+              result = await adapter.executeAction(nodeId, handler.fn, ctx, {
+                metadata: node.metadata as Record<string, unknown> | undefined,
+              })
               break
 
             case 'expressions': {
@@ -262,7 +271,9 @@ export class CompiledFlow {
             switch (handler.type) {
               case 'registered':
               case 'entry_point':
-                result = await handler.fn(ctx)
+                result = await adapter.executeAction(branchId, handler.fn, ctx, {
+                  metadata: branchNode.metadata as Record<string, unknown> | undefined,
+                })
                 break
               case 'expressions': {
                 const legacyCtx = buildLegacyContext(ctx)
@@ -335,7 +346,9 @@ export class CompiledFlow {
         const handler = resolvedHandlers.get(nodeId)
 
         if (handler && (handler.type === 'entry_point' || handler.type === 'registered')) {
-          const result = await handler.fn(ctx)
+          const result = await adapter.executeAction(nodeId, handler.fn, ctx, {
+            metadata: node.metadata as Record<string, unknown> | undefined,
+          })
           ctx.state[nodeId] = result
         }
 
