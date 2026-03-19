@@ -5,6 +5,8 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 import { RulesRefEditor } from '../../components/RulesRefEditor'
 import { RulesPreview } from '../../components/RulesPreview'
 import { useRulesData } from '../../contexts/RulesDataContext'
+import { getActionModeInfo } from '../action-mode'
+import type { DataClass } from '../../components/DataClassBadges'
 
 interface RulesRef {
   file: string
@@ -12,8 +14,8 @@ interface RulesRef {
 }
 
 function ActionNode({ id, data, selected }: NodeProps) {
-  const { label, description, isUnassigned, hasError } =
-    data
+  const { label, description, isUnassigned, hasError } = data
+  const modeInfo = getActionModeInfo(data as Record<string, unknown>)
 
   return (
     <NodeShell
@@ -21,11 +23,14 @@ function ActionNode({ id, data, selected }: NodeProps) {
       type="action"
       label={(label as string | undefined) ?? 'Action'}
       description={description as string | undefined}
+      subtitle={modeInfo.subtitle}
       selected={selected}
       isUnassigned={isUnassigned as boolean | undefined}
       hasError={hasError as boolean | undefined}
       colorVar="--fp-node-orange"
-      icon={Zap}
+      icon={modeInfo.icon}
+      dataClass={data.data_class as DataClass[] | undefined}
+      laneDataClass={data._laneDataClass as DataClass[] | undefined}
     />
   )
 }
@@ -64,8 +69,7 @@ function ActionEditor({ nodeId, data, onChange }: NodeEditorProps) {
   const entryPoints = data.entry_points as unknown[] | undefined
   const { rulesData, validationErrors } = useRulesData(rules?.file)
   const hasRules = rules !== undefined
-  const hasCasesOrEntryPoints =
-    entryPoints !== undefined && entryPoints.length > 0
+  const hasCasesOrEntryPoints = entryPoints !== undefined && entryPoints.length > 0
 
   function handleRulesRefChange(ref: RulesRef | undefined) {
     const updated: Record<string, unknown> = { ...data }

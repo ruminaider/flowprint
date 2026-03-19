@@ -5,6 +5,7 @@ import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
 import { RulesRefEditor } from '../../components/RulesRefEditor'
 import { RulesPreview } from '../../components/RulesPreview'
 import { useRulesData } from '../../contexts/RulesDataContext'
+import type { DataClass } from '../../components/DataClassBadges'
 
 interface RulesRef {
   file: string
@@ -17,8 +18,7 @@ interface SwitchCase {
 }
 
 function SwitchNode({ id, data, selected }: NodeProps) {
-  const { label, description, isUnassigned, hasError } =
-    data
+  const { label, description, isUnassigned, hasError } = data
 
   return (
     <NodeShell
@@ -31,6 +31,8 @@ function SwitchNode({ id, data, selected }: NodeProps) {
       hasError={hasError as boolean | undefined}
       colorVar="--fp-node-purple"
       icon={GitBranch}
+      dataClass={data.data_class as DataClass[] | undefined}
+      laneDataClass={data._laneDataClass as DataClass[] | undefined}
     />
   )
 }
@@ -50,7 +52,9 @@ function SwitchProperties({ nodeId, data }: NodePropertiesProps) {
   if (cases && cases.length > 0) {
     return (
       <div data-testid={`properties-${nodeId}`}>
-        <span data-testid="cases-summary">{cases.length} case{cases.length !== 1 ? 's' : ''}</span>
+        <span data-testid="cases-summary">
+          {cases.length} case{cases.length !== 1 ? 's' : ''}
+        </span>
       </div>
     )
   }

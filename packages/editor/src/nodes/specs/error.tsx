@@ -2,10 +2,10 @@ import type { NodeProps } from '@xyflow/react'
 import { ShieldAlert } from 'lucide-react'
 import { NodeShell } from '../NodeShell'
 import type { NodeSpec, NodePropertiesProps, NodeEditorProps } from '../types'
+import type { DataClass } from '../../components/DataClassBadges'
 
 function ErrorNode({ id, data, selected }: NodeProps) {
-  const { label, description, isUnassigned, hasError } =
-    data
+  const { label, description, isUnassigned, hasError } = data
 
   return (
     <NodeShell
@@ -18,6 +18,8 @@ function ErrorNode({ id, data, selected }: NodeProps) {
       hasError={hasError as boolean | undefined}
       colorVar="--fp-node-red"
       icon={ShieldAlert}
+      dataClass={data.data_class as DataClass[] | undefined}
+      laneDataClass={data._laneDataClass as DataClass[] | undefined}
     />
   )
 }
