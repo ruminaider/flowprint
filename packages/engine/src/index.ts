@@ -43,7 +43,7 @@ export type {
 } from './rules/index.js'
 
 // Walker (generic graph walker + types)
-export { walkGraph } from './walker/index.js'
+export { walkGraph, walkBranch } from './walker/index.js'
 export type {
   ExecutionContext as WalkerExecutionContext,
   NodeExecutionRecord,
