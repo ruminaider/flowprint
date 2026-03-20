@@ -28,12 +28,21 @@ const FORBIDDEN_IDENTIFIERS = new Set([
 
 const MAX_AST_DEPTH = 50
 
-/** Module-level expression parse cache (Review #18). */
+/** Thrown when an expression string fails to parse (e.g. label-style `when` values). */
+export class ExpressionParseError extends Error {
+  constructor(source: string, cause?: unknown) {
+    const detail = cause instanceof Error ? cause.message : 'Parse error'
+    super(`Expression parse error: ${detail} (source: ${JSON.stringify(source)})`)
+    this.name = 'ExpressionParseError'
+  }
+}
+
+/** Module-level expression parse cache. */
 const parseCache = new Map<string, acorn.Node>()
 
 /**
  * Build a frozen Math object with only allowlisted methods/constants.
- * Shared with runner/evaluator.ts (Review #4).
+ * Builds the same safe Math subset as runner/evaluator.ts. Both read from ALLOWED_MATH_MEMBERS.
  */
 export function buildSafeMath(): Readonly<Record<string, unknown>> {
   const safeMath: Record<string, unknown> = {}
@@ -57,7 +66,7 @@ export function interpretExpression(
   source: string,
   scope: Record<string, unknown>,
 ): unknown {
-  // Use null-prototype scope to prevent prototype chain traversal (Review #2)
+  // Use null-prototype scope to prevent prototype chain traversal
   const safeScope = Object.create(null) as Record<string, unknown>
   for (const [key, value] of Object.entries(scope)) {
     safeScope[key] = value
@@ -68,8 +77,7 @@ export function interpretExpression(
     try {
       ast = acorn.parseExpressionAt(source, 0, { ecmaVersion: 2022 })
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Parse error'
-      throw new Error(`Expression parse error: ${msg}`)
+      throw new ExpressionParseError(source, e)
     }
     parseCache.set(source, ast)
   }

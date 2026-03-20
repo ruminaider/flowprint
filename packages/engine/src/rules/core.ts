@@ -201,7 +201,7 @@ function evaluateOperator(op: string, value: unknown, operand: unknown): boolean
       return typeof value === 'number' && value >= low && value <= high
     }
     default:
-      return false
+      throw new Error(`Unknown rule operator: "${op}"`)
   }
 }
 

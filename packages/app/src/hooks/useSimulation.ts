@@ -37,8 +37,8 @@ interface TraceSnapshots {
 
 /**
  * Pre-compute highlight and context snapshots for every step index.
- * One-time O(n) pass when trace arrives, then O(1) access per step.
- * Each entry is a point-in-time snapshot (Review #36).
+ * One-time O(n²) build when trace arrives, then O(1) access per step.
+ * Each entry is a point-in-time snapshot.
  */
 function buildTraceSnapshots(steps: SimulationStep[]): TraceSnapshots {
   const highlights: NodeHighlightMap[] = []
@@ -102,13 +102,13 @@ export function useSimulation(
   const currentStepData = trace?.steps[currentStep]
   const currentNodeId = currentStepData?.node_id
 
-  // Pre-compute snapshots once when trace changes (Review #19/#25/#34)
+  // Pre-compute snapshots once when trace changes
   const snapshots = useMemo<TraceSnapshots | null>(() => {
     if (!trace) return null
     return buildTraceSnapshots(trace.steps)
   }, [trace])
 
-  // O(1) lookup per step (Review #19)
+  // O(1) lookup per step
   const nodeHighlights = snapshots?.highlights[currentStep] ?? emptyHighlights
 
   const start = useCallback(
@@ -119,15 +119,16 @@ export function useSimulation(
 
       setError(null)
 
-      // Review #8: .catch() handler for unhandled rejections
+      // .catch() handler for unhandled rejections
       simulateGraph(doc, options).then(
         (result) => {
           if (result.error) {
             setError(result.error)
-            return
           }
-          setTrace(result)
-          setCurrentStep(0)
+          if (result.steps.length > 0) {
+            setTrace(result)
+            setCurrentStep(0)
+          }
         },
         (err: unknown) => {
           setError(err instanceof Error ? err.message : String(err))
@@ -171,7 +172,7 @@ export function useSimulation(
     autoPlayRef.current = enabled
   }, [])
 
-  // Review #22: chained setTimeout instead of setInterval for auto-play
+  // Chained setTimeout instead of setInterval for auto-play
   useEffect(() => {
     if (!isAutoPlaying || !trace) return
 

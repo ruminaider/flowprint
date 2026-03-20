@@ -37,7 +37,7 @@ export function App() {
 
   const simulation = useSimulation(doc, rulesDataMap)
 
-  // Review #5: gate on doc !== null only, not on rules presence
+  // Gate on doc !== null only, not on rules presence
   const canSimulate = doc !== null
 
   const handleSimulate = useCallback(() => {

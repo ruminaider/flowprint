@@ -77,8 +77,8 @@ export async function walkGraph<TStep extends BaseStep>(
       step = await handlers.onSwitch(currentNodeId, node, ctx)
     } else if (isParallelNode(node)) {
       const walkBranch = async (startId: string): Promise<TStep[]> => {
-        // Each branch gets its own steps array but shares the results map
-        // Snapshot results before branching (Review #13)
+        // Each branch gets its own steps array and a snapshot of the results map
+        // (so branches cannot observe each other's mutations)
         const branchResults = new Map(results)
         return walkGraph(doc, handlers, input, branchResults, {
           ...options,

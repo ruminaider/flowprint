@@ -490,7 +490,7 @@ describe('simulateGraph', () => {
       expect(trace.error).toContain('not found in document')
     })
 
-    it('invalid expression in switch case falls through to default', async () => {
+    it('runtime expression error in switch case surfaces as step error', async () => {
       const doc = makeDoc({
         check: {
           type: 'switch',
@@ -504,8 +504,31 @@ describe('simulateGraph', () => {
 
       const trace = await simulateGraph(doc, makeOptions())
 
-      // Invalid expressions are caught per-case and treated as non-matching,
-      // allowing label-style `when` values and graceful fallthrough to default
+      // Runtime errors (undefined identifiers, security violations) are not
+      // swallowed — they produce error steps and propagate to trace status
+      expect(trace.status).toBe('error')
+      const switchStep = trace.steps.find((s) => s.node_id === 'check')
+      expect(switchStep).toBeDefined()
+      expect(switchStep?.status).toBe('error')
+      expect(switchStep?.error).toContain('nonexistent')
+    })
+
+    it('label-style switch case falls through to default', async () => {
+      const doc = makeDoc({
+        check: {
+          type: 'switch',
+          lane: 'default',
+          label: 'Check',
+          cases: [{ when: 'Approved', next: 'done' }],
+          default: 'done',
+        },
+        done: { type: 'terminal', lane: 'default', label: 'Done', outcome: 'success' },
+      })
+
+      const trace = await simulateGraph(doc, makeOptions())
+
+      // Label-style `when` values (e.g. "Approved") fail to parse as
+      // expressions — treated as non-matching, graceful fallthrough to default
       expect(trace.status).toBe('success')
       const switchStep = trace.steps.find((s) => s.node_id === 'check')
       expect(switchStep).toBeDefined()

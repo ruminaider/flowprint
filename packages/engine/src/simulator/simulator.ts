@@ -3,7 +3,11 @@ import type { WalkHandlers, WalkContext } from '../walker/types.js'
 import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
 import { evaluateRules } from '../rules/core.js'
 import type { ExpressionEvaluator } from '../rules/core.js'
-import { interpretExpression, buildSafeMath } from '../expressions/interpreter.js'
+import {
+  interpretExpression,
+  buildSafeMath,
+  ExpressionParseError,
+} from '../expressions/interpreter.js'
 import type { ExecutionContext } from '../runner/types.js'
 import type {
   SimulationOptions,
@@ -43,7 +47,7 @@ export async function simulateGraph(
     return interpretExpression(expr, scope)
   }
 
-  // Review #11: Extract shared rules evaluation helper
+  // Shared rules evaluation helper for all node types with rules references
   const evaluateNodeRules = (
     nodeId: string,
     rulesRef: { file: string; evaluator?: string },
@@ -156,9 +160,21 @@ export async function simulateGraph(
               expressionEvaluation: { expression: c.when, result },
             }
           }
-        } catch {
-          // Label-style `when` values (e.g. "Approved") are not valid
-          // expressions — treat as non-matching and continue to next case
+        } catch (err: unknown) {
+          // Label-style `when` values come in two forms:
+          // 1. Multi-word labels ("High Priority") → ExpressionParseError
+          // 2. Bare identifiers ("Approved") → parse as JS Identifier, fail at runtime
+          // Both are treated as non-matching. All other errors (security violations,
+          // depth exceeded, expression typos with operators/member access) surface
+          // as step errors so the user sees the mistake.
+          if (err instanceof ExpressionParseError) continue
+          if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(c.when)) continue
+          return {
+            node_id: nodeId,
+            type: 'switch',
+            status: 'error',
+            error: `Case expression "${c.when}" failed: ${err instanceof Error ? err.message : String(err)}`,
+          }
         }
       }
       if (node.default) {
@@ -222,7 +238,7 @@ export async function simulateGraph(
       return { node_id: nodeId, type: 'terminal', status: 'reached', outcome: node.outcome }
     },
 
-    // Review #30: Trigger emits a synthetic "activated" step
+    // Trigger emits a synthetic "activated" step
     onTrigger(nodeId, node) {
       return {
         node_id: nodeId,
@@ -242,20 +258,36 @@ export async function simulateGraph(
     },
   }
 
+  // Declared outside try so partial progress is preserved on error
+  let steps: SimulationStep[] = []
+
   try {
-    const steps = await walkGraph(doc, handlers, options.input, results, {
+    steps = await walkGraph(doc, handlers, options.input, results, {
       maxSteps: options.maxSteps,
     })
-
-    const lastStep = steps[steps.length - 1]
-    const outcome = lastStep?.outcome
-    const status = outcome === 'failure' ? 'failure' : 'success'
-    const lastResultKey = [...results.keys()].pop()
-    const output = lastResultKey !== undefined ? results.get(lastResultKey) : undefined
-
-    return { status, steps, output }
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err)
-    return { status: 'error', steps: [], error: errorMessage }
+    return { status: 'error', steps, error: errorMessage }
+  }
+
+  // Promote any step-level errors to trace status
+  const hasStepError = steps.some((s) => s.status === 'error')
+  const lastStep = steps[steps.length - 1]
+  const outcome = lastStep?.outcome
+
+  const status = hasStepError
+    ? 'error'
+    : outcome === 'failure'
+      ? 'failure'
+      : 'success'
+
+  const lastResultKey = [...results.keys()].pop()
+  const output = lastResultKey !== undefined ? results.get(lastResultKey) : undefined
+
+  return {
+    status,
+    steps,
+    output,
+    error: hasStepError ? 'One or more steps encountered errors' : undefined,
   }
 }

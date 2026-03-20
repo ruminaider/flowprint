@@ -81,7 +81,7 @@ const textareaStyle: React.CSSProperties = {
   resize: 'vertical',
 }
 
-const MAX_INPUT_BYTES = 256 * 1024 // 256KB (Review #27)
+const MAX_INPUT_BYTES = 256 * 1024 // 256KB
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, { bg: string; fg: string }> = {
@@ -139,7 +139,7 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
   } = simulation
 
   const handleRun = useCallback(() => {
-    // Review #27: byte-size guard
+    // Byte-size guard
     if (new Blob([inputText]).size > MAX_INPUT_BYTES) {
       setInputError('Input exceeds 256KB limit')
       return
@@ -167,7 +167,7 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
     start(input, fixtures)
   }, [inputText, fixturesText, start])
 
-  // Review #37: keyboard shortcuts scoped to active simulation
+  // Keyboard shortcuts scoped to active simulation
   useEffect(() => {
     if (!isActive) return
 
@@ -268,7 +268,7 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
       {/* Header */}
       <div style={headerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Review #38: step counter */}
+          {/* Step counter */}
           <span style={{ fontWeight: 600 }}>
             Step {currentStep + 1} of {totalSteps}
           </span>
@@ -310,7 +310,7 @@ export function SimulationPanel({ simulation }: SimulationPanelProps) {
           Stop
         </button>
 
-        {/* Review #38: progress scrubber */}
+        {/* Progress scrubber */}
         <input
           type="range"
           min={0}

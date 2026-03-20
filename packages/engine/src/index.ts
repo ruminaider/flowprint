@@ -50,7 +50,7 @@ export type {
 } from './simulator/index.js'
 
 // Expression interpreter (also available from ./browser)
-export { interpretExpression } from './expressions/index.js'
+export { interpretExpression, ExpressionParseError } from './expressions/index.js'
 
 // Codegen
 export { generateCode } from './codegen/index.js'

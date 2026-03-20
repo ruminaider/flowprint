@@ -12,7 +12,7 @@ packages/
   app/      flowprint-app (private)         (Vite  -> static site)
 ```
 
-Dependency graph: `schema` has zero dependents. `editor` and `cli` depend on `schema`. `app` depends on `editor` + `schema`. Editor and CLI are siblings -- neither depends on the other.
+Dependency graph: `schema` has zero dependents. `editor` and `cli` depend on `schema`. `app` depends on `editor` + `schema` + `engine`. Editor and CLI are siblings -- neither depends on the other.
 
 ## Commands
 

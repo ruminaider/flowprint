@@ -11,4 +11,4 @@ export {
   ALLOWED_MATH_MEMBERS,
   BLOCKED_PROPERTY_NAMES,
 } from './allowlist.js'
-export { interpretExpression, buildSafeMath } from './interpreter.js'
+export { interpretExpression, buildSafeMath, ExpressionParseError } from './interpreter.js'
