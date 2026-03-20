@@ -37,7 +37,15 @@ export type {
 
 // Walker (shared skeleton)
 export { walkGraph } from './walker/index.js'
-export type { BaseStep, BaseTrace, WalkHandlers, WalkContext, WalkOptions } from './walker/index.js'
+export type {
+  BaseStep,
+  BaseTrace,
+  StepNodeType,
+  StepStatus,
+  WalkHandlers,
+  WalkContext,
+  WalkOptions,
+} from './walker/index.js'
 
 // Simulator
 export { simulateGraph } from './simulator/index.js'
@@ -50,7 +58,7 @@ export type {
 } from './simulator/index.js'
 
 // Expression interpreter (also available from ./browser)
-export { interpretExpression, ExpressionParseError } from './expressions/index.js'
+export { interpretExpression, ExpressionParseError, clearParseCache } from './expressions/index.js'
 
 // Codegen
 export { generateCode } from './codegen/index.js'

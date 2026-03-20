@@ -9,6 +9,7 @@ import { WelcomeScreen } from './components/WelcomeScreen'
 import { NewBlueprintWizard } from './components/NewBlueprintWizard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SimulationPanel } from './components/SimulationPanel'
+import { SimulationErrorBoundary } from './components/SimulationErrorBoundary'
 import { UnsavedChangesGuard } from './components/UnsavedChangesGuard'
 import { useFileManager } from './hooks/useFileManager'
 import { useProjectDirectory } from './hooks/useProjectDirectory'
@@ -237,15 +238,22 @@ export function App() {
             />
           </div>
           {showSimPanel && (
-            <SimulationPanel
-              simulation={{
-                ...simulation,
-                stop: () => {
-                  simulation.stop()
-                  setShowSimPanel(false)
-                },
+            <SimulationErrorBoundary
+              onReset={() => {
+                simulation.stop()
+                setShowSimPanel(false)
               }}
-            />
+            >
+              <SimulationPanel
+                simulation={{
+                  ...simulation,
+                  stop: () => {
+                    simulation.stop()
+                    setShowSimPanel(false)
+                  },
+                }}
+              />
+            </SimulationErrorBoundary>
           )}
         </>
       )}

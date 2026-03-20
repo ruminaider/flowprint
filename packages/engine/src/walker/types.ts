@@ -10,11 +10,47 @@ import type {
 } from '@ruminaider/flowprint-schema'
 import type { RulesDocument } from '../rules/types.js'
 
+/**
+ * The seven schema-defined node types, plus 'unknown' for unrecognized nodes.
+ *
+ * Future improvement: a discriminated union keyed on `type` would let each
+ * node type define its own set of valid statuses (e.g., only 'switch' steps
+ * can have status 'matched'). That requires a larger refactor of BaseStep
+ * into per-type interfaces — tracked as a potential follow-up.
+ */
+export type StepNodeType =
+  | 'action'
+  | 'switch'
+  | 'parallel'
+  | 'wait'
+  | 'error'
+  | 'terminal'
+  | 'trigger'
+  | 'unknown'
+  | 'compensation'
+
+/**
+ * All step status values used across the runner and simulator.
+ */
+export type StepStatus =
+  | 'completed'
+  | 'matched'
+  | 'default'
+  | 'no-match'
+  | 'fixture'
+  | 'timeout'
+  | 'skipped'
+  | 'handled'
+  | 'reached'
+  | 'activated'
+  | 'fired'
+  | 'error'
+
 /** Common fields shared by all step types (runner StepResult, simulator SimulationStep). */
 export interface BaseStep {
   node_id: string
-  type: string
-  status: string
+  type: StepNodeType
+  status: StepStatus
   matched_case?: number
   next?: string
   outcome?: string

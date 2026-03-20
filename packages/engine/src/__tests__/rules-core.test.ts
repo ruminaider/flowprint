@@ -42,15 +42,19 @@ describe('rules/core', () => {
     })
 
     it('blocks __proto__ access', () => {
-      expect(resolveDotPath('__proto__', {})).toBeUndefined()
+      expect(() => resolveDotPath('__proto__', {})).toThrow('Access to "__proto__" is blocked')
     })
 
     it('blocks constructor access', () => {
-      expect(resolveDotPath('constructor', {})).toBeUndefined()
+      expect(() => resolveDotPath('constructor', {})).toThrow(
+        'Access to "constructor" is blocked',
+      )
     })
 
     it('blocks prototype in nested path', () => {
-      expect(resolveDotPath('a.prototype.b', { a: {} })).toBeUndefined()
+      expect(() => resolveDotPath('a.prototype.b', { a: {} })).toThrow(
+        'Access to "prototype" is blocked',
+      )
     })
   })
 

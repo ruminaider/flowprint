@@ -64,7 +64,7 @@ export function resolveDotPath(path: string, context: Record<string, unknown>): 
 
   for (const part of parts) {
     if (BLOCKED_PROPERTY_NAMES.has(part)) {
-      return undefined
+      throw new Error(`Access to "${part}" is blocked`)
     }
     if (typeof current !== 'object' || current === null) {
       return undefined

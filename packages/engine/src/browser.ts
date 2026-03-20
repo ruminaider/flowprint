@@ -22,10 +22,14 @@ export type {
 } from './rules/types.js'
 
 // Expression interpretation (browser-safe)
-export { interpretExpression, ExpressionParseError } from './expressions/interpreter.js'
+export {
+  interpretExpression,
+  ExpressionParseError,
+  clearParseCache,
+} from './expressions/interpreter.js'
 
 // Shared walk types
-export type { BaseStep, BaseTrace } from './walker/types.js'
+export type { BaseStep, BaseTrace, StepNodeType, StepStatus } from './walker/types.js'
 
 // Shared context type
 export type { ExecutionContext } from './runner/types.js'

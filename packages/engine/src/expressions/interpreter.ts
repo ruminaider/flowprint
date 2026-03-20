@@ -37,8 +37,29 @@ export class ExpressionParseError extends Error {
   }
 }
 
-/** Module-level expression parse cache. */
+const PARSE_CACHE_MAX = 1000
+
+/**
+ * LRU parse cache for expression ASTs.
+ * Capped at PARSE_CACHE_MAX entries to prevent unbounded memory growth
+ * in long-running browser sessions. Map insertion order provides LRU
+ * semantics — oldest entries are evicted first.
+ */
 const parseCache = new Map<string, acorn.Node>()
+
+function cachePut(key: string, value: acorn.Node): void {
+  if (parseCache.size >= PARSE_CACHE_MAX) {
+    // Map.keys().next() gives the oldest entry (first inserted)
+    const oldest = parseCache.keys().next().value
+    if (oldest !== undefined) parseCache.delete(oldest)
+  }
+  parseCache.set(key, value)
+}
+
+/** Clear the expression parse cache. Useful for freeing memory between simulations. */
+export function clearParseCache(): void {
+  parseCache.clear()
+}
 
 /**
  * Build a frozen Math object with only allowlisted methods/constants.
@@ -73,13 +94,17 @@ export function interpretExpression(
   }
 
   let ast = parseCache.get(source)
-  if (!ast) {
+  if (ast) {
+    // Promote to most-recent for LRU ordering
+    parseCache.delete(source)
+    parseCache.set(source, ast)
+  } else {
     try {
       ast = acorn.parseExpressionAt(source, 0, { ecmaVersion: 2022 })
     } catch (e: unknown) {
       throw new ExpressionParseError(source, e)
     }
-    parseCache.set(source, ast)
+    cachePut(source, ast)
   }
 
   return evaluate(ast as any, safeScope, 0)
