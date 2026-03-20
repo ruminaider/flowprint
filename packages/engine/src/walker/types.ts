@@ -8,7 +8,6 @@ import type {
   TerminalNode,
   TriggerNode,
 } from '@ruminaider/flowprint-schema'
-import type { RulesDocument } from '../rules/types.js'
 
 /**
  * The seven schema-defined node types, plus 'unknown' for unrecognized nodes.
@@ -96,7 +95,6 @@ export interface WalkContext<TStep extends BaseStep> {
   input: unknown
   results: Map<string, unknown>
   steps: TStep[]
-  rulesData?: Record<string, RulesDocument>
 }
 
 /** Options for the walk skeleton. */
@@ -104,4 +102,10 @@ export interface WalkOptions {
   maxSteps?: number
   startNodeId?: string
   signal?: AbortSignal
+}
+
+/** Shared execution context for expression and rules evaluation. */
+export interface ExecutionContext {
+  input: unknown
+  results: Map<string, unknown> // nodeId -> output
 }

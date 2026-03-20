@@ -9,7 +9,9 @@ export type {
 } from './simulator/index.js'
 
 // Rules evaluation (browser-safe, for standalone rules testing)
-export { evaluateRules } from './rules/core.js'
+// Named `evaluateRulesCore` to distinguish from the Node.js `evaluateRules` in the
+// main entry point, which wraps this with a vm-based expression evaluator.
+export { evaluateRules as evaluateRulesCore } from './rules/core.js'
 export type { ExpressionEvaluator } from './rules/core.js'
 export type {
   RulesDocument,
@@ -29,7 +31,4 @@ export {
 } from './expressions/interpreter.js'
 
 // Shared walk types
-export type { BaseStep, BaseTrace, StepNodeType, StepStatus } from './walker/types.js'
-
-// Shared context type
-export type { ExecutionContext } from './runner/types.js'
+export type { BaseStep, BaseTrace, ExecutionContext, StepNodeType, StepStatus } from './walker/types.js'

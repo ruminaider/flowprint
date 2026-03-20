@@ -17,7 +17,7 @@ export {
   loadEntryPoint,
   loadFixtures,
 } from './runner/index.js'
-export type { RunOptions, ExecutionTrace, StepResult, ExecutionContext } from './runner/index.js'
+export type { RunOptions, ExecutionTrace, StepResult } from './runner/index.js'
 
 // Rules
 export { loadRulesFile, evaluateRules, runRulesTests } from './rules/index.js'
@@ -40,6 +40,7 @@ export { walkGraph } from './walker/index.js'
 export type {
   BaseStep,
   BaseTrace,
+  ExecutionContext,
   StepNodeType,
   StepStatus,
   WalkHandlers,
