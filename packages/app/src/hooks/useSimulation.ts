@@ -42,23 +42,43 @@ interface TraceSnapshots {
   contexts: Record<string, unknown>[]
 }
 
+interface EdgeLookups {
+  /** "source->target" → first edge ID (for non-switch edges) */
+  byPair: Map<string, string>
+  /** "source:caseIndex" → edge ID (for switch case disambiguation) */
+  byCase: Map<string, string>
+}
+
 /**
- * Build a lookup from "source->target" to React Flow edge ID.
+ * Build lookups from schema edges to React Flow edge IDs.
  * Mirrors the ID pattern in layout-engine.ts: `e-${source}-${target}-${index}`
  */
-function buildEdgeLookup(doc: FlowprintDocument): Map<string, string> {
+function buildEdgeLookup(doc: FlowprintDocument): EdgeLookups {
   const schemaEdges = getEdges(doc)
-  const lookup = new Map<string, string>()
+  const byPair = new Map<string, string>()
+  const byCase = new Map<string, string>()
+  const caseCounters = new Map<string, number>()
+
   for (let i = 0; i < schemaEdges.length; i++) {
     const edge = schemaEdges[i]
     if (!edge) continue
+    const edgeId = `e-${edge.source}-${edge.target}-${String(i)}`
     const key = `${edge.source}->${edge.target}`
-    // First occurrence wins (matches computeEdges index ordering)
-    if (!lookup.has(key)) {
-      lookup.set(key, `e-${edge.source}-${edge.target}-${String(i)}`)
+
+    // First occurrence wins for the basic pair lookup
+    if (!byPair.has(key)) {
+      byPair.set(key, edgeId)
+    }
+
+    // Track case edges by source + case index for switch disambiguation
+    if (edge.label !== undefined) {
+      const caseIdx = caseCounters.get(edge.source) ?? 0
+      byCase.set(`${edge.source}:${String(caseIdx)}`, edgeId)
+      caseCounters.set(edge.source, caseIdx + 1)
     }
   }
-  return lookup
+
+  return { byPair, byCase }
 }
 
 /**
@@ -68,7 +88,7 @@ function buildEdgeLookup(doc: FlowprintDocument): Map<string, string> {
  */
 function buildTraceSnapshots(
   steps: SimulationStep[],
-  edgeLookup: Map<string, string>,
+  edgeLookup: EdgeLookups,
 ): TraceSnapshots {
   const highlights: NodeHighlightMap[] = []
   const edgeHighlights: EdgeHighlightMap[] = []
@@ -104,17 +124,25 @@ function buildTraceSnapshots(
     const isParallelJoin =
       prevStep?.type === 'parallel' && prevStep?.status === 'completed'
     if (i > 0 && !isParallelRevisit && !isParallelJoin && prevStep) {
+      // Strategy 0: case-specific edge for switch nodes (disambiguates multi-edges)
+      let edgeId =
+        prevStep.matched_case !== undefined
+          ? edgeLookup.byCase.get(`${prevStep.node_id}:${String(prevStep.matched_case)}`)
+          : undefined
+
       // Strategy 1: direct edge from previous step
-      let edgeId = edgeLookup.get(`${prevStep.node_id}->${step.node_id}`)
+      if (!edgeId) {
+        edgeId = edgeLookup.byPair.get(`${prevStep.node_id}->${step.node_id}`)
+      }
 
       // Strategy 2: edge via previous step's routing target
       if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
-        edgeId = edgeLookup.get(`${prevStep.next}->${step.node_id}`)
+        edgeId = edgeLookup.byPair.get(`${prevStep.next}->${step.node_id}`)
       }
 
       // Strategy 3: find any edge targeting this node in the schema
       if (!edgeId) {
-        for (const [key, eid] of edgeLookup.entries()) {
+        for (const [key, eid] of edgeLookup.byPair.entries()) {
           if (key.endsWith(`->${step.node_id}`)) {
             edgeId = eid
             break
@@ -130,7 +158,7 @@ function buildTraceSnapshots(
     // Fan-out edges for parallel branches (all animate simultaneously)
     if (step.branchNodeIds) {
       for (const branchId of step.branchNodeIds) {
-        const fanOutEdgeId = edgeLookup.get(`${step.node_id}->${branchId}`)
+        const fanOutEdgeId = edgeLookup.byPair.get(`${step.node_id}->${branchId}`)
         if (fanOutEdgeId) edgeSnapshot[fanOutEdgeId] = 'traversing'
       }
     }
@@ -208,7 +236,10 @@ export function useSimulation(
   const currentNodeId = currentStepData?.node_id
 
   // Build edge lookup once when doc changes
-  const edgeLookup = useMemo(() => (doc ? buildEdgeLookup(doc) : new Map<string, string>()), [doc])
+  const edgeLookup = useMemo<EdgeLookups>(
+    () => (doc ? buildEdgeLookup(doc) : { byPair: new Map(), byCase: new Map() }),
+    [doc],
+  )
 
   // Pre-compute snapshots once when trace changes (Review #19/#25/#34)
   const snapshots = useMemo<TraceSnapshots | null>(() => {
