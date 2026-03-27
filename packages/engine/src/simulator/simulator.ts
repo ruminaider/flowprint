@@ -114,14 +114,14 @@ export async function simulateGraph(
           '_error' in (fixture as Record<string, unknown>) &&
           (fixture as Record<string, unknown>)._error === true)
       const catchTarget = node.error?.catch
-      const catchNode = catchTarget ? ctx.doc.nodes[catchTarget] : undefined
-      const validCatch = catchNode && isErrorNode(catchNode) ? catchTarget : undefined
-      const next = isErrorFixture && validCatch ? validCatch : node.next
+      const canCatch =
+        isErrorFixture && catchTarget && isErrorNode(ctx.doc.nodes[catchTarget])
+      const next = canCatch ? catchTarget : node.next
 
       return {
         node_id: nodeId,
         type: 'action',
-        status: isErrorFixture && validCatch ? 'error-caught' : 'completed',
+        status: canCatch ? 'error-caught' : 'completed',
         next,
         stepOutput: { nodeId, value: fixture },
       }

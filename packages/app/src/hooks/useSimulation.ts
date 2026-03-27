@@ -49,6 +49,16 @@ interface EdgeLookups {
   byCase: Map<string, string>
 }
 
+const EMPTY_EDGE_LOOKUP: EdgeLookups = { byPair: new Map(), byCase: new Map() }
+
+function edgeKey(source: string, target: string): string {
+  return `${source}->${target}`
+}
+
+function caseKey(nodeId: string, caseIdx: number): string {
+  return `${nodeId}:${String(caseIdx)}`
+}
+
 /**
  * Build lookups from schema edges to React Flow edge IDs.
  * Mirrors the ID pattern in layout-engine.ts: `e-${source}-${target}-${index}`
@@ -63,17 +73,15 @@ function buildEdgeLookup(doc: FlowprintDocument): EdgeLookups {
     const edge = schemaEdges[i]
     if (!edge) continue
     const edgeId = `e-${edge.source}-${edge.target}-${String(i)}`
-    const key = `${edge.source}->${edge.target}`
+    const key = edgeKey(edge.source, edge.target)
 
-    // First occurrence wins for the basic pair lookup
     if (!byPair.has(key)) {
       byPair.set(key, edgeId)
     }
 
-    // Track case edges by source + case index for switch disambiguation
     if (edge.label !== undefined) {
       const caseIdx = caseCounters.get(edge.source) ?? 0
-      byCase.set(`${edge.source}:${String(caseIdx)}`, edgeId)
+      byCase.set(caseKey(edge.source, caseIdx), edgeId)
       caseCounters.set(edge.source, caseIdx + 1)
     }
   }
@@ -124,23 +132,25 @@ function buildTraceSnapshots(
     const isParallelJoin =
       prevStep?.type === 'parallel' && prevStep?.status === 'completed'
     if (i > 0 && !isParallelRevisit && !isParallelJoin && prevStep) {
-      // Strategy 0: case-specific edge for switch nodes (disambiguates multi-edges)
+      // Switch nodes can have multiple cases targeting the same node (e.g.
+      // triage_assessment → assign_provider for both Urgent and Routine).
+      // matched_case disambiguates which case edge to animate.
       let edgeId =
         prevStep.matched_case !== undefined
-          ? edgeLookup.byCase.get(`${prevStep.node_id}:${String(prevStep.matched_case)}`)
+          ? edgeLookup.byCase.get(caseKey(prevStep.node_id, prevStep.matched_case))
           : undefined
 
-      // Strategy 1: direct edge from previous step
+      // Direct source→target lookup (handles single-edge paths)
       if (!edgeId) {
-        edgeId = edgeLookup.byPair.get(`${prevStep.node_id}->${step.node_id}`)
+        edgeId = edgeLookup.byPair.get(edgeKey(prevStep.node_id, step.node_id))
       }
 
-      // Strategy 2: edge via previous step's routing target
+      // Intermediate routing (e.g. switch → hub → branch in parallel flows)
       if (!edgeId && prevStep.next && prevStep.next !== step.node_id) {
-        edgeId = edgeLookup.byPair.get(`${prevStep.next}->${step.node_id}`)
+        edgeId = edgeLookup.byPair.get(edgeKey(prevStep.next, step.node_id))
       }
 
-      // Strategy 3: find any edge targeting this node in the schema
+      // Defensive fallback: linear scan for any edge targeting this node
       if (!edgeId) {
         for (const [key, eid] of edgeLookup.byPair.entries()) {
           if (key.endsWith(`->${step.node_id}`)) {
@@ -158,7 +168,7 @@ function buildTraceSnapshots(
     // Fan-out edges for parallel branches (all animate simultaneously)
     if (step.branchNodeIds) {
       for (const branchId of step.branchNodeIds) {
-        const fanOutEdgeId = edgeLookup.byPair.get(`${step.node_id}->${branchId}`)
+        const fanOutEdgeId = edgeLookup.byPair.get(edgeKey(step.node_id, branchId))
         if (fanOutEdgeId) edgeSnapshot[fanOutEdgeId] = 'traversing'
       }
     }
@@ -237,7 +247,7 @@ export function useSimulation(
 
   // Build edge lookup once when doc changes
   const edgeLookup = useMemo<EdgeLookups>(
-    () => (doc ? buildEdgeLookup(doc) : { byPair: new Map(), byCase: new Map() }),
+    () => (doc ? buildEdgeLookup(doc) : EMPTY_EDGE_LOOKUP),
     [doc],
   )
 
