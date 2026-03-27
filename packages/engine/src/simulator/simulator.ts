@@ -1,6 +1,6 @@
 import { walkGraph } from '../walker/walk.js'
 import type { WalkHandlers, WalkContext } from '../walker/types.js'
-import type { FlowprintDocument } from '@ruminaider/flowprint-schema'
+import { type FlowprintDocument, isErrorNode } from '@ruminaider/flowprint-schema'
 import { evaluateRules } from '../rules/core.js'
 import type { ExpressionEvaluator } from '../rules/core.js'
 import { interpretExpression, buildSafeMath } from '../expressions/interpreter.js'
@@ -114,12 +114,14 @@ export async function simulateGraph(
           '_error' in (fixture as Record<string, unknown>) &&
           (fixture as Record<string, unknown>)._error === true)
       const catchTarget = node.error?.catch
-      const next = isErrorFixture && catchTarget ? catchTarget : node.next
+      const catchNode = catchTarget ? ctx.doc.nodes[catchTarget] : undefined
+      const validCatch = catchNode && isErrorNode(catchNode) ? catchTarget : undefined
+      const next = isErrorFixture && validCatch ? validCatch : node.next
 
       return {
         node_id: nodeId,
         type: 'action',
-        status: isErrorFixture && catchTarget ? 'error-caught' : 'completed',
+        status: isErrorFixture && validCatch ? 'error-caught' : 'completed',
         next,
         stepOutput: { nodeId, value: fixture },
       }
